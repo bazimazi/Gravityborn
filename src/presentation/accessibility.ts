@@ -24,6 +24,11 @@ export function installAccessibility(
       'Bright outlines with symbols for gravity and hazards',
     ],
     ['haptics', 'Vibration', 'Brief feedback on supported devices'],
+    [
+      'swipeGravity',
+      'Swipe to change gravity',
+      'Swipe the arena to turn gravity; tap to place a well',
+    ],
   ] as const) {
     const row = document.createElement('label');
     row.className = 'setting-row';

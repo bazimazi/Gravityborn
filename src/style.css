@@ -171,6 +171,8 @@ kbd {
   justify-content: space-between;
   align-items: center;
   min-height: 30px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 .section-heading h1 {
   font-size: calc(13px * var(--ui-scale, 1));

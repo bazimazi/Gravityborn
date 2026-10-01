@@ -12,6 +12,7 @@ export interface Settings {
   joystickScale: number;
   joystickDeadzone: number;
   frameRate: number;
+  swipeGravity: boolean;
 }
 export const defaults: Settings = {
   version: 1,
@@ -27,6 +28,7 @@ export const defaults: Settings = {
   joystickScale: 1,
   joystickDeadzone: 0.1,
   frameRate: 60,
+  swipeGravity: true,
 };
 const key = 'gravityborn.settings';
 
@@ -59,6 +61,7 @@ export function migrateSettings(value: unknown): Settings {
     joystickScale: number('joystickScale', 0.8, 1.3),
     joystickDeadzone: number('joystickDeadzone', 0, 0.35),
     frameRate: data.frameRate === 30 ? 30 : 60,
+    swipeGravity: boolean('swipeGravity'),
   };
 }
 

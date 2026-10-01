@@ -41,9 +41,15 @@
     {
       "section": 5,
       "title": "Primary Controls",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/main.ts",
+        "src/presentation/gestures.ts",
+        "src/presentation/accessibility.ts",
+        "tests/gestures.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Joystick, cardinal buttons and optional arena swipes are implemented. Tap/swipe/cancel separation is checked with native Chromium touch injection; WebKit gesture and physical-device ergonomics require manual validation."
     },
     {
       "section": 6,

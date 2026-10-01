@@ -254,6 +254,44 @@ test('local diagnostics can be exported, disabled, cleared and restored', async 
   await expect(page.getByRole('button', { name: 'Enable recording', exact: true })).toBeVisible();
 });
 
+test('arena touch swipes change gravity without accidentally placing a well', async ({
+  page,
+  context,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Native touch movement injection uses Chromium CDP.');
+  await page.goto('/');
+  await page.getByRole('button', { name: /Enter the chamber/ }).click();
+  const session = await context.newCDPSession(page);
+  await session.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  const bounds = await page.locator('#game').boundingBox();
+  const x = bounds!.x + bounds!.width * 0.5;
+  const y = bounds!.y + bounds!.height * 0.65;
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x, y, id: 1 }],
+  });
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchMove',
+    touchPoints: [{ x, y: y - 70, id: 1 }],
+  });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect.poll(async () => (await snapshot(page)).direction).toEqual({ x: 0, y: -1 });
+  expect((await snapshot(page)).stats.wells).toBe(0);
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x, y, id: 1 }],
+  });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchCancel', touchPoints: [] });
+  expect((await snapshot(page)).stats.wells).toBe(0);
+  await session.send('Input.dispatchTouchEvent', {
+    type: 'touchStart',
+    touchPoints: [{ x, y, id: 1 }],
+  });
+  await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await expect.poll(async () => (await snapshot(page)).stats.wells).toBe(1);
+});
+
 test('clears held input when focus is lost and supports inspector frame stepping', async ({
   page,
 }) => {

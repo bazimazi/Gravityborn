@@ -39,6 +39,8 @@ import { DebugSession, type PlayerStat } from './gameplay/debug';
 import { bossDefinitions } from './content/bosses';
 import { relics } from './content/relics';
 import { newDiagnostics, recordDiagnostic } from './core/diagnostics';
+import { arenaGesture } from './presentation/gestures';
+import { biomes } from './content/rooms';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -128,6 +130,9 @@ const feedback = new Feedback(game.events);
 const audio = new GameAudio(game.events, settings);
 const canvas = element<HTMLCanvasElement>('#game');
 const renderer = new Renderer(canvas, settings);
+element('.section-heading h1').innerHTML =
+  '<span class="live-dot"></span><span id="room-name"></span>';
+let arenaTouch: { id: number; start: Vec2 } | null = null;
 const tutorial = new Tutorial(game, () => {
   profile.tutorialCompleted = true;
   recordDiagnostic(profile.diagnostics, { event: 'TutorialCompleted' });
@@ -417,6 +422,9 @@ function toast(message: string): void {
   toastUntil = performance.now() + 2600;
 }
 function clearInput(): void {
+  if (arenaTouch && canvas.hasPointerCapture(arenaTouch.id))
+    canvas.releasePointerCapture(arenaTouch.id);
+  arenaTouch = null;
   keys.clear();
   joystick = { x: 0, y: 0 };
   joystickPointer = null;
@@ -530,10 +538,36 @@ canvas.addEventListener('pointerleave', () => {
 });
 canvas.addEventListener('pointerdown', (event) => {
   if (event.button !== 0 || game.state !== 'playing') return;
+  if (event.pointerType !== 'mouse' && settings.swipeGravity) {
+    if (arenaTouch) return;
+    arenaTouch = { id: event.pointerId, start: { x: event.clientX, y: event.clientY } };
+    canvas.setPointerCapture(event.pointerId);
+    event.preventDefault();
+    return;
+  }
   renderer.aim = renderer.toWorld(event.clientX, event.clientY);
   castWell();
   if (event.pointerType !== 'mouse') renderer.aim = null;
 });
+canvas.addEventListener('pointerup', (event) => {
+  if (!arenaTouch || arenaTouch.id !== event.pointerId) return;
+  const gesture = arenaGesture(arenaTouch.start, { x: event.clientX, y: event.clientY });
+  arenaTouch = null;
+  if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+  if (game.state !== 'playing') return;
+  if (gesture.kind === 'swipe') {
+    if (game.flip(gesture.direction)) void audio.unlock();
+    armedWell = false;
+  } else if (gesture.kind === 'tap') {
+    renderer.aim = renderer.toWorld(event.clientX, event.clientY);
+    castWell();
+    renderer.aim = null;
+  }
+});
+for (const type of ['pointercancel', 'lostpointercapture'])
+  canvas.addEventListener(type, (event) => {
+    if ((event as PointerEvent).pointerId === arenaTouch?.id) arenaTouch = null;
+  });
 const pad = element('#joystick');
 function updateJoystick(event: PointerEvent): void {
   const bounds = pad.getBoundingClientRect();
@@ -760,6 +794,24 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  element('#room-name').textContent = tutorial.active
+    ? tutorial.lesson.name.toUpperCase()
+    : run.active
+      ? (run.phase === 'room'
+          ? game.room.name.split(' · ').at(-1)!
+          : biomes[run.biome].name
+        ).toUpperCase()
+      : 'THE ABANDONED LAB';
+  element('.section-heading > .mono').textContent = tutorial.active
+    ? `TRAINING ${tutorial.index + 1} / 7`
+    : run.active
+      ? `REGION ${run.biome + 1} / ${run.phase.toUpperCase()}`
+      : 'SECTOR 01 / FIRST CONTACT';
+  element('.sector-description').textContent = tutorial.active
+    ? 'Seven small experiments teach you to turn the room into a weapon.'
+    : run.active
+      ? `${biomes[run.biome].name}. ${run.rooms} chambers secured. Discoveries survive the expedition.`
+      : 'An abandoned research chamber. Unstable matter. A newly awakened Gravityborn.';
   const listKey = run.active
     ? [...game.abilities.levels].map(([id, level]) => `${id}:${level}`).join(',')
     : 'laboratory';
