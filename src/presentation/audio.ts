@@ -1,6 +1,6 @@
 import type { EventBus } from '../core/events';
 import type { Settings } from '../core/settings';
-import { abilityFeedback } from '../content/ability-feedback';
+import { abilitySound } from '../content/ability-feedback';
 
 export type MusicState =
   | 'off'
@@ -41,8 +41,16 @@ export class GameAudio {
     events.on('wellCreated', () => this.tone(90, 220, 0.5, 'sine', 0.2));
     events.on('collected', () => this.tone(500, 800, 0.08, 'sine', 0.035));
     events.on('abilityUsed', (event) => {
-      const style = abilityFeedback(event.id);
-      this.tone(style.startFrequency, style.endFrequency, style.soundDuration, 'triangle', 0.12);
+      for (const layer of abilitySound(event.id))
+        this.tone(
+          layer.start,
+          layer.end,
+          layer.duration,
+          layer.waveform,
+          layer.gain,
+          false,
+          layer.delay,
+        );
     });
     events.on('explosion', () => this.tone(130, 25, 0.35, 'sawtooth', 0.18));
     events.on('killed', () => this.tone(260, 80, 0.1, 'triangle', 0.12));
@@ -130,6 +138,7 @@ export class GameAudio {
     type: OscillatorType,
     gain: number,
     music = false,
+    delay = 0,
   ): void {
     if (
       !this.context ||
@@ -139,17 +148,18 @@ export class GameAudio {
     )
       return;
     const context = this.context;
+    const when = context.currentTime + delay;
     const oscillator = context.createOscillator();
     const envelope = context.createGain();
     oscillator.type = type;
-    oscillator.frequency.setValueAtTime(start, context.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(end, context.currentTime + duration);
-    envelope.gain.setValueAtTime(0, context.currentTime);
+    oscillator.frequency.setValueAtTime(start, when);
+    oscillator.frequency.exponentialRampToValueAtTime(end, when + duration);
+    envelope.gain.setValueAtTime(0, when);
     envelope.gain.linearRampToValueAtTime(
       gain * (music ? this.settings.musicVolume : this.settings.volume),
-      context.currentTime + (music ? 0.04 : 0.008),
+      when + (music ? 0.04 : 0.008),
     );
-    envelope.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, when + duration);
     oscillator.connect(envelope).connect(context.destination);
     this.voices++;
     if (music) this.musicVoices.add(oscillator);
@@ -159,7 +169,7 @@ export class GameAudio {
       this.voices--;
       this.musicVoices.delete(oscillator);
     };
-    oscillator.start();
-    oscillator.stop(context.currentTime + duration);
+    oscillator.start(when);
+    oscillator.stop(when + duration);
   }
 }

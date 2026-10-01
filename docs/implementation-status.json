@@ -301,7 +301,7 @@
         "src/progression/build.ts",
         "tests/synergies.test.ts"
       ],
-      "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Seven cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
+      "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Nine cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
     },
     {
       "section": 24,
@@ -369,7 +369,7 @@
         "tests/deployment.test.ts",
         "tests/progression.test.ts"
       ],
-      "remaining": "Eight classes have distinct starting powers and physical/stat trade-offs. Engineer now deploys a movable, destructible Gravity Beacon with an Orbital Engine evolution; its source follows the body and disappears on destruction/expiry. Core-mass collision damage respects Massborn and density changes. Automated behavior, save and browser rendering checks pass; human class identity and balance review remain open."
+      "remaining": "Ten classes have distinct starting powers and physical/stat trade-offs. Engineer now deploys a movable, destructible Gravity Beacon with an Orbital Engine evolution; its source follows the body and disappears on destruction/expiry. Core-mass collision damage respects Massborn and density changes. Automated behavior, save and browser rendering checks pass; human class identity and balance review remain open."
     },
     {
       "section": 29,
@@ -1029,9 +1029,11 @@
       "status": "partial",
       "evidence": [
         "src/presentation/audio.ts",
-        "src/presentation/feedback.ts"
+        "src/presentation/feedback.ts",
+        "src/content/ability-feedback.ts",
+        "tests/audio.test.ts"
       ],
-      "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues implemented. Listening tests and expanded power-specific timbres remain."
+      "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues are implemented. Effect families have distinct bounded layered waveforms, pitch direction and timing while preserving the shared twelve-voice budget, mute and cleanup. Listening tests on real speakers/headphones and final mix remain external."
     },
     {
       "section": 78,
