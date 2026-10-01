@@ -1,6 +1,7 @@
 import type { Expedition } from '../progression/expedition';
 import { biomes } from '../content/rooms';
 import { relicById } from '../content/relics';
+import { encounters } from '../content/events';
 
 const escape = (text: string): string =>
   text.replace(
@@ -18,7 +19,9 @@ export function expeditionView(run: Expedition): string {
         (choice) =>
           `<button class="run-card" data-upgrade="${choice.id}"><small>${choice.kind.toUpperCase()}</small><strong>${escape(choice.name)}</strong><span>${escape(choice.description)}</span></button>`,
       )
-      .join('')}</div>`;
+      .join(
+        '',
+      )}</div><button class="text-button" data-run-action="reroll" ${run.build.rerolls ? '' : 'disabled'}>Reroll · ${run.build.rerolls} remaining</button>`;
   else if (run.phase === 'map')
     content = `<h2>Choose your route</h2><p>Choose an illuminated chamber to continue. Every route reaches the region's guardian.</p><div class="run-map" aria-label="Expedition map">${Array.from(
       { length: 7 },
@@ -40,9 +43,10 @@ export function expeditionView(run: Expedition): string {
       .join(
         '',
       )}</div><button class="primary-button" data-run-action="leave-shop">Continue onward</button>`;
-  else if (run.phase === 'event')
-    content = `<h2>The fractured core</h2><p>${escape(run.message)}</p><div class="run-choices"><button class="run-card" data-event="risk" ${run.game.player.health <= 25 ? 'disabled' : ''}><strong>Overload the core</strong><span>Lose 25 integrity. Gain a rare or legendary relic.</span></button><button class="run-card" data-event="repair"><strong>Salvage its shell</strong><span>Restore 18 integrity.</span></button><button class="run-card" data-event="leave"><strong>Leave it intact</strong><span>Continue without changing your core.</span></button></div>`;
-  else if (run.phase === 'reward')
+  else if (run.phase === 'event') {
+    const encounter = encounters.find((encounter) => encounter.id === run.eventId)!;
+    content = `<h2>${escape(encounter.name)}</h2><p>${escape(encounter.text)}</p><div class="run-choices">${encounter.choices.map((choice) => `<button class="run-card" data-event="${choice.id}" ${run.canResolveEvent(choice.id) ? '' : 'disabled'}><strong>${escape(choice.name)}</strong><span>${escape(choice.description)}</span></button>`).join('')}</div>`;
+  } else if (run.phase === 'reward')
     content = `<h2>Chamber secured</h2><p>${escape(run.message)}</p><button class="primary-button" data-run-action="advance">Continue expedition →</button>`;
   else if (run.phase === 'summary')
     content = `<h2>${run.won ? 'Expedition complete' : 'The core went dark'}</h2><p>${escape(run.message)}</p><p>${run.rooms} rooms explored · ${run.kills} hostiles defeated · ${Math.floor(run.elapsed / 60)}m ${Math.floor(run.elapsed % 60)}s</p><p class="mono">SEED ${escape(run.seed)}</p><button class="primary-button" data-run-action="new">New expedition</button><button class="text-button" data-run-action="lab">Return to laboratory</button>`;

@@ -113,7 +113,7 @@ it('completes a three-region run with upgrades, valid routes, shops, and single 
         expect(run.buy(item.id)).toBe(false);
       }
       run.leaveShop();
-    } else if (run.phase === 'event') run.resolveEvent('repair');
+    } else if (run.phase === 'event') run.resolveEvent('leave');
     else if (run.phase === 'reward') {
       const rooms = run.rooms;
       game.events.emit('ended', { won: true });

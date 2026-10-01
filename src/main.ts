@@ -20,7 +20,16 @@ import {
   unlockClass,
   type Profile,
 } from './progression/profile';
-import { classes } from './content/classes';
+import { profileView } from './presentation/profile';
+import {
+  craftEquipment,
+  upgradeEquipment,
+  reforgeEquipment,
+  purchaseResearch,
+} from './progression/profile';
+import { equipmentById } from './content/equipment';
+import { modes, type RunMode } from './content/modes';
+import { contracts, phenomena, type Contract } from './content/phenomena';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -123,8 +132,27 @@ function persist(): void {
   saveStore.save({ profile, checkpoint });
 }
 function renderProfile(): void {
-  element('#profile-dialog').innerHTML =
-    `<div class="dialog-header"><h2 id="profile-title">The observatory</h2><button data-run-action="profile-close" aria-label="Close progression">×</button></div><p class="run-stats mono">${profile.shards} GRAVITY SHARDS · ${profile.research} RESEARCH · ${profile.runs} RUNS · ${profile.wins} WINS</p><p class="dialog-copy">Discoveries and class mastery survive death. Expeditions save at room boundaries; reloading returns to the last saved route.</p>${checkpoint ? '<button class="primary-button" data-run-action="resume">Resume saved route</button>' : ''}<label class="setting-row">Expedition seed <input id="run-seed" maxlength="64" placeholder="Random seed"></label><div class="class-grid">${classes.map((definition) => `<button class="run-card" data-class="${definition.id}" ${!profile.classes.includes(definition.id) && profile.shards < definition.cost ? 'disabled' : ''}><small>${profile.classes.includes(definition.id) ? (profile.selectedClass === definition.id ? 'SELECTED' : `MASTERY ${profile.mastery[definition.id] ?? 0}`) : `UNLOCK · ${definition.cost} SHARDS`}</small><strong>${definition.name}</strong><span>${definition.description}</span></button>`).join('')}</div><button class="primary-button" data-run-action="new">Start selected class</button><div class="save-tools"><button class="text-button" data-run-action="export">Export save</button><label class="text-button">Import save <input id="import-save" type="file" accept="application/json" hidden></label><span class="mono">SAVE: ${saveStore.state.toUpperCase()}</span></div>`;
+  const preserved = Object.fromEntries(
+    ['run-mode', 'run-contract', 'run-difficulty'].map((id) => [
+      id,
+      document.querySelector<HTMLSelectElement>(`#${id}`)?.value,
+    ]),
+  );
+  const seed = document.querySelector<HTMLInputElement>('#run-seed')?.value ?? '';
+  const region = document.querySelector<HTMLSelectElement>('#run-region')?.value ?? '0';
+  const open = [...element('#profile-dialog').querySelectorAll('details')].map(
+    (detail) => detail.open,
+  );
+  element('#profile-dialog').innerHTML = profileView(profile, saveStore.state, Boolean(checkpoint));
+  element<HTMLInputElement>('#run-seed').value = seed;
+  element<HTMLSelectElement>('#run-region').value = region;
+  for (const [id, value] of Object.entries(preserved))
+    if (value) element<HTMLSelectElement>(`#${id}`).value = value;
+  element('#profile-dialog')
+    .querySelectorAll('details')
+    .forEach((detail, index) => {
+      if (open[index] !== undefined) detail.open = open[index];
+    });
   element<HTMLInputElement>('#import-save').onchange = async (event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
@@ -146,6 +174,32 @@ element('#profile-open').onclick = () => {
   renderProfile();
   openDialog('#profile-dialog');
 };
+document.addEventListener('change', (event) => {
+  const select = event.target as HTMLSelectElement;
+  if (select.id === 'run-mode') {
+    element('#mode-description').textContent =
+      modes.find((mode) => mode.id === select.value)?.description ?? '';
+    return;
+  }
+  if (select.id === 'run-contract') {
+    element('#contract-description').textContent =
+      contracts.find((contract) => contract.id === select.value)?.description ?? '';
+    return;
+  }
+  if (select.dataset.equipSlot) {
+    const slot = select.dataset.equipSlot;
+    if (select.value === '') delete profile.loadout[slot];
+    else if (profile.equipment[select.value] && equipmentById.get(select.value)?.slot === slot)
+      profile.loadout[slot] = select.value;
+  } else if (select.dataset.affixFor) {
+    if (!reforgeEquipment(profile, select.dataset.affixFor, select.value))
+      toast('Reforging needs Precision Workshop and 3 research.');
+  } else if (select.id === 'mutation-select' && profile.skills.includes('mutations'))
+    profile.mutation = select.value;
+  else return;
+  saveStore.save({ profile, checkpoint });
+  renderProfile();
+});
 
 function refreshRun(): void {
   if (!run.active) return;
@@ -180,6 +234,14 @@ function refreshRun(): void {
 document.addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if (!button || button.disabled) return;
+  if (button.dataset.research || button.dataset.craft || button.dataset.upgradeEquipment) {
+    if (button.dataset.research) purchaseResearch(profile, button.dataset.research);
+    if (button.dataset.craft) craftEquipment(profile, button.dataset.craft);
+    if (button.dataset.upgradeEquipment) upgradeEquipment(profile, button.dataset.upgradeEquipment);
+    saveStore.save({ profile, checkpoint });
+    renderProfile();
+    return;
+  }
   if (button.dataset.class) {
     const id = button.dataset.class;
     if (profile.classes.includes(id) || unlockClass(profile, id)) profile.selectedClass = id;
@@ -211,6 +273,17 @@ document.addEventListener('click', (event) => {
       seed ||
         `${new Date().toISOString().slice(0, 10)}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`,
       profile.selectedClass,
+      profile,
+      Number(document.querySelector<HTMLSelectElement>('#run-region')?.value ?? 0),
+      {
+        mode: (document.querySelector<HTMLSelectElement>('#run-mode')?.value ??
+          'standard') as RunMode,
+        contract: (document.querySelector<HTMLSelectElement>('#run-contract')?.value ??
+          'none') as Contract,
+        difficulty: Number(
+          document.querySelector<HTMLSelectElement>('#run-difficulty')?.value ?? 0,
+        ),
+      },
     );
     feedback.clear();
     renderer.clear();
@@ -238,6 +311,7 @@ document.addEventListener('click', (event) => {
       toast(run.message);
     }
   } else if (button.dataset.upgrade) run.build.choose(button.dataset.upgrade);
+  else if (button.dataset.runAction === 'reroll') run.build.reroll();
   else if (button.dataset.buy) run.buy(button.dataset.buy);
   else if (button.dataset.event)
     run.resolveEvent(button.dataset.event as 'risk' | 'repair' | 'leave');
@@ -591,13 +665,21 @@ function updateHud(fps: number): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-direction]')) {
     button.classList.toggle('active', button.dataset.direction === direction);
     button.setAttribute('aria-pressed', String(button.dataset.direction === direction));
-    button.disabled = game.state !== 'playing';
+    button.disabled = game.state !== 'playing' || game.rules.directionLocked;
   }
   element('#status').textContent =
     game.state === 'won'
       ? 'CHAMBER CLEARED · EXPERIMENT COMPLETE'
       : `${game.enemyCount} HOSTILES · ${game.state === 'paused' ? 'PAUSED' : 'CHAMBER SEALED'}`;
   element('#chain').textContent = `${game.chains.current}× CHAIN`;
+  if (run.active && run.phase === 'room') {
+    const phenomenon = phenomena.find((phenomenon) => phenomenon.id === game.rules.phenomenon);
+    element('#status').textContent = game.room.puzzle
+      ? game.environment.switchActive
+        ? 'EXIT OPEN · REACH THE GATE'
+        : 'MOVE HEAVY MATTER TO THE SWITCH'
+      : `${game.enemyCount} HOSTILES${phenomenon ? ` · ${phenomenon.name.toUpperCase()}` : ''}`;
+  }
   element<HTMLButtonElement>('#well').disabled = game.state !== 'playing' || game.wellCooldown > 0;
   element('#well').classList.toggle('armed', armedWell);
   element('#well-state').textContent =

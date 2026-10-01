@@ -13,6 +13,7 @@ export interface Entity {
   definition: EntityDefinition;
   body: Matter.Body;
   health: number;
+  maxHealth: number;
   alive: boolean;
   invulnerability: number;
   lastImpact: number;
@@ -103,6 +104,7 @@ export class PhysicsWorld {
       kind,
       definition,
       health: definition.health,
+      maxHealth: definition.health,
       alive: true,
       invulnerability: 0,
       lastImpact: -Infinity,

@@ -35,7 +35,8 @@ export class BossSystem {
       state = { next: this.host.time + 2, phase: 1, cycle: 0, satellites: [], walls: [] };
       this.states.set(entity.id, state);
     }
-    state.phase = entity.health > 360 ? 1 : entity.health > 180 ? 2 : 3;
+    state.phase =
+      entity.health > (entity.maxHealth * 2) / 3 ? 1 : entity.health > entity.maxHealth / 3 ? 2 : 3;
     entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / 1.1);
     const toward = normalize(subtract(this.host.player.body.position, entity.body.position));
     this.host.world.accelerate(entity, scale(toward, 0.00018));

@@ -8,11 +8,32 @@ import type { EntityKind } from '../physics/world';
 import { classById } from '../content/classes';
 import { record, finite, strings } from '../core/save';
 import type { AbilitySnapshot } from '../gameplay/abilities';
+import type { Profile } from './profile';
+import { encounters } from '../content/events';
+import { Random } from '../core/random';
+import { modes, rotatingChallenge, type RunMode } from '../content/modes';
+import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
+import { bossDefinitions, type BossKind } from '../content/bosses';
+export interface RunOptions {
+  mode?: RunMode;
+  contract?: Contract;
+  difficulty?: number;
+  date?: Date;
+}
 
 export type ExpeditionPhase = 'inactive' | 'map' | 'room' | 'reward' | 'shop' | 'event' | 'summary';
 export class Expedition {
   id = '';
   classId = 'manipulator';
+  startBiome = 0;
+  eventId = 'fracture';
+  mode: RunMode = 'standard';
+  contract: Contract = 'none';
+  difficulty = 0;
+  depth = 0;
+  phenomenon: Phenomenon | '' = '';
+  score = 0;
+  bestChain = 0;
   phase: ExpeditionPhase = 'inactive';
   seed = '';
   biome = 0;
@@ -36,6 +57,8 @@ export class Expedition {
     game.events.on('ended', (event) => {
       if (this.phase !== 'room') return;
       this.elapsed += game.time;
+      this.score += game.stats.score;
+      this.bestChain = Math.max(this.bestChain, game.chains.best);
       if (!event.won) {
         this.phase = 'summary';
         this.message = 'The core fell silent. Your discoveries remain.';
@@ -54,11 +77,47 @@ export class Expedition {
         !node.visited && (this.current ? this.current.next.includes(node.id) : node.row === 0),
     );
   }
-  start(seed: string, classId = 'manipulator'): void {
+  start(
+    seed: string,
+    classId = 'manipulator',
+    profile?: Profile,
+    biome = 0,
+    options: RunOptions = {},
+  ): void {
+    this.mode = modes.some((mode) => mode.id === options.mode) ? options.mode! : 'standard';
+    if (this.mode === 'endless' && !profile?.skills.includes('endless')) this.mode = 'standard';
+    this.contract = contracts.some((contract) => contract.id === options.contract)
+      ? options.contract!
+      : 'none';
+    this.difficulty = Math.max(0, Math.min(6, Math.floor(options.difficulty ?? 0)));
+    this.depth = 0;
+    this.phenomenon = '';
+    this.score = 0;
+    this.bestChain = 0;
+    if (this.mode === 'daily' || this.mode === 'weekly') {
+      const challenge = rotatingChallenge(this.mode, options.date);
+      seed = challenge.seed;
+      classId = challenge.classId;
+      this.phenomenon = challenge.phenomenon;
+      profile = undefined;
+      biome = 0;
+      this.contract = 'none';
+      this.difficulty = 1;
+    }
+    if (this.mode === 'challenge') {
+      this.phenomenon = 'rotating';
+      this.difficulty = Math.max(2, this.difficulty);
+    }
+    if (this.mode === 'campaign') biome = 0;
     this.id = crypto.randomUUID();
     this.classId = classById.has(classId) ? classId : 'manipulator';
     this.seed = seed.trim().slice(0, 64) || 'gravityborn';
-    this.biome = 0;
+    this.startBiome =
+      profile?.skills.includes('navigation') &&
+      (profile.skills.includes('survey') || profile.discoveries.includes(`biome:${biome}`))
+        ? Math.max(0, Math.min(7, Math.floor(biome)))
+        : 0;
+    this.biome = this.startBiome;
     this.rooms = 0;
     this.kills = 0;
     this.elapsed = 0;
@@ -67,9 +126,10 @@ export class Expedition {
     this.game.abilities.levels.clear();
     for (const id of classById.get(this.classId)!.powers) this.game.abilities.learn(id);
     this.build = new RunBuild(this.game, this.seed, this.classId);
+    if (profile) this.build.configure(profile);
     this.build.apply();
     this.game.player.health = this.game.maxHealth;
-    this.map = generateMap(this.seed, 0);
+    this.map = this.createMap();
     this.current = undefined;
     this.phase = 'map';
     this.message = 'Choose a route. Health and your build carry between rooms.';
@@ -81,13 +141,57 @@ export class Expedition {
     const health = this.game.player.health;
     const powers = this.game.abilities.snapshot();
     this.current = node;
-    this.game.reset(true, buildRoom(this.seed, node.id, node.type, this.biome, this.rooms));
+    const room = buildRoom(
+      `${this.seed}:${this.depth}`,
+      node.id,
+      node.type,
+      this.biome,
+      this.rooms + this.difficulty,
+    );
+    if (this.mode === 'boss_rush')
+      room.spawns = room.spawns.map((spawn) =>
+        spawn.kind in bossDefinitions
+          ? { ...spawn, kind: (Object.keys(bossDefinitions) as BossKind[])[node.row % 5] }
+          : spawn,
+      );
+    if (this.difficulty >= 2) {
+      const enemy = room.spawns.find(
+        (spawn) => spawn.kind !== 'player' && entityDefinitions[spawn.kind].faction === 'enemy',
+      );
+      if (enemy)
+        enemy.elite = ['inverted', 'orbital', 'vampire', 'heavy', 'singularity'][
+          Math.min(4, this.difficulty - 2)
+        ] as 'inverted' | 'orbital' | 'vampire' | 'heavy' | 'singularity';
+    }
+    if (this.difficulty >= 3)
+      room.hazards.push({
+        kind: 'laser',
+        x: 600,
+        y: 400,
+        width: 650,
+        height: 18,
+        period: 4,
+        phase: 0,
+      });
+    this.game.reset(true, room);
     this.game.abilities.restore(powers);
     this.build.apply();
     this.game.abilities.restore(powers);
     this.game.player.health = Math.min(this.game.maxHealth, health);
     this.game.abilities.cooldowns.clear();
     this.game.abilities.energy = this.game.abilities.maxEnergy;
+    const random = new Random(`${this.seed}:${this.depth}:${node.id}:anomaly`);
+    const phenomenon =
+      this.phenomenon ||
+      (this.depth > 0 || this.difficulty >= 4 || (this.rooms > 2 && random.next() < 0.18)
+        ? random.pick(phenomena).id
+        : '');
+    this.game.rules.configure(
+      `${this.seed}:${node.id}`,
+      phenomenon,
+      this.contract,
+      Math.min(12, this.difficulty + this.depth),
+    );
     if (['combat', 'elite', 'challenge', 'boss', 'puzzle'].includes(node.type)) {
       this.phase = 'room';
       this.message =
@@ -108,7 +212,9 @@ export class Expedition {
       this.message = 'The salvage trader accepts matter shards.';
     } else if (node.type === 'event') {
       this.phase = 'event';
-      this.message = 'A damaged research core offers an unstable exchange.';
+      const encounter = new Random(`${this.seed}:${node.id}:event`).pick(encounters);
+      this.eventId = encounter.id;
+      this.message = encounter.text;
     } else {
       if (node.type === 'rest') {
         const amount = Math.ceil(this.game.maxHealth * 0.4);
@@ -129,33 +235,54 @@ export class Expedition {
     this.message = `Acquired ${relicById.get(id)!.name}.`;
     return true;
   }
-  resolveEvent(choice: 'risk' | 'repair' | 'leave'): boolean {
+  resolveEvent(choice: string): boolean {
     if (this.phase !== 'event') return false;
-    if (choice === 'risk') {
-      if (this.game.player.health <= 25) return false;
-      this.game.player.health -= 25;
-      this.grantRelic(true);
-    } else if (choice === 'repair') {
-      this.game.player.health = Math.min(this.game.maxHealth, this.game.player.health + 18);
-      this.message = 'You salvaged the core for 18 integrity.';
-    } else this.message = 'You left the unstable core intact.';
+    const effect = encounters
+      .find((event) => event.id === this.eventId)
+      ?.choices.find((candidate) => candidate.id === choice);
+    if (!effect || !this.canResolveEvent(choice)) return false;
+    this.game.player.health -= effect.healthCost ?? 0;
+    this.build.currency -= effect.currencyCost ?? 0;
+    this.game.player.health = Math.min(
+      this.game.maxHealth,
+      this.game.player.health + (effect.heal ?? 0),
+    );
+    this.build.currency += effect.currency ?? 0;
+    this.build.gainXP(effect.xp ?? 0);
+    if (effect.power) this.game.abilities.learn(effect.power);
+    if (effect.mutation) this.build.mutation = effect.mutation;
+    this.build.apply();
+    this.message = effect.description;
+    if (effect.relic) this.grantRelic(effect.relic === 'rare');
     this.completeRoom(false);
     return true;
+  }
+  canResolveEvent(id: string): boolean {
+    const choice = encounters
+      .find((event) => event.id === this.eventId)
+      ?.choices.find((choice) => choice.id === id);
+    return Boolean(
+      choice &&
+        this.game.player.health > (choice.healthCost ?? 0) &&
+        this.build.currency >= (choice.currencyCost ?? 0),
+    );
   }
   leaveShop(): void {
     if (this.phase === 'shop') this.completeRoom(false);
   }
   advance(): boolean {
     if (this.phase !== 'reward' || this.build.pending > 0) return false;
-    if (this.current?.type === 'boss') {
-      if (this.biome === 2) {
+    if (this.current?.type === 'boss' && this.current.next.length === 0) {
+      const limit = modes.find((mode) => mode.id === this.mode)!.regions;
+      if (this.mode !== 'endless' && this.biome >= Math.min(7, this.startBiome + limit - 1)) {
         this.won = true;
         this.phase = 'summary';
-        this.message = 'Three regions liberated. The expedition returns with new knowledge.';
+        this.message = 'The route is liberated. The expedition returns with new knowledge.';
         return true;
       }
-      this.biome++;
-      this.map = generateMap(this.seed, this.biome);
+      this.biome = (this.biome + 1) % 8;
+      this.depth++;
+      this.map = this.createMap();
       this.current = undefined;
     }
     this.phase = 'map';
@@ -170,6 +297,15 @@ export class Expedition {
     return {
       id: this.id,
       classId: this.classId,
+      startBiome: this.startBiome,
+      eventId: this.eventId,
+      mode: this.mode,
+      contract: this.contract,
+      difficulty: this.difficulty,
+      depth: this.depth,
+      phenomenon: this.phenomenon,
+      score: this.score,
+      bestChain: this.bestChain,
       seed: this.seed,
       biome: this.biome,
       visited: this.map.filter((node) => node.visited).map((node) => node.id),
@@ -201,8 +337,13 @@ export class Expedition {
       const phases = ['map', 'reward', 'shop', 'event', 'summary'];
       if (typeof data.phase !== 'string' || !phases.includes(data.phase)) return false;
       const biome = Math.floor(finite(data.biome, 0, 7));
+      const startBiome = Math.floor(finite(data.startBiome ?? 0, 0, 7));
       const visited = strings(data.visited, 30);
-      const map = generateMap(data.seed, biome);
+      const mode = modes.some((mode) => mode.id === data.mode)
+        ? (data.mode as RunMode)
+        : 'standard';
+      const depth = Math.floor(finite(data.depth ?? 0, 0, 100000));
+      const map = this.createMap(data.seed, biome, mode, depth);
       if (visited.some((id) => !map.some((node) => node.id === id))) return false;
       const current =
         data.current === null ? undefined : map.find((node) => node.id === data.current);
@@ -230,6 +371,22 @@ export class Expedition {
       this.seed = data.seed;
       this.classId = data.classId;
       this.biome = biome;
+      this.startBiome = startBiome;
+      this.mode = mode;
+      this.depth = depth;
+      this.contract = contracts.some((contract) => contract.id === data.contract)
+        ? (data.contract as Contract)
+        : 'none';
+      this.difficulty = finite(data.difficulty ?? 0, 0, 6);
+      this.phenomenon = phenomena.some((item) => item.id === data.phenomenon)
+        ? (data.phenomenon as Phenomenon)
+        : '';
+      this.score = finite(data.score ?? 0, 0, 1000000000);
+      this.bestChain = finite(data.bestChain ?? 0, 0, 1000);
+      this.eventId =
+        typeof data.eventId === 'string' && encounters.some((event) => event.id === data.eventId)
+          ? data.eventId
+          : 'fracture';
       this.map = map;
       this.current = current;
       this.phase = data.phase as ExpeditionPhase;
@@ -263,14 +420,35 @@ export class Expedition {
     this.build.addRelic(relic.id);
     this.message = `Discovered ${relic.name}: ${relic.description}`;
   }
+  private createMap(
+    seed = this.seed,
+    biome = this.biome,
+    mode = this.mode,
+    depth = this.depth,
+  ): MapNode[] {
+    if (mode === 'boss_rush' || mode === 'gauntlet')
+      return Array.from({ length: mode === 'boss_rush' ? 5 : 7 }, (_, row) => ({
+        id: `${biome}:${row}:1`,
+        row,
+        lane: 1,
+        type: mode === 'boss_rush' || row === 6 ? 'boss' : 'elite',
+        next: row === (mode === 'boss_rush' ? 4 : 6) ? [] : [`${biome}:${row + 1}:1`],
+        visited: false,
+      }));
+    return generateMap(depth ? `${seed}:${depth}` : seed, biome);
+  }
   private completeRoom(combat = true): void {
     if (!this.current || this.current.visited) return;
     this.current.visited = true;
     this.rooms++;
-    this.build.currency += this.current.type === 'challenge' ? 35 : 15;
+    const currency = Math.floor(
+      (this.current.type === 'challenge' ? 35 : 15) *
+        contracts.find((contract) => contract.id === this.contract)!.reward,
+    );
+    this.build.currency += currency;
     this.build.gainXP(this.current.type === 'boss' ? 100 : 30);
     if (combat) {
-      this.message = `Chamber cleared. +${this.current.type === 'challenge' ? 35 : 15} matter shards.`;
+      this.message = `Chamber cleared. +${currency} matter shards.`;
       if (['elite', 'boss', 'puzzle', 'challenge'].includes(this.current.type))
         this.grantRelic(this.current.type === 'boss');
     }

@@ -249,15 +249,15 @@
       "title": "Run Structure",
       "status": "partial",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 22,
@@ -337,9 +337,17 @@
     {
       "section": 27,
       "title": "Equipment",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 28,
@@ -374,16 +382,32 @@
     {
       "section": 30,
       "title": "Meta Progression Trees",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 31,
       "title": "Mutation System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 32,
@@ -395,9 +419,17 @@
     {
       "section": 33,
       "title": "Gravitational Phenomena",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 34,
@@ -416,9 +448,17 @@
     {
       "section": 36,
       "title": "Resource Collection",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 37,
@@ -430,9 +470,17 @@
     {
       "section": 38,
       "title": "Risk / Reward",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 39,
@@ -451,23 +499,47 @@
     {
       "section": 41,
       "title": "Endless Mode",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 42,
       "title": "Infinite Build Scaling",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 43,
       "title": "Difficulty System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 44,
@@ -556,9 +628,17 @@
     {
       "section": 56,
       "title": "Daily / Rotating Content",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/events.ts",
+        "src/content/modes.ts",
+        "src/gameplay/rules.ts",
+        "tests/equipment.test.ts",
+        "tests/modes.test.ts"
+      ],
+      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
     },
     {
       "section": 57,

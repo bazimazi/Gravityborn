@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { newProfile } from '../../src/progression/profile';
 
 interface Snapshot {
   state: string;
@@ -13,6 +14,39 @@ interface Snapshot {
 }
 const snapshot = (page: Page): Promise<Snapshot> =>
   page.evaluate(() => (window as unknown as { __gravityborn: () => Snapshot }).__gravityborn());
+
+test('observatory purchases equipment and research, then starts a contracted run', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const profile = newProfile();
+  profile.shards = 100;
+  profile.research = 20;
+  await page.evaluate(
+    (profile) => localStorage.setItem('gravityborn.save', JSON.stringify({ version: 1, profile })),
+    profile,
+  );
+  await page.reload();
+  await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+  await page.getByText('Research · six progression trees', { exact: true }).click();
+  await page.locator('[data-research="field_theory"]').click();
+  await expect(page.locator('[data-research="field_theory"]')).toBeDisabled();
+  await page.getByText('Equipment · six slots', { exact: true }).click();
+  await page.getByText('Craft equipment · 50 designs', { exact: true }).click();
+  await page.locator('[data-craft="basalt_core"]').click();
+  await expect(page.locator('[data-equip-slot="core"]')).toHaveValue('basalt_core');
+  await page.locator('#run-contract').selectOption('locked');
+  await page.locator('#run-mode').selectOption('quick');
+  await page.getByRole('button', { name: 'Start selected class', exact: true }).click();
+  await page.locator('[data-room]:enabled').click();
+  await expect(page.getByRole('button', { name: 'Gravity left', exact: true })).toBeDisabled();
+  const saved = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('gravityborn.save')!).payload.profile,
+  );
+  expect(saved.equipment.basalt_core).toBe(1);
+  expect(saved.skills).toContain('field_theory');
+  expect(saved.shards).toBe(88);
+});
 
 test('starts a seeded expedition and restricts powers to the current build', async ({ page }) => {
   await page.goto('/');

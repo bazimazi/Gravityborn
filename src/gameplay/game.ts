@@ -13,6 +13,7 @@ import type { RoomDefinition } from '../content/rooms';
 import type { Trigger } from '../progression/modifiers';
 import { Random } from '../core/random';
 import { BossSystem } from './bosses';
+import { RuleSystem } from './rules';
 
 const laboratory: RoomDefinition = {
   ...arena,
@@ -47,6 +48,7 @@ export class Game {
   enemies!: EnemySystem;
   environment!: EnvironmentSystem;
   bosses!: BossSystem;
+  rules!: RuleSystem;
   room: RoomDefinition = laboratory;
   state: GameState = 'ready';
   time = 0;
@@ -100,17 +102,26 @@ export class Game {
           position: { ...ability.position },
           time: this.time + 0.12,
         });
-      if (rule.effect === 'orbit' && this.gravity.fields.size < 48) {
+      if (
+        ['orbit', 'personal', 'afterimage', 'horizon'].includes(rule.effect) &&
+        this.gravity.fields.size < 48 &&
+        (rule.effect !== 'horizon' || this.player.health < this.maxHealth * 0.35)
+      ) {
         const cause = this.createCause();
         this.gravity.addField({
           source: 'relic',
-          mode: 'vortex',
+          mode:
+            rule.effect === 'orbit'
+              ? 'vortex'
+              : rule.effect === 'afterimage'
+                ? 'directional'
+                : 'radial',
           position: { ...this.player.body.position },
-          direction: { x: 0, y: 0 },
+          direction: { ...this.gravity.direction },
           strength: rule.value,
           radius: 170,
           falloff: 'linear',
-          remaining: 1.1,
+          remaining: rule.effect === 'afterimage' ? 3 : 1.1,
         });
         for (const entity of this.world.entities.values())
           if (
@@ -141,6 +152,7 @@ export class Game {
     this.stats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0 };
     this.enemies = new EnemySystem(this);
     this.bosses = new BossSystem(this);
+    this.rules = new RuleSystem(this);
     for (const wall of room.walls) this.world.addWall(wall.x, wall.y, wall.width, wall.height);
     if (populate) {
       for (const spawn of room.spawns) {
@@ -191,6 +203,7 @@ export class Game {
   }
 
   flip(direction: Vec2): boolean {
+    if (this.rules.directionLocked) return false;
     if (this.abilities.modifiers.evaluate('randomGravity', 0) > 0)
       direction = this.random.pick(
         [
@@ -231,7 +244,8 @@ export class Game {
     const wells = [...this.gravity.fields.values()].filter(
       (field) => field.source === 'player-well',
     );
-    if (wells.length >= balance.gravity.maxWells) this.gravity.removeField(wells[0].id);
+    if (wells.length >= this.abilities.modifiers.evaluate('maxWells', balance.gravity.maxWells))
+      this.gravity.removeField(wells[0].id);
     if (this.gravity.fields.size >= balance.physics.maxFields) return false;
     const chain = this.chains.start(this.time);
     const fieldId = this.gravity.addField({
@@ -283,6 +297,7 @@ export class Game {
         this.abilities.cast(echo.id, echo.position, true);
       }
     this.abilities.tick(dt);
+    this.rules.tick();
     this.environment.tick();
     this.wellCooldown = Math.max(0, this.wellCooldown - dt);
     this.gravity.tick(dt);
@@ -371,7 +386,10 @@ export class Game {
 
   private resolveCollision({ a, b, speed, position }: CollisionFact): void {
     if ((a && !a.alive) || (b && !b.alive)) return;
-    if (speed > balance.combat.impactThreshold) this.trigger('OnCollision');
+    if (speed > balance.combat.impactThreshold) {
+      this.trigger('OnCollision');
+      this.rules.impact(position);
+    }
     if (speed > balance.combat.impactFeedbackThreshold)
       this.events.emit('impact', { position, force: speed, color: (a ?? b)!.definition.color });
     const projectile = a?.kind === 'projectile' ? a : b?.kind === 'projectile' ? b : undefined;

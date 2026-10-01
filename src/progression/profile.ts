@@ -1,6 +1,8 @@
 import { classById } from '../content/classes';
 import { record, finite, strings } from '../core/save';
 import type { Expedition } from './expedition';
+import { equipmentById, affixes } from '../content/equipment';
+import { researchNodes, mutations } from '../content/research';
 export interface Profile {
   shards: number;
   research: number;
@@ -15,6 +17,8 @@ export interface Profile {
   skills: string[];
   equipment: Record<string, number>;
   loadout: Record<string, string>;
+  affixes: Record<string, string>;
+  mutation: string;
 }
 export function newProfile(): Profile {
   return {
@@ -31,6 +35,8 @@ export function newProfile(): Profile {
     skills: [],
     equipment: {},
     loadout: {},
+    affixes: {},
+    mutation: '',
   };
 }
 export function readProfile(value: unknown): Profile {
@@ -49,9 +55,22 @@ export function readProfile(value: unknown): Profile {
     for (const [id, amount] of Object.entries(record(data.mastery ?? {})))
       if (classById.has(id)) profile.mastery[id] = Math.floor(finite(amount, 0, 100000000));
     for (const [id, level] of Object.entries(record(data.equipment ?? {})))
-      if (id.length < 100) profile.equipment[id] = Math.floor(finite(level, 1, 20));
+      if (equipmentById.has(id)) profile.equipment[id] = Math.floor(finite(level, 1, 5));
     for (const [slot, id] of Object.entries(record(data.loadout ?? {})))
-      if (slot.length < 30 && typeof id === 'string' && id.length < 100) profile.loadout[slot] = id;
+      if (typeof id === 'string' && equipmentById.get(id)?.slot === slot && profile.equipment[id])
+        profile.loadout[slot] = id;
+    for (const [id, affix] of Object.entries(record(data.affixes ?? {})))
+      if (
+        profile.equipment[id] &&
+        typeof affix === 'string' &&
+        affixes.some((item) => item.id === affix)
+      )
+        profile.affixes[id] = affix;
+    if (
+      typeof data.mutation === 'string' &&
+      mutations.some((mutation) => mutation.id === data.mutation)
+    )
+      profile.mutation = data.mutation;
     return profile;
   } catch {
     return newProfile();
@@ -76,5 +95,49 @@ export function settleRun(profile: Profile, run: Expedition): boolean {
   profile.mastery[run.classId] = (profile.mastery[run.classId] ?? 0) + run.kills;
   for (const id of [...run.build.relics, ...run.game.abilities.levels.keys()])
     if (!profile.discoveries.includes(id)) profile.discoveries.push(id);
+  for (let biome = run.startBiome; biome <= run.biome; biome++)
+    if (!profile.discoveries.includes(`biome:${biome}`)) profile.discoveries.push(`biome:${biome}`);
+  return true;
+}
+export function purchaseResearch(profile: Profile, id: string): boolean {
+  const node = researchNodes.find((node) => node.id === id);
+  if (
+    !node ||
+    profile.skills.includes(id) ||
+    profile.research < node.cost ||
+    (node.requires && !profile.skills.includes(node.requires))
+  )
+    return false;
+  profile.research -= node.cost;
+  profile.skills.push(id);
+  return true;
+}
+export function craftEquipment(profile: Profile, id: string): boolean {
+  const item = equipmentById.get(id);
+  if (!item || profile.equipment[id] || profile.shards < item.cost) return false;
+  profile.shards -= item.cost;
+  profile.equipment[id] = 1;
+  profile.loadout[item.slot] = id;
+  return true;
+}
+export function upgradeEquipment(profile: Profile, id: string): boolean {
+  const level = profile.equipment[id];
+  if (equipmentById.get(id)?.rarity === 'legendary') return false;
+  if (!level || level >= 5 || profile.research < level + 1) return false;
+  profile.research -= level + 1;
+  profile.equipment[id]++;
+  return true;
+}
+export function reforgeEquipment(profile: Profile, id: string, affix: string): boolean {
+  if (
+    !profile.skills.includes('affixes') ||
+    !profile.equipment[id] ||
+    profile.research < 3 ||
+    !affixes.some((item) => item.id === affix) ||
+    profile.affixes[id] === affix
+  )
+    return false;
+  profile.research -= 3;
+  profile.affixes[id] = affix;
   return true;
 }

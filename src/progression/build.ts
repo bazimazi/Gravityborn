@@ -6,6 +6,9 @@ import type { Game } from '../gameplay/game';
 import type { Modifier } from './modifiers';
 import { classById } from '../content/classes';
 import { record, finite, strings } from '../core/save';
+import { equipmentById, equipmentSets, affixes } from '../content/equipment';
+import { researchNodes, mutations } from '../content/research';
+import type { Profile } from './profile';
 
 export interface UpgradeChoice {
   id: string;
@@ -46,6 +49,10 @@ const passives: {
   },
 ];
 export class RunBuild {
+  equipment: { id: string; level: number; affix: string }[] = [];
+  skills: string[] = [];
+  mutation = '';
+  rerolls = 0;
   xp = 0;
   level = 1;
   pending = 0;
@@ -63,6 +70,24 @@ export class RunBuild {
   }
   get threshold(): number {
     return 40 + this.level * 20;
+  }
+  configure(profile: Profile): void {
+    this.equipment = Object.values(profile.loadout)
+      .filter((id) => profile.equipment[id] && equipmentById.has(id))
+      .map((id) => ({ id, level: profile.equipment[id], affix: profile.affixes[id] ?? '' }));
+    this.skills = [...profile.skills];
+    this.mutation = profile.skills.includes('mutations') ? profile.mutation : '';
+    this.rerolls =
+      Number(this.skills.includes('reroll')) + Number(this.skills.includes('reroll_plus'));
+    if (this.skills.includes('scavenger')) this.currency += 15;
+    this.apply();
+  }
+  reroll(): boolean {
+    if (!this.pending || !this.rerolls) return false;
+    this.rerolls--;
+    this.choices = [];
+    this.offer();
+    return true;
   }
   gainXP(amount: number): void {
     this.xp += Math.max(0, amount);
@@ -145,6 +170,46 @@ export class RunBuild {
       ?.modifiers.forEach((modifier, index) =>
         modifiers.add({ ...modifier, id: `class:${index}` }),
       );
+    for (const id of this.skills) {
+      const modifier = researchNodes.find((node) => node.id === id)?.modifier;
+      if (modifier) modifiers.add({ ...modifier, id: `research:${id}` });
+    }
+    const mutation = mutations.find((mutation) => mutation.id === this.mutation);
+    mutation?.modifiers.forEach((modifier, index) =>
+      modifiers.add({ ...modifier, id: `mutation:${index}` }),
+    );
+    mutation?.triggers?.forEach((rule, index) =>
+      modifiers.rules.set(`mutation:${index}`, { ...rule, id: `mutation:${index}` }),
+    );
+    const sets = new Map<string, number>();
+    for (const entry of this.equipment) {
+      const definition = equipmentById.get(entry.id);
+      if (!definition) continue;
+      sets.set(definition.set, (sets.get(definition.set) ?? 0) + 1);
+      definition.modifiers.forEach((modifier, index) => {
+        const factor = 1 + (entry.level - 1) * 0.06;
+        const value =
+          index === 0 && definition.rarity !== 'legendary'
+            ? modifier.operation === 'multiply'
+              ? Math.max(0.1, 1 + (modifier.value - 1) * factor)
+              : modifier.value * factor
+            : modifier.value;
+        modifiers.add({ ...modifier, value, id: `equipment:${entry.id}:${index}` });
+      });
+      definition.triggers?.forEach((rule, index) =>
+        modifiers.rules.set(`equipment:${entry.id}:${index}`, {
+          ...rule,
+          id: `equipment:${entry.id}:${index}`,
+        }),
+      );
+      const affix = affixes.find((affix) => affix.id === entry.affix);
+      if (affix) modifiers.add({ ...affix.modifier, id: `affix:${entry.id}` });
+    }
+    for (const [id, count] of sets)
+      if (count >= 3) {
+        const set = equipmentSets.get(id);
+        if (set) modifiers.add({ ...set.modifier, id: `set:${id}` });
+      }
     for (const id of this.relics) {
       const relic = relicById.get(id);
       if (!relic) continue;
@@ -175,6 +240,10 @@ export class RunBuild {
     Matter.Body.setInertia(this.game.player.body, Infinity);
     this.game.player.gravityScale = modifiers.evaluate('gravityResponse', 1);
     this.game.player.health = Math.min(this.game.maxHealth, this.game.player.health);
+    this.game.abilities.energy = Math.min(
+      this.game.abilities.maxEnergy,
+      this.game.abilities.energy,
+    );
   }
   get activeSynergies(): string[] {
     return synergies
@@ -183,6 +252,10 @@ export class RunBuild {
   }
   snapshot(): unknown {
     return {
+      equipment: this.equipment,
+      skills: this.skills,
+      mutation: this.mutation,
+      rerolls: this.rerolls,
       xp: this.xp,
       level: this.level,
       pending: this.pending,
@@ -195,6 +268,36 @@ export class RunBuild {
   }
   restore(value: unknown): void {
     const data = record(value);
+    this.skills = strings(data.skills ?? [], 100).filter((id) =>
+      researchNodes.some((node) => node.id === id),
+    );
+    this.mutation =
+      typeof data.mutation === 'string' &&
+      mutations.some((mutation) => mutation.id === data.mutation)
+        ? data.mutation
+        : '';
+    this.rerolls = Math.floor(finite(data.rerolls ?? 0, 0, 10));
+    this.equipment = [];
+    if (
+      !Array.isArray(data.equipment ?? []) ||
+      (data.equipment as unknown[] | undefined)?.length! > 6
+    )
+      throw new Error('Invalid loadout');
+    const slots = new Set<string>();
+    for (const value of (data.equipment ?? []) as unknown[]) {
+      const entry = record(value);
+      const definition = typeof entry.id === 'string' ? equipmentById.get(entry.id) : undefined;
+      if (!definition || slots.has(definition.slot)) throw new Error('Invalid equipment');
+      slots.add(definition.slot);
+      this.equipment.push({
+        id: definition.id,
+        level: Math.floor(finite(entry.level, 1, 5)),
+        affix:
+          typeof entry.affix === 'string' && affixes.some((affix) => affix.id === entry.affix)
+            ? entry.affix
+            : '',
+      });
+    }
     this.xp = finite(data.xp, 0, 1000000);
     this.level = Math.floor(finite(data.level, 1, 10000));
     this.pending = Math.floor(finite(data.pending, 0, 100));

@@ -80,7 +80,7 @@ export class Renderer {
       ctx.fillStyle = '#171421';
       ctx.fillRect(350, 100, 500, 14);
       ctx.fillStyle = boss.entity.definition.color;
-      ctx.fillRect(350, 100, (500 * boss.entity.health) / boss.entity.definition.health, 14);
+      ctx.fillRect(350, 100, (500 * boss.entity.health) / boss.entity.maxHealth, 14);
       ctx.font = 'bold 15px monospace';
       ctx.textAlign = 'center';
       ctx.fillText(`${boss.name.toUpperCase()} · PHASE ${boss.phase}`, 600, 90);
@@ -433,12 +433,12 @@ export class Renderer {
     if (
       entity.definition.faction === 'enemy' &&
       entity.kind !== 'projectile' &&
-      entity.health < entity.definition.health
+      entity.health < entity.maxHealth
     ) {
       ctx.fillStyle = '#121a28';
       ctx.fillRect(x - 19, y - radius - 12, 38, 3);
       ctx.fillStyle = color;
-      ctx.fillRect(x - 19, y - radius - 12, (38 * entity.health) / entity.definition.health, 3);
+      ctx.fillRect(x - 19, y - radius - 12, (38 * entity.health) / entity.maxHealth, 3);
     }
     if (this.debug) {
       ctx.strokeStyle = '#80e4ad';

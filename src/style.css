@@ -1422,3 +1422,30 @@ dialog::backdrop {
     min-width: 36px;
   }
 }
+#profile-dialog select {
+  color: #edf4fa;
+  background: #162639;
+  border: 1px solid #40566d;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 44px;
+  max-width: 65%;
+}
+#profile-dialog details {
+  padding: 10px 0;
+  border-bottom: 1px solid #2b3a49;
+}
+#profile-dialog summary {
+  cursor: pointer;
+  padding: 10px 0;
+  color: #8cf2e3;
+}
+.run-card button {
+  color: #b6f4e5;
+  background: #1a3540;
+  border: 1px solid #3b646b;
+  border-radius: 5px;
+  padding: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
