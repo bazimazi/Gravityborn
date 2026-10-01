@@ -447,26 +447,32 @@
     {
       "section": 34,
       "title": "Environmental Objects",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/objects.ts",
         "src/gameplay/objects.ts",
         "src/gameplay/game.ts",
-        "tests/objects.test.ts"
+        "tests/objects.test.ts",
+        "src/content/materials.ts",
+        "src/gameplay/materials.ts",
+        "tests/materials.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Physical categories include ignition/contact spread, ice quenching, conductive discharges blocked by walls/insulators, gravity, elasticity, fragility and mass. Gameplay balance and physical-device performance validation remain open."
     },
     {
       "section": 35,
       "title": "Physics Materials",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/objects.ts",
         "src/gameplay/objects.ts",
         "src/gameplay/game.ts",
-        "tests/objects.test.ts"
+        "tests/objects.test.ts",
+        "src/content/materials.ts",
+        "src/gameplay/materials.ts",
+        "tests/materials.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Physical categories include ignition/contact spread, ice quenching, conductive discharges blocked by walls/insulators, gravity, elasticity, fragility and mass. Gameplay balance and physical-device performance validation remain open."
     },
     {
       "section": 36,

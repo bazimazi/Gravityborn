@@ -27,12 +27,23 @@ export interface Label {
 }
 
 export class Feedback {
+  readonly arcs: { from: Vec2; to: Vec2; life: number }[] = [];
   readonly particles: Particle[] = [];
   readonly rings: Ring[] = [];
   readonly labels: Label[] = [];
   private readonly pool: Particle[] = [];
   shake = 0;
   constructor(events: EventBus) {
+    events.on('materialReaction', (event) => {
+      if (event.kind === 'arc' && event.from && this.arcs.length < 24)
+        this.arcs.push({ from: event.from, to: event.position, life: 0.35 });
+      else if (event.kind !== 'arc')
+        this.label(
+          event.position,
+          event.kind === 'ignite' ? 'FIRE' : 'QUENCHED',
+          event.kind === 'ignite' ? '#ffb978' : '#a8deff',
+        );
+    });
     for (let i = 0; i < balance.presentation.maxParticles; i++)
       this.pool.push({ x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '', size: 0 });
     events.on('impact', (event) => {
@@ -113,6 +124,8 @@ export class Feedback {
     }
   }
   update(dt: number): void {
+    for (let i = this.arcs.length - 1; i >= 0; i--)
+      if ((this.arcs[i].life -= dt) <= 0) this.arcs.splice(i, 1);
     this.shake = Math.max(0, this.shake - dt * 15);
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const particle = this.particles[i];
@@ -137,6 +150,7 @@ export class Feedback {
     }
   }
   clear(): void {
+    this.arcs.length = 0;
     this.pool.push(...this.particles);
     this.particles.length = 0;
     this.rings.length = 0;

@@ -68,7 +68,7 @@
     "material": "metal",
     "faction": "neutral",
     "color": "#ffb36c",
-    "tags": ["Explosion", "Environmental"],
+    "tags": ["Explosion", "Environmental", "Flammable"],
     "breakable": true
   },
   "crate": {
@@ -84,7 +84,7 @@
     "material": "metal",
     "faction": "neutral",
     "color": "#8fa5bc",
-    "tags": ["Impact", "Environmental"],
+    "tags": ["Impact", "Environmental", "Flammable"],
     "breakable": true
   },
   "rock": {

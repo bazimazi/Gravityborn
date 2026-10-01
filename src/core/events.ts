@@ -1,6 +1,7 @@
 import type { Vec2 } from './vector';
 
 export interface GameEvents {
+  materialReaction: { kind: 'ignite' | 'quench' | 'arc'; position: Vec2; from?: Vec2 };
   gravityChanged: { direction: Vec2; source?: 'player' | 'enemy' };
   wellCreated: { position: Vec2 };
   impact: { position: Vec2; force: number; color: string };

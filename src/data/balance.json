@@ -71,5 +71,16 @@
     "voidStrength": 0.004,
     "voidDuration": 3
   },
+  "materials": {
+    "burnDuration": 5,
+    "burnInterval": 0.5,
+    "burnDamage": 7,
+    "contactDamage": 5,
+    "meltDamage": 18,
+    "dischargeRadius": 120,
+    "arcGap": 34,
+    "arcDamage": 24,
+    "maxArcs": 24
+  },
   "presentation": { "maxParticles": 200, "maxPixelRatio": 2, "shake": 5 }
 }

@@ -189,6 +189,13 @@ export class Renderer {
     }
     for (const id of this.trails.keys()) if (!game.world.entities.has(id)) this.trails.delete(id);
     for (const entity of game.world.entities.values()) this.drawEntity(entity, game, now);
+    for (const arc of feedback.arcs) {
+      ctx.strokeStyle = '#a8deff';
+      ctx.lineWidth = this.settings.highContrast ? 3 : 2;
+      ctx.globalAlpha = this.settings.reducedFlashing ? 0.5 : Math.min(1, arc.life * 4);
+      this.line(arc.from.x, arc.from.y, arc.to.x, arc.to.y);
+    }
+    ctx.globalAlpha = 1;
     for (const particle of this.settings.reducedFlashing ? [] : feedback.particles) {
       ctx.globalAlpha = particle.life / particle.maxLife;
       ctx.fillStyle = particle.color;
@@ -518,6 +525,16 @@ export class Renderer {
       }
     }
     ctx.restore();
+    if (game.materials.isBurning(entity)) {
+      ctx.strokeStyle = '#ffb978';
+      ctx.lineWidth = 2;
+      this.circle(x, y, radius + 8);
+      ctx.stroke();
+      ctx.fillStyle = '#ffb978';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FIRE', x, y + radius + 22);
+    }
     if (entity.elite) {
       ctx.strokeStyle = '#ffe08c';
       ctx.lineWidth = 2;

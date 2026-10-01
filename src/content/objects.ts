@@ -51,7 +51,11 @@ export const objectDefinitions = {
     radius: 40,
   },
   container: {
-    ...object('Explosive Container', 'metal', 12, 60, '#ffb176', ['Explosion', 'Environmental']),
+    ...object('Explosive Container', 'metal', 12, 60, '#ffb176', [
+      'Explosion',
+      'Environmental',
+      'Flammable',
+    ]),
     shape: 'rectangle',
     width: 54,
     height: 48,
@@ -89,7 +93,11 @@ export const objectDefinitions = {
   },
 } as const;
 export const materialDescriptions = [
-  { id: 'metal', name: 'Metal', text: 'Dense and durable. Magnetic cores attract metal objects.' },
+  {
+    id: 'metal',
+    name: 'Metal',
+    text: 'Dense, durable and conductive. Magnetic cores attract metal. Broken cells and generators arc through nearby conductive bodies; walls interrupt the discharge.',
+  },
   {
     id: 'rubber',
     name: 'Rubber',
@@ -108,7 +116,7 @@ export const materialDescriptions = [
   {
     id: 'ice',
     name: 'Ice',
-    text: 'Low drag and surface friction make ice easy to slide into targets.',
+    text: 'Low drag and surface friction make ice easy to slide into targets. Contact with ice extinguishes burning objects and partially melts the ice.',
   },
   { id: 'stone', name: 'Stone', text: 'Heavy, stable matter transfers strong impulses on impact.' },
   {

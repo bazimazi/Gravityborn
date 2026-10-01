@@ -16,6 +16,7 @@ import { BossSystem } from './bosses';
 import { RuleSystem } from './rules';
 import { bossDefinitions } from '../content/bosses';
 import { ObjectSystem } from './objects';
+import { MaterialSystem } from './materials';
 
 const laboratory: RoomDefinition = {
   ...arena,
@@ -53,6 +54,7 @@ export class Game {
   bosses!: BossSystem;
   rules!: RuleSystem;
   objects!: ObjectSystem;
+  materials!: MaterialSystem;
   room: RoomDefinition = laboratory;
   state: GameState = 'ready';
   time = 0;
@@ -169,6 +171,7 @@ export class Game {
     this.bosses = new BossSystem(this);
     this.rules = new RuleSystem(this);
     this.objects = new ObjectSystem(this);
+    this.materials = new MaterialSystem(this);
     for (const wall of room.walls) this.world.addWall(wall.x, wall.y, wall.width, wall.height);
     if (populate) {
       for (const spawn of room.spawns) {
@@ -190,8 +193,8 @@ export class Game {
   markCause(entity: Entity, id: number, depth = 0): void {
     this.attribute(entity, { id, depth });
   }
-  applyDamage(entity: Entity, amount: number, cause: number, type = 'Gravity'): void {
-    this.damage(entity, amount, { id: cause, depth: 1 }, [type]);
+  applyDamage(entity: Entity, amount: number, cause: number, type = 'Gravity', depth = 1): void {
+    this.damage(entity, amount, { id: cause, depth }, [type]);
   }
   detonate(entity: Entity): void {
     if (!entity.alive) return;
@@ -406,6 +409,8 @@ export class Game {
     this.world.step();
     for (const collision of this.world.collisions) this.resolveCollision(collision);
     this.resolveExplosions();
+    this.materials.tick();
+    this.resolveExplosions();
     if (this.player.health <= 0) this.end(false);
     else if (
       !this.room.manualCompletion &&
@@ -512,6 +517,8 @@ export class Game {
       if ((pickup === a ? b : a)?.kind === 'player') this.collect(pickup);
       return;
     }
+    if (a && b) this.materials.collide(a, b);
+    if ((a && !a.alive) || (b && !b.alive)) return;
     if (speed > balance.combat.impactThreshold) {
       this.trigger('OnCollision');
       this.rules.impact(position);
@@ -663,6 +670,7 @@ export class Game {
     this.enemies.onDeath(entity);
     this.bosses.onDeath(entity);
     this.objects.onDeath(entity);
+    this.materials.onDeath(entity);
     if (
       ['barrel', 'mine', 'container', 'bomber'].includes(entity.kind) ||
       entity.elite === 'unstable'
@@ -705,6 +713,7 @@ export class Game {
         if (distance > balance.combat.explosionRadius) continue;
         const falloff = 1 - distance / balance.combat.explosionRadius;
         const nextCause = { id: cause.id, depth: cause.depth + 1 };
+        this.materials.ignite(target, nextCause.id, nextCause.depth);
         this.attribute(target, nextCause);
         const direction = distance > 0 ? normalize(offset) : { x: 0, y: -1 };
         this.world.impulse(
