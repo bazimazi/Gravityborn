@@ -18,6 +18,7 @@ import {
 } from '../progression/modifiers';
 import { enemyVariants } from './variants';
 import { eliteModifiers } from './enemies';
+import { phenomena } from './phenomena';
 
 export interface ContentIssue {
   path: string;
@@ -348,6 +349,11 @@ export function validateContent(): ContentIssue[] {
     'Every biome needs a planet, story, hidden lore and guardian.',
   );
   for (const [index, biome] of biomes.entries()) {
+    check(
+      planets[index].anomalies.every((id) => phenomena.some((item) => item.id === id)),
+      `planets.${index}.anomalies`,
+      'Unknown planetary anomaly.',
+    );
     check(
       biome.enemies.every((id) => id in entityDefinitions),
       `biomes.${index}`,

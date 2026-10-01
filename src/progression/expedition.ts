@@ -15,7 +15,7 @@ import { modes, rotatingChallenge, type RunMode } from '../content/modes';
 import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
 import { bossDefinitions, type BossKind } from '../content/bosses';
 import { freshMastery, readMastery, type MasteryProgress } from './mastery';
-import { story, secretLore } from '../content/story';
+import { story, secretLore, planets } from '../content/story';
 import { abilityById } from '../content/abilities';
 import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
 import { eliteCompatibility, type VariantKind } from '../content/variants';
@@ -286,7 +286,9 @@ export class Expedition {
     const phenomenon =
       this.phenomenon ||
       (this.depth > 0 || this.difficulty >= 4 || (this.rooms > 2 && random.next() < 0.18)
-        ? random.pick(phenomena).id
+        ? random.next() < 0.5
+          ? random.pick(planets[this.biome].anomalies)
+          : random.pick(phenomena).id
         : '');
     this.game.rules.configure(
       `${this.seed}:${node.id}`,

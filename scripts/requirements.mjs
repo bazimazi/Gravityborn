@@ -28,7 +28,7 @@ fs.writeFileSync(
   path,
   JSON.stringify(
     {
-      updated: '2026-10-01',
+      updated: new Date().toISOString().slice(0, 10),
       scope:
         'Full specification; future/example targets are distinguished from shipped implementation.',
       requirements,

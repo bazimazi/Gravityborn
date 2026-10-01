@@ -34,9 +34,14 @@
     {
       "section": 4,
       "title": "Player Controller",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/main.ts",
+        "src/presentation/accessibility.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Physics movement, screen-relative steering, joystick deadzone/size, cancellation and focus handling are implemented. Physical-device handling and human responsiveness review remain."
     },
     {
       "section": 5,
@@ -54,15 +59,14 @@
     {
       "section": 6,
       "title": "Gravity System Architecture",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/physics/gravity.ts",
+        "src/physics/world.ts",
+        "tests/gravity.test.ts",
+        "tests/physics.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "One spatially indexed authority combines global and local vector fields, falloff, material/tag filters and response scaling. Gameplay systems use the shared authority."
     },
     {
       "section": 7,
@@ -427,15 +431,14 @@
     {
       "section": 32,
       "title": "Planet System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/story.ts",
-        "src/content/challenges.ts",
-        "src/progression/mastery.ts",
         "src/presentation/codex.ts",
+        "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Eight collectible planet records expose mass, radius, gravity, atmosphere, property, biome, enemies, resource, anomaly and guardian. These are exploration records, not eight separately simulated spherical worlds."
     },
     {
       "section": 33,
@@ -505,10 +508,7 @@
       "section": 37,
       "title": "Shops",
       "status": "implemented",
-      "evidence": [
-        "src/progression/shop.ts",
-        "tests/shop.test.ts"
-      ],
+      "evidence": ["src/progression/shop.ts", "tests/shop.test.ts"],
       "remaining": "Seven purchase categories implemented with build-aware stock, costs, replacement semantics, single purchases, and saved inventories. Economy balance remains under playtest."
     },
     {
@@ -541,15 +541,14 @@
     {
       "section": 40,
       "title": "Mastery System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/story.ts",
-        "src/content/challenges.ts",
         "src/progression/mastery.ts",
-        "src/presentation/codex.ts",
+        "src/progression/challenges.ts",
+        "src/content/challenges.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Every catalog power plus well/flip has five mastery milestones based on casts, causal kills, elites, chain size and a victory contribution. New powers derive objectives automatically; human grind/balance review remains separate."
     },
     {
       "section": 41,
@@ -601,9 +600,14 @@
     {
       "section": 44,
       "title": "Camera",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/presentation/camera.ts",
+        "src/presentation/renderer.ts",
+        "tests/camera.test.ts",
+        "scripts/visual-check.mjs"
+      ],
+      "remaining": "Top-down camera frames the whole room on desktop and follows the core on narrow/short views; telegraphs, trails, fields and physical silhouettes remain in world coordinates. Human readability on devices remains part of the device gate."
     },
     {
       "section": 45,
@@ -636,14 +640,16 @@
     {
       "section": 49,
       "title": "Chain Reaction System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/objects.ts",
-        "src/gameplay/objects.ts",
+        "src/gameplay/chains.ts",
         "src/gameplay/game.ts",
-        "tests/objects.test.ts"
+        "src/gameplay/materials.ts",
+        "tests/events.test.ts",
+        "tests/gameplay.test.ts",
+        "tests/materials.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Causal IDs propagate across manipulated bodies, impacts, explosions and material reactions; chains deduplicate effects and cap depth, lifetime and effect counts. HUD/feedback show current chains and run summaries retain the best."
     },
     {
       "section": 50,
@@ -825,22 +831,28 @@
     {
       "section": 65,
       "title": "Physics Architecture",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
+        "src/physics/world.ts",
         "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/core/events.ts",
+        "src/presentation/feedback.ts",
+        "docs/architecture.md"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Physics callbacks collect facts; gameplay resolves damage, chains and rewards after the solver. Presentation and audio subscribe to events without deciding damage."
     },
     {
       "section": 66,
       "title": "Performance Requirements",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/physics/world.ts",
+        "src/physics/gravity.ts",
+        "src/presentation/feedback.ts",
+        "src/core/settings.ts",
+        "scripts/benchmark.ts"
+      ],
+      "remaining": "Spatial field queries, projectile/particle pools, collision masks, finite caps and 30/60 Hz rendering are implemented. Host stress fits the step budget, but phone frame rates and thermal load require devices. Distant-object throttling remains to evaluate against physical correctness."
     },
     {
       "section": 67,
@@ -871,17 +883,16 @@
     {
       "section": 69,
       "title": "Save System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts",
+        "src/core/save.ts",
         "src/core/storage.ts",
+        "src/progression/profile.ts",
+        "src/progression/expedition.ts",
+        "tests/save.test.ts",
         "tests/storage.test.ts"
       ],
-      "remaining": "Web saves and native Preferences adapter implemented and tested; native process-death/device durability validation remains external."
+      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries."
     },
     {
       "section": 70,
@@ -902,9 +913,15 @@
     {
       "section": 71,
       "title": "Mobile UX",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/style.css",
+        "src/presentation/accessibility.ts",
+        "src/presentation/gestures.ts",
+        "tests/browser/game.spec.ts",
+        "scripts/android-smoke.mjs"
+      ],
+      "remaining": "Large controls, portrait/landscape layouts, left-handed mode, text/joystick scaling, quick restart and touch gestures pass browser checks. Physical-device one-handed ergonomics and safe areas remain external validation."
     },
     {
       "section": 72,
@@ -924,9 +941,14 @@
     {
       "section": 73,
       "title": "Gravity Direction Indicator",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/main.ts",
+        "src/presentation/renderer.ts",
+        "src/presentation/shell.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "HUD direction text/arrow, active cardinal control, ambient directional cues and oriented directional-field chevrons communicate force without color alone."
     },
     {
       "section": 74,
@@ -967,20 +989,14 @@
       "section": 77,
       "title": "Audio Design",
       "status": "partial",
-      "evidence": [
-        "src/presentation/audio.ts",
-        "src/presentation/feedback.ts"
-      ],
+      "evidence": ["src/presentation/audio.ts", "src/presentation/feedback.ts"],
       "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues implemented. Listening tests and expanded power-specific timbres remain."
     },
     {
       "section": 78,
       "title": "Music",
       "status": "implemented",
-      "evidence": [
-        "src/presentation/audio.ts",
-        "src/main.ts"
-      ],
+      "evidence": ["src/presentation/audio.ts", "src/main.ts"],
       "remaining": "Seven adaptive music arrangements with anomaly modulation and separate volume implemented. Device listening/mix validation remains external."
     },
     {
@@ -1078,10 +1094,7 @@
       "section": 90,
       "title": "Anti-Degenerate Design",
       "status": "partial",
-      "evidence": [
-        "src/data/stat-limits.json",
-        "tests/modifiers.test.ts"
-      ],
+      "evidence": ["src/data/stat-limits.json", "tests/modifiers.test.ts"],
       "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
     },
     {
@@ -1115,16 +1128,30 @@
     {
       "section": 93,
       "title": "Testing Strategy",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "tests/gravity.test.ts",
+        "tests/physics.test.ts",
+        "tests/gameplay.test.ts",
+        "tests/progression.test.ts",
+        "tests/rooms.test.ts",
+        "tests/save.test.ts",
+        "tests/browser/game.spec.ts",
+        ".github/workflows/check.yml"
+      ],
+      "remaining": "Automated gravity, physics, combat, progression, seeded path, persistence and browser-input coverage runs in CI. Scripted input playtests complement transition tests; human fun and balance remain separate."
     },
     {
       "section": 94,
       "title": "Performance Testing",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "scripts/benchmark.ts",
+        "tests/regressions.test.ts",
+        "tests/modifiers.test.ts",
+        "tests/variants.test.ts"
+      ],
+      "remaining": "Host stress covers 220 bodies and 50 fields, runaway build multiplication, all elite variants and bounded causal effects. Oversized scenes are constrained by production caps. Sustained phone rendering/thermal stress remains external."
     },
     {
       "section": 95,
@@ -1142,16 +1169,30 @@
     {
       "section": 96,
       "title": "Save Compatibility",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/core/save.ts",
+        "src/progression/profile.ts",
+        "tests/save.test.ts",
+        "tests/storage.test.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures."
     },
     {
       "section": 97,
       "title": "Architecture",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "docs/architecture.md",
+        "src/core",
+        "src/physics",
+        "src/gameplay",
+        "src/progression",
+        "src/content",
+        "src/presentation"
+      ],
+      "remaining": "Core, simulation, gameplay, content/progression, presentation, persistence and debug responsibilities are separate modules; the architecture document describes their boundaries."
     },
     {
       "section": 98,

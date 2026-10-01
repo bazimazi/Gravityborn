@@ -77,7 +77,14 @@ export function codexView(profile: Profile): string {
       entries: planets.map((planet) => ({
         id: planet.id,
         name: planet.name,
-        text: `${planet.biome}. Relative mass ${planet.mass}; radius ${planet.radius} km; gravity index ${planet.gravity}. Atmosphere: ${planet.atmosphere}. ${planet.property}. Resource: ${planet.resource}. Guardian: ${planet.boss}.`,
+        text: `${planet.biome}. Relative mass ${planet.mass}; radius ${planet.radius} km; gravity index ${planet.gravity}. Atmosphere: ${planet.atmosphere}. ${planet.property}. Resource: ${planet.resource}. Hostiles: ${planet.enemies
+          .map((id) => {
+            const entity = entityDefinitions[id];
+            return 'name' in entity ? entity.name : id;
+          })
+          .join(
+            ', ',
+          )}. Common anomalies: ${planet.anomalies.map((id) => phenomena.find((entry) => entry.id === id)!.name).join(', ')}. Guardian: ${planet.boss}.`,
         known: known(planet.id),
       })),
     },

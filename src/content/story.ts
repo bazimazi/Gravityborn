@@ -1,5 +1,6 @@
 import { biomes } from './rooms';
 import { bossDefinitions, regionGuardians } from './bosses';
+import type { Phenomenon } from './phenomena';
 export const story = [
   {
     act: 'I · Awakening',
@@ -134,6 +135,18 @@ export const planets = biomes.map((biome, index) => ({
     'Shifting geometry',
   ][index],
   enemies: [...biome.enemies],
+  anomalies: (
+    [
+      ['reverse', 'dense'],
+      ['collapse', 'elastic'],
+      ['collision', 'rift'],
+      ['rotating', 'zero'],
+      ['singularity', 'collapse'],
+      ['zero', 'reverse'],
+      ['rain', 'storm'],
+      ['rift', 'storm'],
+    ] satisfies Phenomenon[][]
+  )[index],
   resource: [
     'Alloy',
     'Gravity crystal',
