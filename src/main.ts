@@ -781,6 +781,7 @@ function showState(): void {
   const won = game.state === 'won';
   overlay.classList.add('summary');
   overlay.hidden = false;
+  element('#toast').hidden = true;
   overlay.innerHTML = `<div class="intro-content"><div class="prototype-label mono">${paused ? 'SIMULATION SUSPENDED' : won ? 'EXPERIMENT COMPLETE' : 'CORE SIGNAL LOST'}</div><h2 class="intro-title">${paused ? 'Hold that thought.' : won ? 'You changed<span>the outcome.</span>' : 'Gravity gives.<span>Gravity takes.</span>'}</h2><p class="intro-description">${paused ? 'The chamber will be right where you left it.' : won ? 'Six hostiles. Zero weapons. You made the room do the work.' : 'Try a new direction. Pull a barrel into the crowd. Every experiment teaches you something.'}</p>${paused ? '' : `<div class="run-results"><div><strong>${game.stats.kills}</strong><small>HOSTILES</small></div><div><strong>${game.chains.best}×</strong><small>BEST CHAIN</small></div><div><strong>${game.stats.score}</strong><small>SCORE</small></div></div>`}<div class="intro-actions"><button class="primary-button" id="continue">${paused ? 'Resume experiment' : 'Try another experiment ↗'}</button>${paused ? '<button class="text-button" id="restart">Restart</button>' : ''}</div></div>`;
   element('#continue').onclick = () => {
     if (paused) {
