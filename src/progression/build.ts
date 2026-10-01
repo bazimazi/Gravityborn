@@ -11,6 +11,7 @@ import { researchNodes, mutations } from '../content/research';
 import type { Profile } from './profile';
 import { wellEvolutions } from '../content/well';
 import { matchesSynergy } from './synergies';
+import { collectTags } from '../core/tags';
 
 export interface UpgradeChoice {
   id: string;
@@ -298,8 +299,16 @@ export class RunBuild {
   }
   get synergyDefinitions() {
     const powers = new Set(this.game.abilities.levels.keys());
-    const tags = this.relics.flatMap((id) => relicById.get(id)?.tags ?? []);
+    const tags = this.tags;
     return synergies.filter((synergy) => matchesSynergy(synergy, powers, tags));
+  }
+  get tags(): string[] {
+    return collectTags([
+      ...[...this.game.abilities.levels.keys()].map((id) => abilityById.get(id)),
+      ...this.relics.map((id) => relicById.get(id)),
+      ...this.equipment.map((item) => equipmentById.get(item.id)),
+      mutations.find((item) => item.id === this.mutation),
+    ]);
   }
   snapshot(): unknown {
     return structuredClone({

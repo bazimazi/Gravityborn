@@ -5,7 +5,7 @@ import type { SynergyDefinition } from '../content/relics';
 export function matchesSynergy(
   synergy: SynergyDefinition,
   powers: ReadonlySet<string>,
-  relicTags: readonly string[] = [],
+  buildTags: readonly string[] = [],
 ): boolean {
   if (!(synergy.requires?.length || synergy.requiresTags?.length)) return false;
   const hasFamily = (required: string): boolean => {
@@ -19,7 +19,7 @@ export function matchesSynergy(
     return false;
   };
   const tags = new Set([
-    ...relicTags,
+    ...buildTags,
     ...[...powers].flatMap((id) => abilityById.get(id)?.tags ?? []),
   ]);
   return (

@@ -312,7 +312,7 @@ export const synergies: SynergyDefinition[] = [
     id: 'prison',
     name: 'Orbital Prison',
     description:
-      'A planet-family power and any Control-tagged power or relic extend orbital effects by 50%.',
+      'A planet-family power and a Control-tagged power, relic, equipped item or active mutation extend orbital effects by 50%.',
     requires: ['planet'],
     requiresTags: ['Control'],
     modifiers: [{ stat: 'duration', operation: 'multiply', value: 1.5, tags: ['Orbit'] }],

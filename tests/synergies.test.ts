@@ -24,6 +24,31 @@ it('tag requirements combine power and relic identities without requiring a spec
   expect(matchesSynergy(prison, new Set(['planet']), ['Control'])).toBe(true);
   expect(matchesSynergy(prison, new Set(['lock']), ['Control'])).toBe(false);
 });
+it('equipped items and active mutations contribute tags, and removing them removes their synergy', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'equipment-tags');
+  game.abilities.levels.clear();
+  game.abilities.learn('planet');
+  build.apply();
+  expect(build.activeSynergies).not.toContain('Orbital Prison');
+  build.equipment = [{ id: 'lattice_core', level: 1, affix: '' }];
+  build.apply();
+  expect(build.tags).toContain('Control');
+  expect(build.activeSynergies).toContain('Orbital Prison');
+  const saved = build.snapshot();
+  build.equipment = [];
+  build.apply();
+  expect(build.activeSynergies).not.toContain('Orbital Prison');
+  build.mutation = 'dual';
+  build.apply();
+  expect(build.activeSynergies).toContain('Orbital Prison');
+  expect(build.tags.filter((tag) => tag === 'Gravity')).toHaveLength(1);
+  build.restore(saved);
+  build.apply();
+  expect(build.mutation).toBe('');
+  expect(build.activeSynergies).toContain('Orbital Prison');
+  game.world.dispose();
+});
 it('Escape Window grants brief cast protection with a clock preserved through build changes', () => {
   const game = new Game(false);
   const build = new RunBuild(game, 'escape-synergy');

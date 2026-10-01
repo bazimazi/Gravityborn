@@ -109,16 +109,19 @@ export const mutations: {
   name: string;
   description: string;
   modifiers: Omit<Modifier, 'id'>[];
+  tags: string[];
   triggers?: Omit<TriggerRule, 'id'>[];
 }[] = [
   {
     id: 'negative',
+    tags: ['Gravity', 'Mass', 'Void'],
     name: 'Negative Mass',
     description: 'Your core responds to gravity in the opposite direction.',
     modifiers: [{ stat: 'gravityResponse', operation: 'multiply', value: -1 }],
   },
   {
     id: 'dense',
+    tags: ['Mass', 'Impact'],
     name: 'Dense Matter',
     description: 'Triple your core mass, but lose 20% movement acceleration.',
     modifiers: [
@@ -128,6 +131,7 @@ export const mutations: {
   },
   {
     id: 'light',
+    tags: ['Mass', 'Movement'],
     name: 'Light Matter',
     description: 'Halve your core mass and gain 30% movement acceleration.',
     modifiers: [
@@ -137,6 +141,7 @@ export const mutations: {
   },
   {
     id: 'dual',
+    tags: ['Gravity', 'Control'],
     name: 'Dual Gravity',
     description: 'Maintain an additional gravity well, at the cost of longer well cooldowns.',
     modifiers: [
@@ -146,6 +151,7 @@ export const mutations: {
   },
   {
     id: 'unstable',
+    tags: ['Gravity', 'Chaos'],
     name: 'Instability',
     description: 'Gravity changes become unpredictable, but your powers gain 40% strength.',
     modifiers: [
@@ -155,6 +161,7 @@ export const mutations: {
   },
   {
     id: 'afterimage',
+    tags: ['Gravity', 'Control', 'Echo'],
     name: 'Echo Gravity',
     description: 'Every gravity change leaves a temporary directional field at your core.',
     modifiers: [],
@@ -162,6 +169,7 @@ export const mutations: {
   },
   {
     id: 'metabolism',
+    tags: ['Gravity', 'Defense'],
     name: 'Gravitational Metabolism',
     description: 'Taking damage recovers 20 energy.',
     modifiers: [],
@@ -169,6 +177,7 @@ export const mutations: {
   },
   {
     id: 'horizon',
+    tags: ['Gravity', 'Void', 'Defense'],
     name: 'Event Horizon',
     description: 'At low health, repeatedly create a powerful attraction field around your core.',
     modifiers: [{ stat: 'maxHealth', operation: 'add', value: -10 }],
@@ -176,6 +185,7 @@ export const mutations: {
   },
   {
     id: 'personal',
+    tags: ['Gravity', 'Control'],
     name: 'Personal Gravity',
     description:
       'Your core becomes a recurring local gravity source with a smaller energy reserve.',

@@ -1,4 +1,5 @@
 import type { Modifier, TriggerRule } from '../progression/modifiers';
+import type { TaggedContent } from '../core/tags';
 export const equipmentSlots = [
   'core',
   'shell',
@@ -9,7 +10,7 @@ export const equipmentSlots = [
 ] as const;
 export type EquipmentSlot = (typeof equipmentSlots)[number];
 type Stat = Omit<Modifier, 'id'>;
-export interface EquipmentDefinition {
+export interface EquipmentDefinition extends TaggedContent {
   id: string;
   name: string;
   slot: EquipmentSlot;
@@ -173,6 +174,7 @@ export const equipment: EquipmentDefinition[] = families.flatMap((family) =>
     name: `${family.name} ${names[index]}`,
     slot,
     set: family.id,
+    tags: [family.tag],
     description: `${family.description} ${modifierText(family.stats[index])}; ${modifierText(family.trade)}.`,
     rarity: index === 4 ? ('rare' as const) : ('common' as const),
     cost: 12 + index * 3,
@@ -182,6 +184,7 @@ export const equipment: EquipmentDefinition[] = families.flatMap((family) =>
 equipment.push(
   {
     id: 'event_horizon',
+    tags: ['Gravity', 'Echo'],
     name: 'Event Horizon Engine',
     slot: 'artifact',
     set: 'unique',
@@ -193,6 +196,7 @@ equipment.push(
   },
   {
     id: 'phoenix_reactor',
+    tags: ['Defense'],
     name: 'Phoenix Reactor',
     slot: 'core',
     set: 'unique',

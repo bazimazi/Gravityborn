@@ -69,7 +69,7 @@ export function codexView(profile: Profile): string {
       entries: equipment.map((item) => ({
         id: `equipment:${item.id}`,
         name: item.name,
-        text: `${item.description} Slot: ${item.slot}; family: ${item.set}.`,
+        text: `${item.description} Slot: ${item.slot}; family: ${item.set}. Tags: ${item.tags.join(', ')}.`,
         known: Boolean(profile.equipment[item.id]),
       })),
     },

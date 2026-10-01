@@ -842,17 +842,20 @@
     {
       "section": 62,
       "title": "Tag System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
+        "src/core/tags.ts",
+        "src/content/abilities.ts",
+        "src/content/relics.ts",
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "src/content/enemies.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/progression/synergies.ts",
+        "src/content/validate.ts",
+        "tests/synergies.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Powers, relics, equipment families/uniques, mutations and entity definitions expose content tags. Build aggregation deduplicates only learned powers, owned run relics, equipped gear and the active mutation; tagged synergies update on replacement and recovery. Modifier/trigger target filters remain separate from content identity. Build and codex views show tags; catalog validation rejects invalid identities."
     },
     {
       "section": 63,

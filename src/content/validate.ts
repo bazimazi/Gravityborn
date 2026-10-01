@@ -430,7 +430,16 @@ export function validateContent(): ContentIssue[] {
       node = parent;
     }
   }
-  const buildTags = new Set([...abilities, ...relics].flatMap((item) => item.tags));
+  const buildSources = [...abilities, ...relics, ...equipment, ...mutations];
+  for (const item of buildSources)
+    check(
+      item.tags.length > 0 &&
+        new Set(item.tags).size === item.tags.length &&
+        item.tags.every((tag) => /^[A-Za-z][A-Za-z0-9]*$/.test(tag)),
+      `tags.${item.id}`,
+      'Content tags must be distinct nonempty identifiers.',
+    );
+  const buildTags = new Set(buildSources.flatMap((item) => item.tags));
   for (const item of synergies) {
     modifiers(`synergies.${item.id}`, item.modifiers, item.triggers);
     check(

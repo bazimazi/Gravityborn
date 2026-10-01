@@ -7,6 +7,8 @@ import { canBuy, shopDescription } from '../progression/shop';
 import { wellEvolutions } from '../content/well';
 import { abilityById } from '../content/abilities';
 import type { UpgradeChoice } from '../progression/build';
+import { equipmentById } from '../content/equipment';
+import { mutations } from '../content/research';
 
 const escape = (text: string): string =>
   text.replace(
@@ -81,5 +83,5 @@ export function expeditionView(run: Expedition): string {
     content = `<h2>Chamber secured</h2><p>${escape(run.message)}</p><button class="primary-button" data-run-action="advance">Continue expedition →</button>`;
   else if (run.phase === 'summary')
     content = `<h2>${run.won ? 'Expedition complete' : 'The core went dark'}</h2><p>${escape(run.message)}</p><p>${run.rooms} rooms explored · ${run.kills} hostiles defeated · ${Math.floor(run.elapsed / 60)}m ${Math.floor(run.elapsed % 60)}s</p><p class="mono">SEED ${escape(run.seed)}</p><button class="primary-button" data-run-action="new">New expedition</button><button class="text-button" data-run-action="lab">Return to laboratory</button>`;
-  return `<div class="run-content">${stats}${content}<details class="run-build"><summary>Your build · ${run.build.relics.length} relics</summary><p>${run.build.relics.map((id) => escape(relicById.get(id)!.name)).join(' · ') || 'No relics yet'}</p>${run.build.synergyDefinitions.map((item) => `<p><strong>${escape(item.name)}</strong> · ${escape(item.description)}</p>`).join('')}</details></div>`;
+  return `<div class="run-content">${stats}${content}<details class="run-build"><summary>Your build · ${run.build.relics.length} relics</summary><p>${run.build.relics.map((id) => escape(relicById.get(id)!.name)).join(' · ') || 'No relics yet'}</p><p>Equipment: ${run.build.equipment.map((item) => `${escape(equipmentById.get(item.id)!.name)} +${item.level}`).join(' · ') || 'None'}</p><p>Mutation: ${escape(mutations.find((item) => item.id === run.build.mutation)?.name ?? 'None')}</p><p class="upgrade-tags">Build tags: ${run.build.tags.map(escape).join(' · ')}</p>${run.build.synergyDefinitions.map((item) => `<p><strong>${escape(item.name)}</strong> · ${escape(item.description)}</p>`).join('')}</details></div>`;
 }
