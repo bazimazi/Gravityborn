@@ -10,6 +10,17 @@ import { Renderer } from './presentation/renderer';
 import { shell } from './presentation/shell';
 import { abilities, abilityById } from './content/abilities';
 import { enemyDefinitions, eliteModifiers, type EliteModifier } from './content/enemies';
+import { Expedition } from './progression/expedition';
+import { expeditionView } from './presentation/expedition';
+import { SaveStore } from './core/save';
+import {
+  newProfile,
+  readProfile,
+  settleRun,
+  unlockClass,
+  type Profile,
+} from './progression/profile';
+import { classes } from './content/classes';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -22,6 +33,33 @@ try {
 }
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) settings.reducedMotion = true;
 const game = new Game();
+const run = new Expedition(game);
+let saveStore: SaveStore;
+try {
+  saveStore = new SaveStore(window.localStorage);
+} catch {
+  saveStore = new SaveStore({
+    getItem: () => null,
+    setItem: () => {
+      throw new Error('Storage unavailable');
+    },
+  });
+}
+const saved = saveStore.load() as { profile?: unknown; checkpoint?: unknown } | null;
+let profile: Profile = saved?.profile ? readProfile(saved.profile) : newProfile();
+let checkpoint: unknown = saved?.checkpoint ?? null;
+element('.header-right').insertAdjacentHTML(
+  'afterbegin',
+  '<button class="icon-button" id="profile-open" aria-label="Progression hub" title="Progression and saved expedition">✦</button>',
+);
+document.body.insertAdjacentHTML(
+  'beforeend',
+  '<dialog id="profile-dialog" aria-labelledby="profile-title"><button data-close aria-label="Close progression">×</button></dialog>',
+);
+element('#start').insertAdjacentHTML(
+  'afterend',
+  '<button class="primary-button" data-run-action="new">Begin expedition</button>',
+);
 element('#spawn-kind').insertAdjacentHTML(
   'beforeend',
   Object.entries(enemyDefinitions)
@@ -38,13 +76,13 @@ element('#controls').insertAdjacentHTML(
 );
 element<HTMLSelectElement>('#ability-select').onchange = () => {
   const id = element<HTMLSelectElement>('#ability-select').value;
-  if (!game.abilities.levels.has(id)) game.abilities.learn(id);
+  if (!run.active && !game.abilities.levels.has(id)) game.abilities.learn(id);
   element('#ability-description').textContent = abilityById.get(id)!.description;
 };
 element('#ability-description').textContent = abilities[0].description;
 function castPower(): void {
   const id = element<HTMLSelectElement>('#ability-select').value;
-  if (!game.abilities.levels.has(id)) game.abilities.learn(id);
+  if (!run.active && !game.abilities.levels.has(id)) game.abilities.learn(id);
   const target = renderer.aim ?? {
     x: game.player.body.position.x + 160,
     y: game.player.body.position.y,
@@ -73,6 +111,144 @@ let armedWell = false;
 let toastUntil = 0;
 let resumeAfterDialog = false;
 let lastState = game.state;
+let runViewKey = '';
+let powerListKey = '';
+let upgradePaused = false;
+
+function persist(): void {
+  if (run.active && run.phase !== 'room') {
+    settleRun(profile, run);
+    checkpoint = run.snapshot();
+  }
+  saveStore.save({ profile, checkpoint });
+}
+function renderProfile(): void {
+  element('#profile-dialog').innerHTML =
+    `<div class="dialog-header"><h2 id="profile-title">The observatory</h2><button data-run-action="profile-close" aria-label="Close progression">×</button></div><p class="run-stats mono">${profile.shards} GRAVITY SHARDS · ${profile.research} RESEARCH · ${profile.runs} RUNS · ${profile.wins} WINS</p><p class="dialog-copy">Discoveries and class mastery survive death. Expeditions save at room boundaries; reloading returns to the last saved route.</p>${checkpoint ? '<button class="primary-button" data-run-action="resume">Resume saved route</button>' : ''}<label class="setting-row">Expedition seed <input id="run-seed" maxlength="64" placeholder="Random seed"></label><div class="class-grid">${classes.map((definition) => `<button class="run-card" data-class="${definition.id}" ${!profile.classes.includes(definition.id) && profile.shards < definition.cost ? 'disabled' : ''}><small>${profile.classes.includes(definition.id) ? (profile.selectedClass === definition.id ? 'SELECTED' : `MASTERY ${profile.mastery[definition.id] ?? 0}`) : `UNLOCK · ${definition.cost} SHARDS`}</small><strong>${definition.name}</strong><span>${definition.description}</span></button>`).join('')}</div><button class="primary-button" data-run-action="new">Start selected class</button><div class="save-tools"><button class="text-button" data-run-action="export">Export save</button><label class="text-button">Import save <input id="import-save" type="file" accept="application/json" hidden></label><span class="mono">SAVE: ${saveStore.state.toUpperCase()}</span></div>`;
+  element<HTMLInputElement>('#import-save').onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const data = saveStore.import(await file.text()) as
+      | { profile?: unknown; checkpoint?: unknown }
+      | undefined;
+    if (!data?.profile) {
+      toast('This save could not be verified.');
+      return;
+    }
+    profile = readProfile(data.profile);
+    checkpoint = data.checkpoint ?? null;
+    saveStore.save({ profile, checkpoint });
+    renderProfile();
+    toast('Save imported. Resume the saved route when ready.');
+  };
+}
+element('#profile-open').onclick = () => {
+  renderProfile();
+  openDialog('#profile-dialog');
+};
+
+function refreshRun(): void {
+  if (!run.active) return;
+  if (run.build.pending > 0 && run.phase === 'room' && game.state === 'playing') {
+    game.pause();
+    clearInput();
+    upgradePaused = true;
+  }
+  if (!run.build.pending && upgradePaused) {
+    upgradePaused = false;
+    if (run.phase === 'room') game.resume();
+  }
+  const visible = run.phase !== 'room' || run.build.pending > 0;
+  if (!visible) {
+    if (overlay.classList.contains('run-overlay')) {
+      overlay.classList.remove('run-overlay');
+      overlay.hidden = true;
+    }
+    return;
+  }
+  const key = `${run.phase}:${run.biome}:${run.rooms}:${run.build.pending}:${run.build.currency}:${run.message}`;
+  if (key !== runViewKey) {
+    runViewKey = key;
+    clearInput();
+    overlay.innerHTML = expeditionView(run);
+    if (run.phase !== 'room') persist();
+  }
+  overlay.classList.add('run-overlay');
+  overlay.hidden = false;
+}
+
+document.addEventListener('click', (event) => {
+  const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
+  if (!button || button.disabled) return;
+  if (button.dataset.class) {
+    const id = button.dataset.class;
+    if (profile.classes.includes(id) || unlockClass(profile, id)) profile.selectedClass = id;
+    saveStore.save({ profile, checkpoint });
+    renderProfile();
+    return;
+  }
+  if (button.dataset.runAction === 'profile-close') {
+    element<HTMLDialogElement>('#profile-dialog').close();
+    return;
+  }
+  if (button.dataset.runAction === 'export') {
+    const blob = new Blob([saveStore.export({ profile, checkpoint })], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'gravityborn-save.json';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  }
+  if (button.dataset.runAction === 'new') {
+    const seed = document.querySelector<HTMLInputElement>('#run-seed')?.value;
+    resumeAfterDialog = false;
+    element<HTMLDialogElement>('#profile-dialog').close();
+    run.start(
+      seed ||
+        `${new Date().toISOString().slice(0, 10)}-${crypto.getRandomValues(new Uint32Array(1))[0].toString(36)}`,
+      profile.selectedClass,
+    );
+    feedback.clear();
+    renderer.clear();
+    clearInput();
+    void audio.unlock();
+  } else if (button.dataset.runAction === 'resume') {
+    if (!checkpoint || !run.restore(checkpoint)) {
+      toast('The checkpoint could not be restored. Your profile is still available.');
+      return;
+    }
+    resumeAfterDialog = false;
+    element<HTMLDialogElement>('#profile-dialog').close();
+    feedback.clear();
+    renderer.clear();
+    clearInput();
+  } else if (button.dataset.runAction === 'lab') {
+    run.abandon();
+    overlay.classList.remove('run-overlay');
+    restart();
+    return;
+  } else if (button.dataset.room) {
+    if (run.enter(button.dataset.room)) {
+      feedback.clear();
+      renderer.clear();
+      toast(run.message);
+    }
+  } else if (button.dataset.upgrade) run.build.choose(button.dataset.upgrade);
+  else if (button.dataset.buy) run.buy(button.dataset.buy);
+  else if (button.dataset.event)
+    run.resolveEvent(button.dataset.event as 'risk' | 'repair' | 'leave');
+  else if (button.dataset.runAction === 'advance') run.advance();
+  else if (button.dataset.runAction === 'leave-shop') run.leaveShop();
+  else return;
+  runViewKey = '';
+  refreshRun();
+  updateHud(60);
+  if (run.phase === 'room' && !run.build.pending) canvas.focus({ preventScroll: true });
+});
 
 function toast(message: string): void {
   element('#toast').textContent = message;
@@ -96,6 +272,8 @@ function begin(): void {
   toast('Flip gravity to launch objects into hostiles.');
 }
 function restart(): void {
+  if (run.active) run.abandon();
+  overlay.classList.remove('run-overlay');
   game.reset();
   feedback.clear();
   renderer.clear();
@@ -109,6 +287,7 @@ function restart(): void {
   element('#intro-help').onclick = () => openDialog('#help-dialog');
 }
 function pauseToggle(): void {
+  if (run.active && (run.phase !== 'room' || run.build.pending > 0)) return;
   if (document.querySelector('dialog[open]')) return;
   clearInput();
   if (game.state === 'playing') game.pause();
@@ -344,6 +523,10 @@ element<HTMLInputElement>('#gravity-strength').oninput = (event) => {
 };
 
 function showState(): void {
+  if (run.active && (run.phase !== 'room' || run.build.pending > 0)) {
+    refreshRun();
+    return;
+  }
   if (game.state === 'playing') {
     overlay.hidden = true;
     return;
@@ -368,6 +551,23 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  const listKey = run.active
+    ? [...game.abilities.levels].map(([id, level]) => `${id}:${level}`).join(',')
+    : 'laboratory';
+  if (listKey !== powerListKey) {
+    powerListKey = listKey;
+    const select = element<HTMLSelectElement>('#ability-select');
+    const previous = select.value;
+    select.innerHTML = abilities
+      .filter((ability) => !run.active || game.abilities.levels.has(ability.id))
+      .map(
+        (ability) =>
+          `<option value="${ability.id}">${ability.name}${run.active ? ` ${game.abilities.levels.get(ability.id)}` : ''}</option>`,
+      )
+      .join('');
+    if ([...select.options].some((option) => option.value === previous)) select.value = previous;
+    element('#ability-description').textContent = abilityById.get(select.value)?.description ?? '';
+  }
   const selectedPower = element<HTMLSelectElement>('#ability-select').value;
   const cooldown = game.abilities.cooldowns.get(selectedPower) ?? 0;
   element('#energy-value').textContent =
@@ -375,8 +575,9 @@ function updateHud(fps: number): void {
   element('#ability-cast').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : 'Cast · Q';
   element<HTMLButtonElement>('#ability-cast').disabled = game.state !== 'playing' || cooldown > 0;
   const health = Math.ceil(game.player.health);
-  element('#health-value').textContent = `${health} / 100`;
-  element('#health-fill').style.width = `${health}%`;
+  element('#health-value').textContent = `${health} / ${game.maxHealth}`;
+  element('#health-fill').style.width = `${(health / game.maxHealth) * 100}%`;
+  element('[role="progressbar"]').setAttribute('aria-valuemax', String(game.maxHealth));
   element('[role="progressbar"]').setAttribute('aria-valuenow', String(health));
   element('#timer').textContent = `${Math.floor(game.time / 60)
     .toString()
@@ -447,6 +648,7 @@ function frame(now: number): void {
     if (game.state === 'won' || game.state === 'lost') clearInput();
     showState();
   }
+  refreshRun();
   if (now - hudTime > 80) {
     updateHud(fps);
     hudTime = now;
@@ -470,5 +672,16 @@ if (import.meta.env.DEV)
       stats: { ...game.stats },
       bodies: game.world.entities.size,
       move: { ...game.move },
+      expedition: run.active
+        ? {
+            phase: run.phase,
+            seed: run.seed,
+            rooms: run.rooms,
+            biome: run.biome,
+            level: run.build.level,
+            pending: run.build.pending,
+            currency: run.build.currency,
+          }
+        : null,
     }),
   });

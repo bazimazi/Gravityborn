@@ -14,9 +14,9 @@ Test on actual low/mid-range Android devices and an iPhone, in portrait and land
 
 The user has authorized continuing through the full plan while external player and device validation remain open. These checks are tracked separately and do not block repository implementation. `implementation-status.json` tracks all 113 numbered specification sections; partial entries are not completion claims.
 
-Implemented beyond the first prototype: 21 authored physical powers with energy/cooldown/evolution support; tagged modifiers; 13 additional enemy behaviors; eight elite modifiers; laboratory selection and cast controls. Automated checks currently cover 79 unit cases and 18 applicable browser cases.
+Implemented beyond the first prototype: 21 authored physical powers; tagged modifiers and triggers; 13 additional enemy behaviors; eight elite modifiers; authored room composition across eight biome definitions; seeded branching routes; XP choices; 15 relics and four synergies; five bosses; a complete three-region expedition; eight unlockable classes; versioned local progression saves with backup recovery, export/import, and route checkpoints. Automated checks currently cover 106 unit cases and 24 applicable browser cases. The default expedition currently visits the first three biomes; remaining biome access and campaign modes are still in progress.
 
-Current work proceeds through authored rooms and hazards, seeded branching maps, XP choices and relics, bosses, complete runs, persistent progression, expanded content, and release preparation.
+Current work proceeds through equipment, progression trees, mutations, expanded campaign/content, accessibility, offline/native delivery, and release preparation. Existing room-flow tests use direct combat completion to verify transitions; they do not establish player win rates or difficulty balance.
 
 Add the section 104 systems in order: modular ability definitions, enemy behaviors, procedural authored-room composition, XP and three-choice upgrades, one elite, one boss, and a complete run. Extend tests with seeded generation reachability and run-state persistence before introducing meta progression.
 

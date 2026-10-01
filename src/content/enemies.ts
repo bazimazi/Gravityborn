@@ -1,4 +1,5 @@
 import base from '../data/entities.json';
+import { bossDefinitions } from './bosses';
 
 function enemy(
   name: string,
@@ -53,4 +54,4 @@ export const enemyGlyphs: Record<SpecialEnemy, string> = {
   parasite: '+',
   summoner: 'Σ',
 };
-export const entityDefinitions = { ...base, ...enemyDefinitions };
+export const entityDefinitions = { ...base, ...enemyDefinitions, ...bossDefinitions };

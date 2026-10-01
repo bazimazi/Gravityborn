@@ -69,13 +69,13 @@ export class AbilitySystem {
     return id;
   }
 
-  cast(id: string, target: Vec2): boolean {
+  cast(id: string, target: Vec2, repeated = false): boolean {
     const definition = abilityById.get(id);
     const level = this.levels.get(id);
     if (
       !definition ||
       !level ||
-      (this.cooldowns.get(id) ?? 0) > 0 ||
+      (!repeated && (this.cooldowns.get(id) ?? 0) > 0) ||
       !Number.isFinite(target.x + target.y)
     )
       return false;
@@ -83,7 +83,10 @@ export class AbilitySystem {
       0,
       this.modifiers.evaluate('energyCost', definition.energy, definition.tags),
     );
-    if (cost > this.energy || this.host.gravity.fields.size > balance.physics.maxFields - 4)
+    if (
+      (!repeated && cost > this.energy) ||
+      this.host.gravity.fields.size > balance.physics.maxFields - 4
+    )
       return false;
     const point =
       definition.target === 'player' ? { ...this.host.player.body.position } : { ...target };
@@ -289,12 +292,18 @@ export class AbilitySystem {
         break;
     }
     for (const entity of targets) this.host.markCause(entity, chain);
-    this.energy -= cost;
-    this.cooldowns.set(
+    if (!repeated) this.energy -= cost;
+    if (!repeated)
+      this.cooldowns.set(
+        id,
+        Math.max(0.25, this.modifiers.evaluate('cooldown', definition.cooldown, definition.tags)),
+      );
+    this.host.events.emit('abilityUsed', {
       id,
-      Math.max(0.25, this.modifiers.evaluate('cooldown', definition.cooldown, definition.tags)),
-    );
-    this.host.events.emit('abilityUsed', { id, tags: definition.tags, position: point, level });
+      tags: repeated ? [...definition.tags, 'Echo'] : definition.tags,
+      position: point,
+      level,
+    });
     return true;
   }
 

@@ -14,6 +14,42 @@ interface Snapshot {
 const snapshot = (page: Page): Promise<Snapshot> =>
   page.evaluate(() => (window as unknown as { __gravityborn: () => Snapshot }).__gravityborn());
 
+test('starts a seeded expedition and restricts powers to the current build', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
+  await expect(page.locator('[data-room]:enabled')).toHaveCount(1);
+  await page.locator('[data-room]:enabled').click();
+  await expect(page.locator('#overlay')).toBeHidden();
+  await expect(page.locator('#ability-select option')).toHaveCount(2);
+  expect((await snapshot(page)).state).toBe('playing');
+  await page.getByRole('button', { name: 'Pause game', exact: true }).click();
+  expect((await snapshot(page)).state).toBe('paused');
+});
+
+test('reloads a saved route and starts the same room without losing progression', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
+  const before = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('gravityborn.save')!).payload.checkpoint,
+  );
+  await page.locator('[data-room]:enabled').click();
+  await page.reload();
+  await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+  await page.getByRole('button', { name: 'Resume saved route', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
+  const after = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('gravityborn.save')!).payload.checkpoint,
+  );
+  expect(after.id).toBe(before.id);
+  expect(after.seed).toBe(before.seed);
+  expect(after.build).toEqual(before.build);
+  await page.locator('[data-room]:enabled').click();
+  expect((await snapshot(page)).state).toBe('playing');
+});
+
 test('selects and casts a physical power with visible energy and cooldown', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Enter the chamber/ }).click();

@@ -1,11 +1,13 @@
 import type { Settings } from '../core/settings';
 import type { Vec2 } from '../core/vector';
-import arena from '../data/arena.json';
+import { biomes } from '../content/rooms';
 import balance from '../data/balance.json';
 import type { Game } from '../gameplay/game';
 import type { Entity } from '../physics/world';
 import type { Feedback } from './feedback';
 import { computeCamera } from './camera';
+import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';
+import { bossDefinitions } from '../content/bosses';
 
 export class Renderer {
   private readonly context: CanvasRenderingContext2D;
@@ -62,7 +64,7 @@ export class Renderer {
 
     const camera = computeCamera(
       { x: this.width, y: this.height },
-      { x: arena.width, y: arena.height },
+      { x: game.room.width, y: game.room.height },
       game.player.body.position,
     );
     this.scale = camera.scale;
@@ -73,6 +75,26 @@ export class Renderer {
     if (!this.settings.reducedMotion && feedback.shake > 0)
       ctx.translate(Math.sin(now * 0.07) * feedback.shake, Math.cos(now * 0.09) * feedback.shake);
     this.drawArena(game, now);
+    const boss = game.bosses.active;
+    if (boss) {
+      ctx.fillStyle = '#171421';
+      ctx.fillRect(350, 100, 500, 14);
+      ctx.fillStyle = boss.entity.definition.color;
+      ctx.fillRect(350, 100, (500 * boss.entity.health) / boss.entity.definition.health, 14);
+      ctx.font = 'bold 15px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${boss.name.toUpperCase()} · PHASE ${boss.phase}`, 600, 90);
+      if (boss.telegraph > 0) {
+        ctx.strokeStyle = '#ffdca4';
+        ctx.lineWidth = 3;
+        this.circle(
+          boss.entity.body.position.x,
+          boss.entity.body.position.y,
+          60 + boss.telegraph * 25,
+        );
+        ctx.stroke();
+      }
+    }
     for (const field of game.gravity.fields.values()) {
       const opacity = Math.min(1, field.remaining);
       ctx.save();
@@ -143,7 +165,8 @@ export class Renderer {
 
   private drawArena(game: Game, now: number): void {
     const ctx = this.context;
-    ctx.fillStyle = '#0e1a2a';
+    const arena = game.room;
+    ctx.fillStyle = biomes[arena.biome].color;
     ctx.fillRect(50, 50, arena.width - 100, arena.height - 100);
     ctx.strokeStyle = '#8db0d008';
     ctx.lineWidth = 1;
@@ -175,11 +198,58 @@ export class Renderer {
     ctx.font = '600 48px ui-monospace, monospace';
     ctx.fillStyle = '#8cb0c409';
     ctx.fillText('THE WEIGHT', 425, 423);
+    for (const [index, hazard] of arena.hazards.entries()) {
+      const active = game.environment.hazardActive(index);
+      ctx.fillStyle = hazard.kind === 'wind' ? '#80d9f020' : active ? '#ff82616a' : '#ff826118';
+      ctx.fillRect(
+        hazard.x - hazard.width / 2,
+        hazard.y - hazard.height / 2,
+        hazard.width,
+        hazard.height,
+      );
+      ctx.strokeStyle = hazard.kind === 'wind' ? '#80d9f0' : '#ff8261';
+      ctx.strokeRect(
+        hazard.x - hazard.width / 2,
+        hazard.y - hazard.height / 2,
+        hazard.width,
+        hazard.height,
+      );
+      ctx.font = '12px monospace';
+      ctx.fillStyle = '#f9ddcb';
+      ctx.fillText(hazard.kind.toUpperCase(), hazard.x - hazard.width / 2 + 6, hazard.y - 8);
+    }
+    if (arena.puzzle) {
+      ctx.strokeStyle = game.environment.switchActive ? '#8cf2e3' : '#eabb7d';
+      ctx.lineWidth = 3;
+      this.circle(arena.puzzle.switch.x, arena.puzzle.switch.y, 40);
+      ctx.stroke();
+      ctx.font = '12px monospace';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.fillText('MASS SWITCH', arena.puzzle.switch.x - 40, arena.puzzle.switch.y - 48);
+      ctx.strokeRect(arena.puzzle.exit.x - 35, arena.puzzle.exit.y - 35, 70, 70);
+      ctx.fillText(
+        game.environment.switchActive ? 'EXIT OPEN' : 'EXIT LOCKED',
+        arena.puzzle.exit.x - 40,
+        arena.puzzle.exit.y - 48,
+      );
+    }
     for (const wall of game.world.walls) {
       const x = wall.bounds.min.x;
       const y = wall.bounds.min.y;
       const width = wall.bounds.max.x - x;
       const height = wall.bounds.max.y - y;
+      if (Math.abs(wall.angle % Math.PI) > 0.01) {
+        ctx.beginPath();
+        wall.vertices.forEach((vertex, index) =>
+          index ? ctx.lineTo(vertex.x, vertex.y) : ctx.moveTo(vertex.x, vertex.y),
+        );
+        ctx.closePath();
+        ctx.fillStyle = '#142336';
+        ctx.strokeStyle = '#87bdd3';
+        ctx.fill();
+        ctx.stroke();
+        continue;
+      }
       ctx.fillStyle = '#142336';
       ctx.fillRect(x, y, width, height);
       ctx.strokeStyle = '#33485e';
@@ -307,6 +377,14 @@ export class Renderer {
         ctx.strokeRect(-12, -12, 24, 24);
         ctx.fillStyle = color;
         ctx.fillRect(-5, -5, 10, 10);
+      } else if (entity.kind in bossDefinitions) {
+        ctx.lineWidth = 3;
+        this.circle(0, 0, 20);
+        ctx.stroke();
+        for (let i = 0; i < 4; i++) {
+          ctx.rotate(Math.PI / 2);
+          this.line(0, -15, 0, -35);
+        }
       } else if (entity.kind in enemyGlyphs) {
         ctx.fillStyle = color;
         ctx.font = 'bold 20px monospace';
@@ -401,4 +479,3 @@ export class Renderer {
     this.context.stroke();
   }
 }
-import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';
