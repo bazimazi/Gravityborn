@@ -17,6 +17,7 @@
     "test:browser": "playwright test",
     "playtest": "node scripts/playtest.mjs",
     "benchmark": "tsx scripts/benchmark.ts",
+    "validate:content": "tsx scripts/validate-content.ts",
     "format": "prettier --write src tests scripts *.ts *.json",
     "format:check": "prettier --check src tests scripts *.ts *.json"
   },

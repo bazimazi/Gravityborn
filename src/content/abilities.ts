@@ -29,6 +29,21 @@ export interface AbilityDefinition {
   target: 'point' | 'player';
   maxLevel: number;
   evolution?: string;
+  parameters?: {
+    momentumScale?: number;
+    planetCount?: number;
+    collapseMultiplier?: number;
+    collapseDamageType?: string;
+    chainTargets?: number;
+    affects?: string[];
+    falloff?: 'constant' | 'linear' | 'inverseSquare';
+  };
+  feedback?: {
+    color?: string;
+    startFrequency?: number;
+    endFrequency?: number;
+    soundDuration?: number;
+  };
 }
 
 export const abilities: AbilityDefinition[] = [
@@ -150,7 +165,7 @@ export const abilities: AbilityDefinition[] = [
     effect: 'beam',
     energy: 18,
     cooldown: 3,
-    radius: 650,
+    radius: 600,
     strength: 11,
     duration: 0,
     target: 'point',
@@ -206,6 +221,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'black_hole',
+    parameters: { collapseMultiplier: 1.8, collapseDamageType: 'Void' },
     rarity: 'epic',
     name: 'Black Hole',
     description:
@@ -330,6 +346,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'nova',
+    parameters: { momentumScale: -0.5 },
     rarity: 'legendary',
     name: 'Gravity Nova',
     description: 'An evolved pulse reverses inbound momentum before a wide, powerful launch.',
@@ -345,6 +362,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'binary',
+    parameters: { planetCount: 2 },
     rarity: 'legendary',
     name: 'Binary System',
     description: 'Two orbiting gravitational bodies trap and slingshot nearby matter.',

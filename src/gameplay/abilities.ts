@@ -23,7 +23,13 @@ interface Binding {
   entity?: Entity;
   chain: number;
   expires: number;
-  collapse?: { radius: number; position: Vec2; multiplier: number };
+  collapse?: {
+    radius: number;
+    position: Vec2;
+    multiplier: number;
+    damageType: string;
+    affects?: string[];
+  };
 }
 interface Status {
   entity: Entity;
@@ -83,14 +89,23 @@ export class AbilitySystem {
       0,
       this.modifiers.evaluate('energyCost', definition.energy, definition.tags),
     );
+    const tuning = balance.abilities;
+    const parameters = definition.parameters ?? {};
+    const planets = definition.effect === 'planet' ? (parameters.planetCount ?? 1) : 0;
+    const fieldSlots = planets
+      ? planets * 2
+      : ['field', 'collapse', 'reflect'].includes(definition.effect)
+        ? 1
+        : 0;
     if (
       (!repeated && cost > this.energy) ||
-      this.host.gravity.fields.size > balance.physics.maxFields - 4
+      this.host.gravity.fields.size + fieldSlots > balance.physics.maxFields ||
+      this.host.world.entities.size + planets > balance.physics.maxBodies
     )
       return false;
     const point =
       definition.target === 'player' ? { ...this.host.player.body.position } : { ...target };
-    const factor = 1 + (level - 1) * 0.25;
+    const factor = 1 + (level - 1) * tuning.levelStrength;
     const radius = this.modifiers.evaluate(
       'radius',
       definition.radius * Math.sqrt(factor),
@@ -103,7 +118,7 @@ export class AbilitySystem {
     );
     const duration = this.modifiers.evaluate('duration', definition.duration, definition.tags);
     const chain = this.host.createCause(id);
-    const targets = this.near(point, radius);
+    const targets = this.near(point, radius, parameters.affects);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
       this.host.markCause(entity, chain);
       if (entity.kind === 'projectile') entity.redirected = true;
@@ -122,7 +137,8 @@ export class AbilitySystem {
         position: center,
         strength: power,
         radius,
-        falloff: mode === 'zero' ? 'constant' : 'linear',
+        falloff: parameters.falloff ?? (mode === 'zero' ? 'constant' : 'linear'),
+        affects: parameters.affects,
         remaining: duration,
       });
       this.bindings.push({
@@ -144,15 +160,20 @@ export class AbilitySystem {
         break;
       case 'impulse':
       case 'burst': {
-        const extra = definition.effect === 'burst' ? this.stored * 0.12 : 0;
+        const extra = definition.effect === 'burst' ? this.stored * tuning.burstStoredRatio : 0;
         for (const entity of targets) {
-          if (id === 'nova')
-            Matter.Body.setVelocity(entity.body, scale(entity.body.velocity, -0.5));
+          if (parameters.momentumScale !== undefined && !entity.body.isStatic)
+            Matter.Body.setVelocity(
+              entity.body,
+              scale(Matter.Body.getVelocity(entity.body), parameters.momentumScale),
+            );
           impulse(
             entity,
             normalize(subtract(entity.body.position, point)),
             (strength + extra) *
-              (1 - length(subtract(entity.body.position, point)) / (radius * 1.3)),
+              (1 -
+                length(subtract(entity.body.position, point)) /
+                  (radius * tuning.impulseFalloffRadius)),
           );
         }
         if (definition.effect === 'burst') this.stored = 0;
@@ -176,7 +197,7 @@ export class AbilitySystem {
         const sourceBonus = [...this.host.gravity.fields.values()].some(
           (source) => length(subtract(source.position, this.host.player.body.position)) < radius,
         )
-          ? 1.4
+          ? tuning.dashSourceMultiplier
           : 1;
         this.host.world.impulse(
           this.host.player,
@@ -185,7 +206,10 @@ export class AbilitySystem {
             strength * sourceBonus,
           ),
         );
-        this.host.player.invulnerability = Math.max(this.host.player.invulnerability, 0.2);
+        this.host.player.invulnerability = Math.max(
+          this.host.player.invulnerability,
+          tuning.dashInvulnerability,
+        );
         break;
       }
       case 'theft': {
@@ -204,16 +228,20 @@ export class AbilitySystem {
           original: victim.gravityScale,
         });
         victim.gravityScale *= Math.max(
-          0.02,
+          tuning.theftMinimumResponse,
           definition.strength ** (strength / definition.strength),
         );
-        this.stored = Math.min(100, this.stored + victim.body.mass * 8);
+        this.stored = Math.min(
+          tuning.storedMaximum,
+          this.stored + victim.body.mass * tuning.theftMassCharge,
+        );
         this.host.markCause(victim, chain);
         break;
       }
       case 'transfer': {
-        if (targets.length < 2) return false;
-        const [a, b] = targets;
+        const dynamic = targets.filter((entity) => !entity.body.isStatic);
+        if (dynamic.length < 2) return false;
+        const [a, b] = dynamic;
         const velocity = Matter.Body.getVelocity(a.body);
         Matter.Body.setVelocity(a.body, Matter.Body.getVelocity(b.body));
         Matter.Body.setVelocity(b.body, velocity);
@@ -226,11 +254,22 @@ export class AbilitySystem {
       case 'beam': {
         const direction = normalize(subtract(target, this.host.player.body.position));
         for (const entity of this.host.world.entities.values()) {
-          if (entity.kind === 'player') continue;
+          if (
+            entity.kind === 'player' ||
+            (parameters.affects &&
+              !parameters.affects.some(
+                (tag) => tag === entity.definition.material || entity.definition.tags.includes(tag),
+              ))
+          )
+            continue;
           const delta = subtract(entity.body.position, this.host.player.body.position);
           const forward = delta.x * direction.x + delta.y * direction.y;
           const sideways = Math.abs(delta.x * direction.y - delta.y * direction.x);
-          if (forward > 0 && forward < radius && sideways < 32 + entity.definition.radius)
+          if (
+            forward > 0 &&
+            forward < radius &&
+            sideways < tuning.beamWidth + entity.definition.radius
+          )
             impulse(entity, direction, strength);
         }
         break;
@@ -238,36 +277,40 @@ export class AbilitySystem {
       case 'collapse': {
         field('radial', point, strength);
         this.bindings[this.bindings.length - 1].collapse = {
-          radius: radius * 0.38,
+          radius: radius * tuning.collapseRadiusRatio,
           position: point,
-          multiplier: id === 'black_hole' ? 1.8 : 1,
+          multiplier: parameters.collapseMultiplier ?? 1,
+          damageType: parameters.collapseDamageType ?? 'Compression',
+          affects: parameters.affects,
         };
         break;
       }
       case 'planet': {
-        const count = id === 'binary' ? 2 : 1;
+        const count = planets;
         for (let index = 0; index < count; index++) {
           const planet = this.host.world.spawn('rock', {
-            x: point.x + (count > 1 ? (index ? 45 : -45) : 0),
+            x: point.x + (index - (count - 1) / 2) * tuning.planetOffset * 2,
             y: point.y,
           });
           if (!planet) continue;
-          planet.gravityScale = 0.1;
+          planet.gravityScale = tuning.planetGravityScale;
           this.host.markCause(planet, chain);
           this.planets.push({ entity: planet, expires: this.host.time + duration });
-          this.host.world.impulse(planet, { x: 0, y: index ? -5 : 5 });
+          this.host.world.impulse(planet, { x: 0, y: (index % 2 ? -1 : 1) * tuning.planetImpulse });
           field('radial', planet.body.position, strength, planet);
-          field('vortex', planet.body.position, strength * 0.45, planet);
+          field('vortex', planet.body.position, strength * tuning.planetVortexRatio, planet);
         }
         break;
       }
       case 'chain': {
         let source = { ...this.host.player.body.position };
-        for (const [index, entity] of targets.slice(0, 5).entries()) {
+        for (const [index, entity] of targets
+          .slice(0, parameters.chainTargets ?? tuning.chainTargets)
+          .entries()) {
           impulse(
             entity,
             normalize(subtract(entity.body.position, source)),
-            strength * (1 - index * 0.12),
+            strength * Math.max(0, 1 - index * tuning.chainFalloff),
           );
           source = entity.body.position;
         }
@@ -313,7 +356,7 @@ export class AbilitySystem {
   tick(dt: number): void {
     this.energy = Math.min(
       this.maxEnergy,
-      this.energy + this.modifiers.evaluate('energyRegen', 8) * dt,
+      this.energy + this.modifiers.evaluate('energyRegen', balance.abilities.energyRegen) * dt,
     );
     for (const [id, remaining] of this.cooldowns)
       this.cooldowns.set(id, Math.max(0, remaining - dt));
@@ -322,7 +365,7 @@ export class AbilitySystem {
       if (status.until > this.host.time && status.entity.alive) continue;
       if (status.kind === 'lock') {
         Matter.Body.setStatic(status.entity.body, false);
-        this.resistance.set(status.entity.id, this.host.time + 4);
+        this.resistance.set(status.entity.id, this.host.time + balance.abilities.lockResistance);
       } else status.entity.gravityScale = status.original;
       this.statuses.splice(index, 1);
     }
@@ -330,13 +373,20 @@ export class AbilitySystem {
       const binding = this.bindings[index];
       if (binding.expires <= this.host.time || (binding.entity && !binding.entity.alive)) {
         if (binding.collapse) {
-          const targets = this.near(binding.collapse.position, binding.collapse.radius);
+          const targets = this.near(
+            binding.collapse.position,
+            binding.collapse.radius,
+            binding.collapse.affects,
+          );
           for (const entity of targets)
             this.host.applyDamage(
               entity,
-              targets.length * Math.sqrt(entity.body.mass) * 12 * binding.collapse.multiplier,
+              targets.length *
+                Math.sqrt(entity.body.mass) *
+                balance.abilities.collapseDamage *
+                binding.collapse.multiplier,
               binding.chain,
-              binding.collapse.multiplier > 1 ? 'Void' : 'Compression',
+              binding.collapse.damageType,
             );
         }
         this.host.gravity.removeField(binding.field);
@@ -346,7 +396,7 @@ export class AbilitySystem {
       if (binding.entity) this.host.gravity.moveField(binding.field, binding.entity.body.position);
       const field = this.host.gravity.fields.get(binding.field);
       if (field)
-        for (const entity of this.near(field.position, field.radius)) {
+        for (const entity of this.near(field.position, field.radius, field.affects)) {
           this.host.markCause(entity, binding.chain);
           if (entity.kind === 'projectile') entity.redirected = true;
         }
@@ -388,7 +438,10 @@ export class AbilitySystem {
     this.cooldowns.clear();
     for (const [id, level] of Object.entries(snapshot.levels))
       if (abilityById.has(id) && Number.isFinite(level))
-        this.levels.set(id, Math.max(1, Math.min(3, Math.floor(level))));
+        this.levels.set(
+          id,
+          Math.max(1, Math.min(abilityById.get(id)!.maxLevel, Math.floor(level))),
+        );
     this.energy = Math.max(0, Math.min(this.maxEnergy, snapshot.energy));
     this.stored = Math.max(0, Math.min(100, snapshot.stored));
     for (const [id, cooldown] of Object.entries(snapshot.cooldowns))
@@ -396,12 +449,16 @@ export class AbilitySystem {
         this.cooldowns.set(id, Math.max(0, cooldown));
   }
 
-  private near(position: Vec2, radius: number): Entity[] {
+  private near(position: Vec2, radius: number, affects?: string[]): Entity[] {
     return [...this.host.world.entities.values()]
       .filter(
         (entity) =>
           entity.kind !== 'player' &&
           entity.alive &&
+          (!affects ||
+            affects.some(
+              (tag) => tag === entity.definition.material || entity.definition.tags.includes(tag),
+            )) &&
           length(subtract(entity.body.position, position)) < radius,
       )
       .sort(

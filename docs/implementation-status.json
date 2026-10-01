@@ -756,17 +756,18 @@
     {
       "section": 61,
       "title": "Procedural Content Architecture",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/content/abilities.ts",
+        "src/content/ability-feedback.ts",
+        "src/content/validate.ts",
+        "src/gameplay/abilities.ts",
+        "src/data/balance.json",
+        "scripts/validate-content.ts",
+        "tests/content.test.ts",
+        "docs/architecture.md"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Definition-only power authoring covers parameters, tags, rarity, feedback, evolutions, mastery and automatic UI integration. Catalog checks run in CI. New effect kinds still require implementation and focused tests."
     },
     {
       "section": 62,
@@ -1145,16 +1146,34 @@
     {
       "section": 98,
       "title": "Data-Driven Content",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/abilities.ts",
+        "src/content/ability-feedback.ts",
+        "src/content/validate.ts",
+        "src/gameplay/abilities.ts",
+        "src/data/balance.json",
+        "scripts/validate-content.ts",
+        "tests/content.test.ts",
+        "docs/architecture.md"
+      ],
+      "remaining": "Power tuning and evolution behavior are authored data; content references and values are validated. Remaining legacy boss/enemy/environment tuning constants need consolidation."
     },
     {
       "section": 99,
       "title": "Content Authoring Workflow",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/content/abilities.ts",
+        "src/content/ability-feedback.ts",
+        "src/content/validate.ts",
+        "src/gameplay/abilities.ts",
+        "src/data/balance.json",
+        "scripts/validate-content.ts",
+        "tests/content.test.ts",
+        "docs/architecture.md"
+      ],
+      "remaining": "Definition-only power authoring covers parameters, tags, rarity, feedback, evolutions, mastery and automatic UI integration. Catalog checks run in CI. New effect kinds still require implementation and focused tests."
     },
     {
       "section": 100,

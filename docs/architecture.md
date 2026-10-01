@@ -1,12 +1,12 @@
-# Physics prototype architecture
+# Gravityborn architecture
 
-The first milestone implements the specification's section 103. The browser is the initial test surface; native Android/iOS packaging is a later milestone.
+The TypeScript simulation runs in the browser and in Capacitor Android/iOS projects. The browser is the primary automated interaction surface. Android has an emulator-verified debug build; physical-device, iOS build and store-release gates remain external. See `native-delivery.md` and the section-by-section `implementation-status.json` ledger.
 
 `GravitySystem` owns all gravitational acceleration. A normalized global vector combines with radius-indexed local fields, then response and safety caps apply. Matter.js's built-in gravity is disabled. Acceleration multiplied by body mass becomes force, so mass changes collisions without changing free-fall acceleration. Definitions specify material, mass, gravity response, faction, tags, health, and breakability.
 
 `PhysicsWorld` owns the Matter.js engine, body lifecycle, projectile pool, collision facts, and finite-value/velocity limits. It advances at 120 Hz. Incoming velocities are recorded before collision resolution. Physics callbacks record collision facts; gameplay consumes them after the solver finishes. Local fields are indexed by covered spatial cells. Matter.js handles collision broad-phase and rigid body resolution. Both new and sustained contacts produce facts, allowing contact damage to repeat after the player's immunity window.
 
-Balance and entity content live in `src/data`. Renderers and audio subscribe to typed gameplay events; presentation never determines damage. Seeded procedural runs, progression, and save data are deliberately deferred until the physics fun test succeeds.
+Balance, entity definitions and derived-stat limits live in `src/data`; authored abilities, relics, equipment, classes, rooms and progression content live in `src/content`. Renderers and audio subscribe to typed gameplay events; presentation never determines damage. Seeded runs compose authored chambers, multiwave encounters and branching maps.
 
 Reference APIs: [Matter.Engine](https://brm.io/matter-js/docs/classes/Engine.html), [Matter.Body](https://brm.io/matter-js/docs/classes/Body.html).
 
@@ -16,7 +16,9 @@ Reference APIs: [Matter.Engine](https://brm.io/matter-js/docs/classes/Engine.htm
 
 Explosions are drained from a bounded causal queue after collision processing. Objects are removed before their explosion is processed, so a barrel cannot explode twice. Chain IDs expire, repeated effects are deduplicated, and causal depth is capped. Selecting the already-active gravity direction does not create a new cause. The HUD shows the strongest currently active chain.
 
-The field evaluator supports constant/linear/inverse-square falloff and radial/tangential/directional fields; only directional gravity and a radial well are exposed to players. Add abilities through this authority rather than another force implementation.
+The field evaluator supports constant/linear/inverse-square falloff and radial/vortex/directional/zero fields. Powers, bosses, environmental objects and anomalies all use this authority. Field filters match material or entity tags. Burning bodies spread heat through contact; ice quenches them. Broken energy cells and generators discharge through conductive bodies, interrupted by insulating gaps and walls. Material reactions retain causal IDs and have per-frame and depth limits.
+
+`Expedition` owns seeded route transitions, encounters, rewards and run metrics. `RunBuild` owns XP choices, equipped powers, primary-well evolution, relics, equipment, mutations and derived modifiers. `Profile` retains discoveries, research, equipment, classes, challenges and mastery. Breaking a physical rift seal reveals a hidden map route; clearing its optional elite encounter awards rare loot and regional lore. `Tutorial` runs seven manually completed training chambers without altering expedition progression.
 
 ## Presentation and input
 
@@ -24,7 +26,15 @@ The field evaluator supports constant/linear/inverse-square falloff and radial/t
 
 `main.ts` connects semantic DOM controls to the simulation. Keyboard movement uses screen coordinates, which remain stable as gravity changes. Pointer capture supports joystick drags. Gravity buttons handle pointer presses so a second simultaneous touch works; keyboard activation remains available. Blur, visibility loss, and pointer cancellation clear movement. Dialogs pause simulation and remember whether it should resume. Portrait presentation follows the player horizontally; short landscape presentation follows vertically. Neither changes world coordinates. Normal desktop aspect ratios show the centered complete room.
 
-`settings.ts` validates, migrates, and stores only settings. Storage failure falls back to defaults without stopping play. Future-version records are never overwritten by this build. No progression schema exists yet.
+`settings.ts` validates and migrates settings. `SaveStore` uses a versioned checksum envelope and backup recovery, with validated profile and route checkpoint readers. Checkpoints resume from room boundaries, not a serialized rigid-body solver. Browser storage and preloaded Capacitor Preferences share a synchronous cache interface; native writes drain in order. Storage failure is reported without preventing play, and future-version records are not overwritten. The generated service worker caches the production shell atomically for offline browser startup.
+
+Local diagnostics record bounded counts, totals, maxima and the latest 300 gameplay events inside the profile save. Players can disable recording, clear it or export a JSON report. Diagnostic exports omit run seeds and account information; no analytics network service is used. Inspector mutations mark expeditions as assisted.
+
+## Content authoring
+
+Add an `AbilityDefinition` to `src/content/abilities.ts` with a stable ID, name, description, rarity, synergy tags, effect, energy/cooldown, radius/strength/duration, target and maximum level. The effect implementation is shared across definitions. Optional parameters configure material/tag filtering, falloff, momentum scaling, planet count, compression, or chain length. Optional feedback settings override color, tone frequencies and duration; otherwise tags choose defaults. Evolution references point to another authored definition. Mastery objectives, codex entries, inspector selectors and eligible upgrade/shop pools derive from the catalog automatically. Add compatible combinations in the synergy catalog when the mechanic needs one.
+
+Use `npm run validate:content` to check unique IDs, numeric limits, evolution/prerequisite cycles, modifiers/triggers, rewards, equipment sets and biome references. A new effect kind needs a focused gameplay test; a new definition using an existing effect is covered by catalog validation and the per-power finite-simulation test. Use the inspector for interactive review, the seeded expedition bot for input-only reachability, and `npm run benchmark` for host simulation budgets. These checks do not establish human enjoyment or mobile-device performance.
 
 ## Safety budgets and limits
 

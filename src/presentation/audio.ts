@@ -1,5 +1,6 @@
 import type { EventBus } from '../core/events';
 import type { Settings } from '../core/settings';
+import { abilityFeedback } from '../content/ability-feedback';
 
 export type MusicState =
   | 'off'
@@ -39,7 +40,10 @@ export class GameAudio {
     events.on('gravityChanged', () => this.tone(320, 95, 0.22, 'sine', 0.15));
     events.on('wellCreated', () => this.tone(90, 220, 0.5, 'sine', 0.2));
     events.on('collected', () => this.tone(500, 800, 0.08, 'sine', 0.035));
-    events.on('abilityUsed', () => this.tone(180, 420, 0.2, 'triangle', 0.12));
+    events.on('abilityUsed', (event) => {
+      const style = abilityFeedback(event.id);
+      this.tone(style.startFrequency, style.endFrequency, style.soundDuration, 'triangle', 0.12);
+    });
     events.on('explosion', () => this.tone(130, 25, 0.35, 'sawtooth', 0.18));
     events.on('killed', () => this.tone(260, 80, 0.1, 'triangle', 0.12));
     events.on('damaged', (event) => {

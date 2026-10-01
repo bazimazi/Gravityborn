@@ -82,5 +82,26 @@
     "arcDamage": 24,
     "maxArcs": 24
   },
+  "abilities": {
+    "levelStrength": 0.25,
+    "burstStoredRatio": 0.12,
+    "impulseFalloffRadius": 1.3,
+    "dashSourceMultiplier": 1.4,
+    "dashInvulnerability": 0.2,
+    "theftMinimumResponse": 0.02,
+    "storedMaximum": 100,
+    "theftMassCharge": 8,
+    "beamWidth": 32,
+    "collapseRadiusRatio": 0.38,
+    "collapseDamage": 12,
+    "planetOffset": 45,
+    "planetGravityScale": 0.1,
+    "planetImpulse": 5,
+    "planetVortexRatio": 0.45,
+    "chainTargets": 5,
+    "chainFalloff": 0.12,
+    "lockResistance": 4,
+    "energyRegen": 8
+  },
   "presentation": { "maxParticles": 200, "maxPixelRatio": 2, "shake": 5 }
 }

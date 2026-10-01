@@ -320,8 +320,10 @@ export class Expedition {
   buy(id: string): boolean {
     const item = this.shop.find((item) => item.id === id);
     if (this.phase !== 'shop' || !item || !purchase(this.build, item)) return false;
-    if (relics.some(relic => relic.id === id)) this.game.events.emit('diagnostic', { event: 'RelicChoices', subject: id });
-    if (id.startsWith('ability:')) this.game.events.emit('diagnostic', { event: 'AbilityChoices', subject: id.slice(8) });
+    if (relics.some((relic) => relic.id === id))
+      this.game.events.emit('diagnostic', { event: 'RelicChoices', subject: id });
+    if (id.startsWith('ability:'))
+      this.game.events.emit('diagnostic', { event: 'AbilityChoices', subject: id.slice(8) });
     this.discoveries.add(id.includes(':') ? id : `relic:${id}`);
     this.message = `Acquired ${shopDescription(id)!.name}.`;
     return true;

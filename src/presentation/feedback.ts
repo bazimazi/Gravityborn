@@ -1,6 +1,7 @@
 import type { EventBus } from '../core/events';
 import type { Vec2 } from '../core/vector';
 import balance from '../data/balance.json';
+import { abilityFeedback } from '../content/ability-feedback';
 
 interface Particle {
   x: number;
@@ -71,8 +72,9 @@ export class Feedback {
       );
     });
     events.on('abilityUsed', (event) => {
-      this.ring(event.position, 160, '#80e6d1');
-      this.burst(event.position, '#b5a0ff', 12, 110);
+      const style = abilityFeedback(event.id);
+      this.ring(event.position, style.radius, style.color);
+      this.burst(event.position, style.color, 12, 110);
     });
     events.on('killed', (event) => {
       if (event.kind === 'rift_seal')
