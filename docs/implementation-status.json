@@ -144,41 +144,44 @@
     {
       "section": 13,
       "title": "Enemy Design",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
+        "src/content/enemies.ts",
+        "src/content/variants.ts",
         "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/content/rooms.ts",
+        "tests/enemies.test.ts",
+        "tests/variants.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
     {
       "section": 14,
       "title": "Enemy Archetypes",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
+        "src/content/enemies.ts",
+        "src/content/variants.ts",
         "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/content/rooms.ts",
+        "tests/enemies.test.ts",
+        "tests/variants.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
     {
       "section": 15,
       "title": "Elite Enemies",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
+        "src/content/enemies.ts",
+        "src/content/variants.ts",
         "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/content/rooms.ts",
+        "tests/enemies.test.ts",
+        "tests/variants.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
     {
       "section": 16,

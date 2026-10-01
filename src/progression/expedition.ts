@@ -18,6 +18,8 @@ import { freshMastery, readMastery, type MasteryProgress } from './mastery';
 import { story, secretLore } from '../content/story';
 import { abilityById } from '../content/abilities';
 import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
+import { eliteCompatibility, type VariantKind } from '../content/variants';
+import type { EliteModifier } from '../content/enemies';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -243,10 +245,16 @@ export class Expedition {
       const enemy = room.spawns.find(
         (spawn) => spawn.kind !== 'player' && entityDefinitions[spawn.kind].faction === 'enemy',
       );
-      if (enemy)
-        enemy.elite = ['inverted', 'orbital', 'vampire', 'heavy', 'singularity'][
+      if (enemy) {
+        const preferred = ['inverted', 'orbital', 'vampire', 'heavy', 'singularity'][
           Math.min(4, this.difficulty - 2)
-        ] as 'inverted' | 'orbital' | 'vampire' | 'heavy' | 'singularity';
+        ] as EliteModifier;
+        const allowed = eliteCompatibility[enemy.kind as VariantKind];
+        enemy.elite =
+          !allowed || allowed.includes(preferred)
+            ? preferred
+            : allowed[(this.difficulty - 2) % allowed.length];
+      }
     }
     if (this.difficulty >= 3)
       room.hazards.push({

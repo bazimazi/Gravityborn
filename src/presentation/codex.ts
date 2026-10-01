@@ -10,6 +10,7 @@ import { challengeProgress } from '../progression/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
 import type { Profile } from '../progression/profile';
 import { materialDescriptions } from '../content/objects';
+import { eliteCompatibility, type VariantKind } from '../content/variants';
 interface Entry {
   id: string;
   name: string;
@@ -40,7 +41,7 @@ export function codexView(profile: Profile): string {
         .map(([id, definition]) => ({
           id: `enemy:${id}`,
           name: 'name' in definition ? definition.name : id,
-          text: `Mass ${definition.mass}; integrity ${definition.health}; gravity response ${definition.gravityResponse}. Tags: ${definition.tags.join(', ')}.`,
+          text: `Mass ${definition.mass}; integrity ${definition.health}; gravity response ${definition.gravityResponse}. Tags: ${definition.tags.join(', ')}. Elite variants: ${eliteCompatibility[id as VariantKind]?.join(', ') ?? 'none'}.`,
           known: known(`enemy:${id}`),
         })),
     },

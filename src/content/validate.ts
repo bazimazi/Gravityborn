@@ -11,6 +11,8 @@ import { regionGuardians, bossDefinitions } from './bosses';
 import { planets, story, secretLore } from './story';
 import limits from '../data/stat-limits.json';
 import type { Modifier, TriggerRule } from '../progression/modifiers';
+import { enemyVariants } from './variants';
+import { eliteModifiers } from './enemies';
 
 export interface ContentIssue {
   path: string;
@@ -169,10 +171,17 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
 }
 export function validateContent(): ContentIssue[] {
   const issues = validateAbilities(abilities);
+  issues.push(...identities(enemyVariants, 'variants'));
   const check = (valid: boolean, path: string, message: string): void => {
     if (!valid) issues.push({ path, message });
   };
   const powerIds = new Set(abilities.map((item) => item.id));
+  for (const variant of enemyVariants)
+    check(
+      variant.kind in entityDefinitions && eliteModifiers.includes(variant.elite),
+      `variants.${variant.id}`,
+      'Unknown archetype or elite behavior.',
+    );
   const itemIds = new Set(equipment.map((item) => item.id));
   for (const [name, catalog] of [
     ['relics', relics],

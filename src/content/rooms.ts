@@ -4,6 +4,7 @@ import type { GravityField } from '../physics/gravity';
 import type { EliteModifier } from './enemies';
 import { Random } from '../core/random';
 import { regionGuardians } from './bosses';
+import { eliteCompatibility, type VariantKind } from './variants';
 
 export type RoomType =
   | 'combat'
@@ -256,24 +257,14 @@ export function buildRoom(
     room.walls = structuredClone(bounds);
   } else if (combat) {
     const count = Math.min(6, 3 + Math.floor(difficulty / 2) + (type === 'challenge' ? 2 : 0));
-    for (let i = 0; i < count; i++)
+    for (let i = 0; i < count; i++) {
+      const kind = random.pick(region.enemies) as VariantKind;
       room.spawns.push({
         ...layout.enemies[i],
-        kind: random.pick(region.enemies) as EntityKind,
-        elite:
-          type === 'elite' && i === 0
-            ? random.pick([
-                'heavy',
-                'inverted',
-                'orbital',
-                'unstable',
-                'vampire',
-                'reflector',
-                'anchor',
-                'singularity',
-              ] as const)
-            : undefined,
+        kind,
+        elite: type === 'elite' && i === 0 ? random.pick(eliteCompatibility[kind]) : undefined,
       });
+    }
     room.hazards.push({
       kind: biome % 2 ? 'laser' : 'spikes',
       x: 1000,
@@ -286,11 +277,17 @@ export function buildRoom(
     room.waves = [];
     for (let wave = 0; wave < (type === 'challenge' ? 5 : 3); wave++)
       room.waves.push(
-        layout.enemies.slice(0, Math.min(6, count + Math.floor(wave / 2))).map((point, index) => ({
-          ...point,
-          kind: random.pick(region.enemies) as EntityKind,
-          elite: type === 'elite' && index === 0 && wave === 2 ? 'inverted' : undefined,
-        })),
+        layout.enemies.slice(0, Math.min(6, count + Math.floor(wave / 2))).map((point, index) => {
+          const kind = random.pick(region.enemies) as VariantKind;
+          return {
+            ...point,
+            kind,
+            elite:
+              type === 'elite' && index === 0 && wave === 2
+                ? random.pick(eliteCompatibility[kind])
+                : undefined,
+          };
+        }),
       );
   }
   if (biome === 1 || biome === 2 || biome === 4 || biome === 5)

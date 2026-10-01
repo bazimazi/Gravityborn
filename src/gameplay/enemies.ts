@@ -4,13 +4,16 @@ import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import type { AbilityHost } from './abilities';
 import type { Entity } from '../physics/world';
 import type { GravityField } from '../physics/gravity';
+import balance from '../data/balance.json';
 
 interface EnemyHost extends AbilityHost {
   detonate(entity: Entity): void;
 }
 interface EnemyState {
   next: number;
-  field?: number;
+  fields: Map<string, number>;
+  phasing?: boolean;
+  phaseResponse?: number;
   initialized: boolean;
   carrier?: Entity;
   target?: Entity;
@@ -38,6 +41,7 @@ export class EnemySystem {
       state = {
         next: this.host.time + 1.2,
         initialized: false,
+        fields: new Map(),
         lastDirection: { ...this.host.gravity.direction },
       };
       this.states.set(entity.id, state);
@@ -52,24 +56,29 @@ export class EnemySystem {
       strength: number,
       radius: number,
       duration = 1,
+      slot = 'aura',
     ): void => {
-      if (state!.field && this.host.gravity.fields.has(state!.field)) {
-        const existing = this.host.gravity.fields.get(state!.field)!;
+      const fieldId = state!.fields.get(slot);
+      if (fieldId && this.host.gravity.fields.has(fieldId)) {
+        const existing = this.host.gravity.fields.get(fieldId)!;
         this.host.gravity.moveField(existing.id, entity.body.position);
         existing.remaining = duration;
         return;
       }
-      if (this.host.gravity.fields.size >= 48) return;
-      state!.field = this.host.gravity.addField({
-        source: `enemy:${entity.id}`,
-        mode,
-        position: entity.body.position,
-        direction: toward,
-        strength,
-        radius,
-        falloff: 'linear',
-        remaining: duration,
-      });
+      if (this.host.gravity.fields.size >= balance.physics.maxFields - 2) return;
+      state!.fields.set(
+        slot,
+        this.host.gravity.addField({
+          source: `enemy:${entity.id}`,
+          mode,
+          position: entity.body.position,
+          direction: toward,
+          strength,
+          radius,
+          falloff: 'linear',
+          remaining: duration,
+        }),
+      );
     };
     const orbit = (): void => {
       const source = [...this.host.gravity.fields.values()].find(
@@ -127,18 +136,22 @@ export class EnemySystem {
       state.next = Infinity;
     }
     if (entity.kind === 'repulsor' && ready) {
-      field('radial', -0.008, 280, 1.3);
+      field('radial', -0.008, 280, 1.3, 'repulsion');
       state.next = this.host.time + 4;
     }
     if (entity.kind === 'phase') {
       const phasing = Math.floor(entity.life / 2) % 2 === 1;
-      entity.gravityScale = phasing ? 0 : 1;
+      if (phasing && !state.phasing) {
+        state.phaseResponse = entity.gravityScale;
+        entity.gravityScale = 0;
+      } else if (!phasing && state.phasing) entity.gravityScale = state.phaseResponse ?? 1;
+      state.phasing = phasing;
       // Keep solid arena walls; only ignore other entities while phased.
       entity.body.collisionFilter.mask = phasing ? 1 : 0xffffffff;
       entity.telegraph = phasing ? 1 : 0;
     }
     if (entity.kind === 'singularity' || entity.elite === 'singularity')
-      field('radial', 0.008, 330);
+      field('radial', 0.008, 330, 1, 'singularity');
     if ((entity.kind === 'mirror' || entity.elite === 'reflector') && ready) {
       const affected = [...this.host.gravity.fields.values()].find(
         (candidate) =>
@@ -191,7 +204,7 @@ export class EnemySystem {
           length(subtract(source.position, entity.body.position)) < 160
         ) {
           this.host.gravity.removeField(source.id);
-          entity.health = Math.min(entity.definition.health, entity.health + 12);
+          entity.health = Math.min(entity.maxHealth, entity.health + 12);
         }
       }
     state.initialized = true;
