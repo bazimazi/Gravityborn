@@ -286,6 +286,14 @@ export const relicById = new Map(relics.map((relic) => [relic.id, relic]));
 
 export const synergies = [
   {
+    id: 'tidal_cannon',
+    name: 'Tidal Cannon',
+    requires: ['wave', 'beam'],
+    stat: 'strength',
+    value: 1.35,
+    tags: ['Velocity'],
+  },
+  {
     id: 'overload',
     name: 'Gravitational Overload',
     requires: ['theft', 'pulse'],

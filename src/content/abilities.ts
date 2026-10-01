@@ -37,6 +37,7 @@ export interface AbilityDefinition {
     chainTargets?: number;
     affects?: string[];
     falloff?: 'constant' | 'linear' | 'inverseSquare';
+    travelSpeed?: number;
   };
   feedback?: {
     color?: string;
@@ -62,6 +63,25 @@ export const abilities: AbilityDefinition[] = [
     target: 'player',
     maxLevel: 3,
     evolution: 'nova',
+  },
+  {
+    id: 'wave',
+    rarity: 'rare',
+    name: 'Gravity Wave',
+    description:
+      'Send a moving front of gravity toward your aim, carrying loose matter and redirecting shots along its path.',
+    tags: ['Gravity', 'Velocity', 'Projectile'],
+    effect: 'field',
+    mode: 'directional',
+    energy: 28,
+    cooldown: 8,
+    radius: 95,
+    strength: 0.006,
+    duration: 2.5,
+    target: 'player',
+    maxLevel: 3,
+    parameters: { travelSpeed: 320, falloff: 'constant' },
+    feedback: { color: '#a8deff', startFrequency: 110, endFrequency: 320, soundDuration: 0.4 },
   },
   {
     id: 'repulsor',

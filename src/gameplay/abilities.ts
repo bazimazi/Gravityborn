@@ -23,6 +23,7 @@ interface Binding {
   entity?: Entity;
   chain: number;
   expires: number;
+  velocity?: Vec2;
   collapse?: {
     radius: number;
     position: Vec2;
@@ -200,6 +201,13 @@ export class AbilitySystem {
         entity: follow,
         chain,
         expires: this.host.time + duration,
+        velocity:
+          parameters.travelSpeed === undefined
+            ? undefined
+            : scale(
+                normalize(subtract(target, this.host.player.body.position)),
+                parameters.travelSpeed,
+              ),
       });
       return fieldId;
     };
@@ -209,7 +217,9 @@ export class AbilitySystem {
           definition.mode!,
           point,
           strength,
-          definition.target === 'player' ? this.host.player : undefined,
+          definition.target === 'player' && parameters.travelSpeed === undefined
+            ? this.host.player
+            : undefined,
         );
         break;
       case 'impulse':
@@ -452,6 +462,11 @@ export class AbilitySystem {
       }
       if (binding.entity) this.host.gravity.moveField(binding.field, binding.entity.body.position);
       const field = this.host.gravity.fields.get(binding.field);
+      if (field && binding.velocity)
+        this.host.gravity.moveField(binding.field, {
+          x: field.position.x + binding.velocity.x * dt,
+          y: field.position.y + binding.velocity.y * dt,
+        });
       if (field)
         for (const entity of this.near(field.position, field.radius, field.affects)) {
           this.host.markCause(entity, binding.chain);

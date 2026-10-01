@@ -23,6 +23,14 @@ for (const [name, options] of [
   await page.getByRole('button', { name: 'Step physics frame', exact: true }).click();
   await page.getByRole('button', { name: 'Close physics inspector', exact: true }).click();
   await page.screenshot({ path: `artifacts/${name}-upgrades.png`, fullPage: true });
+  await page.reload();
+  await page.getByRole('button', { name: /Enter the chamber/ }).click();
+  await page.locator('#ability-select').selectOption('wave');
+  const arena = await page.locator('#game').boundingBox();
+  await page.mouse.move(arena.x + arena.width * 0.85, arena.y + arena.height * 0.65);
+  await page.getByRole('button', { name: 'Cast · Q', exact: true }).click();
+  await page.waitForTimeout(450);
+  await page.screenshot({ path: `artifacts/${name}-wave.png`, fullPage: true });
   await context.close();
 }
 await browser.close();

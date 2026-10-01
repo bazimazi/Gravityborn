@@ -9,6 +9,7 @@ import { computeCamera } from './camera';
 import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';
 import { bossDefinitions } from '../content/bosses';
 import { objectDefinitions } from '../content/objects';
+import { abilityFeedback } from '../content/ability-feedback';
 
 export class Renderer {
   private readonly context: CanvasRenderingContext2D;
@@ -145,25 +146,54 @@ export class Renderer {
       ctx.save();
       ctx.translate(field.position.x, field.position.y);
       ctx.globalAlpha = opacity;
+      const color = field.source.startsWith('ability:')
+        ? abilityFeedback(field.source.slice(8)).color
+        : field.mode === 'zero'
+          ? '#a8deff'
+          : '#b5a0ff';
       const gradient = ctx.createRadialGradient(0, 0, 8, 0, 0, field.radius);
-      gradient.addColorStop(0, '#9c76ee35');
-      gradient.addColorStop(0.55, '#9c76ee13');
-      gradient.addColorStop(1, '#9c76ee00');
+      gradient.addColorStop(0, `${color}35`);
+      gradient.addColorStop(0.55, `${color}13`);
+      gradient.addColorStop(1, `${color}00`);
       ctx.fillStyle = gradient;
       this.circle(0, 0, field.radius);
       ctx.fill();
       ctx.lineWidth = 1;
-      ctx.strokeStyle = '#b5a0ff65';
+      ctx.strokeStyle = `${color}90`;
       ctx.setLineDash([4, 12]);
       this.circle(0, 0, field.radius);
       ctx.stroke();
       ctx.setLineDash([]);
-      for (let i = 0; i < 5; i++) {
-        ctx.strokeStyle = `rgba(179,149,255,${0.65 - i * 0.09})`;
-        ctx.beginPath();
-        ctx.arc(0, 0, 20 + i * 29, now * 0.001 + i * 1.6, now * 0.001 + i * 1.6 + 2.6);
-        ctx.stroke();
+      if (field.mode === 'directional') {
+        ctx.save();
+        ctx.rotate(
+          Math.atan2(field.direction.y, field.direction.x) + (field.strength < 0 ? Math.PI : 0),
+        );
+        ctx.lineWidth = 3;
+        for (const offset of [-0.5, 0, 0.5]) {
+          const x = field.radius * offset;
+          ctx.beginPath();
+          ctx.moveTo(x - 14, -22);
+          ctx.lineTo(x + 8, 0);
+          ctx.lineTo(x - 14, 22);
+          ctx.stroke();
+        }
+        ctx.restore();
+      } else if (field.mode !== 'zero') {
+        for (let i = 0; i < 5; i++) {
+          ctx.globalAlpha = opacity * (0.8 - i * 0.12);
+          ctx.beginPath();
+          ctx.arc(
+            0,
+            0,
+            field.radius * (0.18 + i * 0.14),
+            now * 0.001 + i * 1.6,
+            now * 0.001 + i * 1.6 + 2.6,
+          );
+          ctx.stroke();
+        }
       }
+      ctx.globalAlpha = opacity;
       ctx.fillStyle = '#101021';
       this.circle(0, 0, 13);
       ctx.fill();
@@ -179,9 +209,17 @@ export class Renderer {
           ? '0'
           : field.mode === 'vortex'
             ? '↻'
-            : field.strength < 0
-              ? '−'
-              : '+',
+            : field.mode === 'directional'
+              ? Math.abs(field.direction.x) > Math.abs(field.direction.y)
+                ? field.direction.x * field.strength < 0
+                  ? '←'
+                  : '→'
+                : field.direction.y * field.strength < 0
+                  ? '↑'
+                  : '↓'
+              : field.strength < 0
+                ? '−'
+                : '+',
         0,
         0,
       );

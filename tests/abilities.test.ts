@@ -39,6 +39,34 @@ describe('physical powers', () => {
     game.castAbility('lock', target.body.position);
     expect(target.body.isStatic).toBe(false);
   });
+  it('a traveling wave moves its spatial influence, launches matter and expires cleanly', () => {
+    const game = new Game(false);
+    game.gravity.strength = 0;
+    const guard = game.world.spawn('anchor', { x: 1040, y: 200 })!;
+    guard.invulnerability = 20;
+    const rock = game.world.spawn('rock', { x: 520, y: 470 })!;
+    game.abilities.learn('wave');
+    game.start();
+    game.castAbility('wave', { x: 1100, y: 470 });
+    const wave = [...game.gravity.fields.values()].find(
+      (field) => field.source === 'ability:wave',
+    )!;
+    const origin = { ...wave.position };
+    for (let i = 0; i < 100; i++) game.step();
+    expect(wave.position.x).toBeCloseTo(origin.x + (320 * 100) / 120, 4);
+    expect(rock.body.position.x).toBeGreaterThan(530);
+    expect(game.chains.source(rock.chainId)).toBe('wave');
+    // The source has left the origin; its old grid cells must not retain its force.
+    game.gravity.removeField(
+      [...game.gravity.fields.values()].find((field) => field.source.startsWith('enemy:'))?.id ??
+        -1,
+    );
+    expect(game.gravity.sample(origin).x).toBe(0);
+    for (let i = 0; i < 230; i++) game.step();
+    expect([...game.gravity.fields.values()].some((field) => field.source === 'ability:wave')).toBe(
+      false,
+    );
+  });
   it('transfers actual velocity between bodies and records one cause', () => {
     const game = new Game(false);
     const a = game.world.spawn('crate', { x: 500, y: 350 })!;

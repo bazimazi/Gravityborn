@@ -117,6 +117,12 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (p?.travelSpeed !== undefined)
+      check(
+        item.effect === 'field' && isNumber(p.travelSpeed, 1, 800),
+        'parameters.travelSpeed',
+        'Traveling fields require a speed from 1–800 world units per second.',
+      );
     if (p?.planetCount !== undefined)
       check(
         Number.isInteger(p.planetCount) && isNumber(p.planetCount, 1, 4),

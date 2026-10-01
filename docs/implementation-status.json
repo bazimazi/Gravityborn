@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-01",
+  "updated": "2026-10-02",
   "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
   "requirements": [
     {
@@ -75,7 +75,7 @@
         "tests/abilities.test.ts",
         "tests/enemies.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain currently passes an impulse between targets; broader gravity-state transfer remains to audit."
     },
     {
       "section": 8,
