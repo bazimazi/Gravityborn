@@ -44,6 +44,8 @@ import { biomes } from './content/rooms';
 import { statusBadges } from './presentation/status';
 import { cosmeticById } from './content/cosmetics';
 import { challenges } from './content/challenges';
+import { RunArchive } from './progression/archive';
+import { archiveView } from './presentation/archive';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -62,6 +64,9 @@ try {
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) settings.reducedMotion = true;
 const game = new Game();
 const run = new Expedition(game);
+const archive = new RunArchive(storage, run);
+let archiveSelection = '';
+let challengeDate: Date | undefined;
 let saveStore: SaveStore;
 try {
   saveStore = new SaveStore(storage);
@@ -198,6 +203,10 @@ function renderProfile(): void {
     (detail) => detail.open,
   );
   element('#profile-dialog').innerHTML = profileView(profile, saveStore.state, Boolean(checkpoint));
+  element('#profile-dialog > .save-tools').insertAdjacentHTML(
+    'beforebegin',
+    archiveView(archive, archiveSelection),
+  );
   element<HTMLInputElement>('#run-seed').value = seed;
   element<HTMLSelectElement>('#run-region').value = region;
   for (const [id, value] of Object.entries(preserved))
@@ -223,6 +232,18 @@ function renderProfile(): void {
     renderProfile();
     toast('Save imported. Resume the saved route when ready.');
   };
+  element<HTMLInputElement>('#import-run').onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    if (file.size > 2000000 || !archive.import(await file.text())) {
+      toast('This run file is invalid or uses an unsupported format.');
+      return;
+    }
+    archiveSelection = archive.reports[0].id;
+    renderProfile();
+    element<HTMLDetailsElement>('#run-archive').open = true;
+    toast('Shared run imported. Its rules and build are ready to inspect.');
+  };
 }
 element('#profile-open').onclick = () => {
   renderProfile();
@@ -230,7 +251,20 @@ element('#profile-open').onclick = () => {
 };
 document.addEventListener('change', (event) => {
   const select = event.target as HTMLSelectElement;
+  if (select.id === 'archive-selection') {
+    archiveSelection = select.value;
+    renderProfile();
+    element<HTMLDetailsElement>('#run-archive').open = true;
+    return;
+  }
+  if (select.id === 'ghost-enabled') {
+    archive.enabled = (event.target as HTMLInputElement).checked;
+    archive.save();
+    return;
+  }
+  if (select.id === 'run-seed') challengeDate = undefined;
   if (select.id === 'run-mode') {
+    challengeDate = undefined;
     element('#mode-description').textContent =
       modes.find((mode) => mode.id === select.value)?.description ?? '';
     return;
@@ -339,6 +373,56 @@ document.addEventListener('click', (event) => {
     element<HTMLDialogElement>('#profile-dialog').close();
     return;
   }
+  if (button.dataset.runAction?.startsWith('archive-')) {
+    const report =
+      archive.reports.find((item) => item.id === archiveSelection) ?? archive.reports[0];
+    if (button.dataset.runAction === 'archive-clear') {
+      archive.clear();
+      archiveSelection = '';
+      renderProfile();
+    } else if (report && button.dataset.runAction === 'archive-export') {
+      const url = URL.createObjectURL(
+        new Blob([archive.export(report.id)!], { type: 'application/json' }),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'gravityborn-run.json';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } else if (report && button.dataset.runAction === 'archive-prepare') {
+      const recipe = report.recipe;
+      const rotating = recipe.mode === 'daily' || recipe.mode === 'weekly';
+      const region = element<HTMLSelectElement>('#run-region');
+      if (
+        (!rotating && !profile.classes.includes(recipe.classId)) ||
+        (recipe.mode === 'endless' && !profile.skills.includes('endless')) ||
+        region.options[recipe.biome].disabled
+      ) {
+        toast('Unlock this class, mode or starting region before using these rules.');
+        return;
+      }
+      challengeDate = undefined;
+      if (rotating) {
+        const date = recipe.seed.match(/^(daily|weekly):(\d{4}-\d{2}-\d{2})$/)?.[2];
+        if (!date || !Number.isFinite(Date.parse(date))) {
+          toast('This rotating challenge has no valid date.');
+          return;
+        }
+        challengeDate = new Date(`${date}T00:00:00Z`);
+      } else profile.selectedClass = recipe.classId;
+      element<HTMLInputElement>('#run-seed').value = recipe.seed;
+      element<HTMLSelectElement>('#run-mode').value = recipe.mode;
+      element<HTMLSelectElement>('#run-contract').value = recipe.contract;
+      element<HTMLSelectElement>('#run-difficulty').value = String(recipe.difficulty);
+      region.value = String(recipe.biome);
+      renderProfile();
+      element('#mode-description').textContent = rotating
+        ? `Archived ${recipe.mode} challenge: ${recipe.seed}. Starting bonuses are disabled.`
+        : 'Shared rules selected. Your current equipment and research apply; matching bonuses are needed for ghost playback.';
+      toast('Run rules selected. Start when ready.');
+    }
+    return;
+  }
   if (button.dataset.runAction === 'export') {
     const blob = new Blob([saveStore.export({ profile, checkpoint })], {
       type: 'application/json',
@@ -397,8 +481,10 @@ document.addEventListener('click', (event) => {
         difficulty: Number(
           document.querySelector<HTMLSelectElement>('#run-difficulty')?.value ?? 0,
         ),
+        date: challengeDate,
       },
     );
+    challengeDate = undefined;
     feedback.clear();
     renderer.clear();
     clearInput();
@@ -958,6 +1044,7 @@ function frame(now: number): void {
     if (Math.hypot(game.move.x, game.move.y) > 0.1) moved = true;
     accumulator += feedback.simulationElapsed(elapsed, settings.reducedMotion);
     while (accumulator >= balance.physics.stepMs) {
+      archive.sample();
       game.step();
       tutorial.tick();
       accumulator -= balance.physics.stepMs;
@@ -969,6 +1056,7 @@ function frame(now: number): void {
   } else accumulator = 0;
   feedback.update(elapsed / 1000);
   renderer.tutorialTarget = tutorial.active ? (tutorial.beacon ?? null) : null;
+  renderer.ghost = archive.position();
   const guide = element('#tutorial-guide');
   guide.hidden = !tutorial.active || game.state !== 'playing';
   if (tutorial.active) {

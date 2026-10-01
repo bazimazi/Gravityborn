@@ -4,7 +4,10 @@ import { NativeStorage } from '../src/core/storage';
 it('hydrates native saves before use and orders backup writes before new primary records', async () => {
   const writes: string[] = [];
   const adapter = new NativeStorage({
-    get: async ({ key }) => ({ value: key === 'gravityborn.save' ? 'prior' : null }),
+    get: async ({ key }) => ({
+      value:
+        key === 'gravityborn.save' ? 'prior' : key === 'gravityborn.archive' ? 'recordings' : null,
+    }),
     set: async ({ key, value }) => {
       await Promise.resolve();
       writes.push(`${key}:${value}`);
@@ -12,6 +15,7 @@ it('hydrates native saves before use and orders backup writes before new primary
   });
   await adapter.load();
   expect(adapter.getItem('gravityborn.save')).toBe('prior');
+  expect(adapter.getItem('gravityborn.archive')).toBe('recordings');
   adapter.setItem('gravityborn.save.backup', 'prior');
   adapter.setItem('gravityborn.save', 'new');
   adapter.setItem('gravityborn.save', 'new');

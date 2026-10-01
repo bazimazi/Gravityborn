@@ -573,6 +573,7 @@ export class Expedition {
       this.build.apply();
       this.game.abilities.restore(powers as unknown as AbilitySnapshot);
       this.game.player.health = Math.min(health, this.game.maxHealth);
+      this.game.events.emit('runRestored', { id: this.id });
       return true;
     } catch {
       return false;

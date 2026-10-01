@@ -24,6 +24,8 @@ npm run preview
 
 Open http://127.0.0.1:4180. All art and sound are generated locally; gameplay makes no external network requests. The production web app installs an offline cache after its first online load. Native projects bundle the assets for offline startup; see [native delivery](docs/native-delivery.md).
 
+The Observatory's **Run archive & ghosts** saves recent results and a complete victory route. Export/import run files to share seeds, builds and ghosts; choose **Use these run rules** to prepare a repeat, including historical daily challenges. Matching runs show an optional visual ghost. Imported scores are unverified and do not award progression. Earned challenge shells and titles are selectable under **Core appearance & titles**.
+
 ## Controls
 
 | Action | Keyboard / mouse | Touch |

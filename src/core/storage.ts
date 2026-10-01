@@ -6,7 +6,12 @@ interface NativeStore {
   get(options: { key: string }): Promise<{ value: string | null }>;
   set(options: { key: string; value: string }): Promise<void>;
 }
-const keys = ['gravityborn.save', 'gravityborn.save.backup', 'gravityborn.settings'];
+const keys = [
+  'gravityborn.save',
+  'gravityborn.save.backup',
+  'gravityborn.settings',
+  'gravityborn.archive',
+];
 
 /** Preload native records, then serialize writes so backup and primary cannot race. */
 export class NativeStorage implements LocalStore {

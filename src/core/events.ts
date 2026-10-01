@@ -3,6 +3,7 @@ import type { DiagnosticSample } from './diagnostics';
 
 export interface GameEvents {
   runStarted: { id: string; mode: string; classId: string; difficulty: number };
+  runRestored: { id: string };
   runEnded: {
     id: string;
     outcome: 'victory' | 'defeat' | 'abandoned';

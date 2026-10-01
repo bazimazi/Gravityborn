@@ -23,6 +23,7 @@ export class Renderer {
   debug = false;
   aim: Vec2 | null = null;
   tutorialTarget: Vec2 | null = null;
+  ghost: Vec2 | null = null;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -81,6 +82,20 @@ export class Renderer {
     if (!this.settings.reducedMotion && feedback.shake > 0)
       ctx.translate(Math.sin(now * 0.07) * feedback.shake, Math.cos(now * 0.09) * feedback.shake);
     this.drawArena(game, now);
+    if (this.ghost) {
+      ctx.save();
+      ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#a5b8e8';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      this.circle(this.ghost.x, this.ghost.y, 25);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('GHOST', this.ghost.x, this.ghost.y - 34);
+      ctx.restore();
+    }
     if (this.tutorialTarget) {
       ctx.strokeStyle = '#94e8d8';
       ctx.fillStyle = '#94e8d8';

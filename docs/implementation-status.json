@@ -755,23 +755,38 @@
     {
       "section": 57,
       "title": "Leaderboards",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/progression/archive.ts",
+        "src/presentation/archive.ts",
+        "tests/archive.test.ts"
+      ],
+      "remaining": "Local archive best score, chain and endless depth exclude imported and assisted results. Network leaderboards are explicitly a later stability-gated feature; no backend or verified score submission is implemented."
     },
     {
       "section": 58,
       "title": "Social Features",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/progression/archive.ts",
+        "src/presentation/archive.ts",
+        "tests/archive.test.ts",
+        "tests/browser/archive.spec.ts"
+      ],
+      "remaining": "Offline run/build/ghost JSON sharing and historical daily/weekly challenge setup are implemented. Imported scores are labeled unverified and cannot grant rewards. Compact challenge codes and online leaderboard replays remain future extensions."
     },
     {
       "section": 59,
       "title": "Ghost System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/progression/archive.ts",
+        "src/presentation/archive.ts",
+        "src/presentation/renderer.ts",
+        "tests/archive.test.ts",
+        "tests/browser/archive.spec.ts"
+      ],
+      "remaining": "Successful unassisted runs record bounded quarter-second positional traces per chamber. Matching seed/rules/starting bonuses/revision replay a visual-only ghost with interpolation; imports share routes. Resumed or truncated runs retain results only. One complete ghost and 20 results persist locally, including native storage."
     },
     {
       "section": 60,
