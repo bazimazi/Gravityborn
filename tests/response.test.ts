@@ -81,3 +81,24 @@ it('an expired lock on a recycled projectile cannot unlock its new incarnation',
   game.abilities.tick(0);
   expect(second.body.isStatic).toBe(false);
 });
+it('gravity transfer exchanges signed response and removes only its own factor on expiry', () => {
+  const game = new Game(false);
+  const a = game.world.spawn('crate', { x: 700, y: 400 })!;
+  const b = game.world.spawn('floater', { x: 740, y: 400 })!;
+  a.gravityScale = -1;
+  const aResponse = a.gravityScale * a.definition.gravityResponse;
+  const bResponse = b.gravityScale * b.definition.gravityResponse;
+  game.abilities.learn('transfer');
+  game.start();
+  expect(game.castAbility('transfer', a.body.position)).toBe(true);
+  expect(a.gravityScale * a.definition.gravityResponse).toBeCloseTo(bResponse);
+  expect(b.gravityScale * b.definition.gravityResponse).toBeCloseTo(aResponse);
+  b.gravityFactors.set('parasite:external', -1.8);
+  game.abilities.cooldowns.clear();
+  expect(game.castAbility('transfer', a.body.position)).toBe(false);
+  game.time = 5;
+  game.abilities.tick(0);
+  expect(a.gravityScale).toBe(-1);
+  expect(b.gravityScale).toBe(-1.8);
+  expect(b.gravityFactors.size).toBe(1);
+});

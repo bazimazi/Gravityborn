@@ -36,7 +36,8 @@ interface Status {
   entity: Entity;
   generation: number;
   until: number;
-  kind: 'lock' | 'theft';
+  kind: 'lock' | 'theft' | 'transfer';
+  factor?: string;
 }
 export interface AbilitySnapshot {
   levels: Record<string, number>;
@@ -169,11 +170,18 @@ export class AbilitySystem {
         this.statuses.some((status) => status.entity === victim && status.kind === 'theft'))
     )
       return false;
-    if (
-      definition.effect === 'transfer' &&
-      targets.filter((entity) => !entity.body.isStatic).length < 2
-    )
-      return false;
+    const transferable =
+      definition.effect === 'transfer'
+        ? targets
+            .filter(
+              (entity) =>
+                !entity.body.isStatic &&
+                Math.abs(entity.gravityScale * entity.definition.gravityResponse) > 0.0001 &&
+                ![...entity.gravityFactors.keys()].some((key) => key.startsWith('transfer:')),
+            )
+            .slice(0, 2)
+        : [];
+    if (definition.effect === 'transfer' && transferable.length < 2) return false;
     const chain = this.host.createCause(id);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
       this.host.markCause(entity, chain);
@@ -311,13 +319,23 @@ export class AbilitySystem {
         break;
       }
       case 'transfer': {
-        const dynamic = targets.filter((entity) => !entity.body.isStatic);
-        if (dynamic.length < 2) return false;
-        const [a, b] = dynamic;
+        const [a, b] = transferable;
+        const aResponse = a.gravityScale * a.definition.gravityResponse;
+        const bResponse = b.gravityScale * b.definition.gravityResponse;
+        const factor = `transfer:${chain}`;
+        a.gravityFactors.set(factor, bResponse / aResponse);
+        b.gravityFactors.set(factor, aResponse / bResponse);
         const velocity = Matter.Body.getVelocity(a.body);
         Matter.Body.setVelocity(a.body, Matter.Body.getVelocity(b.body));
         Matter.Body.setVelocity(b.body, velocity);
         for (const entity of [a, b]) {
+          this.statuses.push({
+            entity,
+            generation: entity.generation,
+            kind: 'transfer',
+            factor,
+            until: this.host.time + duration,
+          });
           this.host.markCause(entity, chain);
           if (entity.kind === 'projectile') entity.redirected = true;
         }
@@ -449,7 +467,7 @@ export class AbilitySystem {
           until: this.host.time + balance.abilities.lockResistance,
           generation: status.generation,
         });
-      } else status.entity.gravityFactors.delete('theft');
+      } else status.entity.gravityFactors.delete(status.factor ?? 'theft');
       this.statuses.splice(index, 1);
     }
     for (let index = this.bindings.length - 1; index >= 0; index--) {
