@@ -31,6 +31,7 @@ export interface Entity {
   gravityFactors: Map<string, number>;
   elite?: EliteModifier;
   telegraph?: number;
+  attackAim?: Vec2;
 }
 export interface CollisionFact {
   a: Entity | undefined;
@@ -194,6 +195,7 @@ export class PhysicsWorld {
       gravityScale: 1,
       elite: undefined,
       telegraph: undefined,
+      attackAim: undefined,
     });
     this.entities.set(entity.id, entity);
     this.safePositions.set(entity.id, { ...position });

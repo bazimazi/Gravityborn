@@ -731,6 +731,15 @@ export class Renderer {
       }
     }
     ctx.restore();
+    if (entity.attackAim && (entity.telegraph ?? 0) > 0) {
+      ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#f5c283';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([8, 6]);
+      this.line(x, y, entity.attackAim.x, entity.attackAim.y);
+      ctx.setLineDash([]);
+      this.circle(entity.attackAim.x, entity.attackAim.y, 30);
+      ctx.stroke();
+    }
     if (entity.kind === 'rift_seal') {
       ctx.fillStyle = '#d9c3ff';
       ctx.font = '11px monospace';

@@ -1091,7 +1091,7 @@
         "src/content/classes.ts",
         "scripts/validate-content.ts"
       ],
-      "remaining": "Current catalog: eight biomes, ten bosses, sixteen base enemies plus 72 curated variants, 50 powers, 50 relics, ten classes and 268 challenges. The alpha power/relic counts are met. The 25-enemy target is met only when behavioral variants count; there are sixteen distinct base behaviors. Human balance and replayability remain unvalidated."
+      "remaining": "Current catalog: eight biomes, ten bosses, nineteen base enemies plus 81 curated variants, 50 powers, 50 relics, ten classes and 268 challenges. The alpha power/relic counts are met. The 25-enemy target is met only when behavioral variants count; there are nineteen distinct base behaviors. Human balance and replayability remain unvalidated."
     },
     {
       "section": 83,
@@ -1104,7 +1104,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Ten classes, 100 combined powers/relics, eight regions, ten bosses, 72 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
+      "remaining": "Ten classes, 100 combined powers/relics, eight regions, ten bosses, 81 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
     },
     {
       "section": 84,
@@ -1115,7 +1115,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 72 variants, fifty equipment designs and ten classes. Powers/relics remain 50/50 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 81 variants, fifty equipment designs and ten classes. Powers/relics remain 50/50 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,

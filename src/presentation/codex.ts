@@ -1,5 +1,5 @@
 import { abilities } from '../content/abilities';
-import { entityDefinitions } from '../content/enemies';
+import { entityDefinitions, enemyDescriptions } from '../content/enemies';
 import { bossDefinitions, bossDescriptions, type BossKind } from '../content/bosses';
 import { relics } from '../content/relics';
 import { equipment } from '../content/equipment';
@@ -44,7 +44,7 @@ export function codexView(profile: Profile): string {
         .map(([id, definition]) => ({
           id: `enemy:${id}`,
           name: 'name' in definition ? definition.name : id,
-          text: `Mass ${definition.mass}; integrity ${definition.health}; gravity response ${definition.gravityResponse}. Tags: ${definition.tags.join(', ')}. Elite variants: ${eliteCompatibility[id as VariantKind]?.join(', ') ?? 'none'}.`,
+          text: `${enemyDescriptions[id as VariantKind] ?? ''} Mass ${definition.mass}; integrity ${definition.health}; gravity response ${definition.gravityResponse}. Tags: ${definition.tags.join(', ')}. Elite variants: ${eliteCompatibility[id as VariantKind]?.join(', ') ?? 'none'}.`,
           known: known(`enemy:${id}`),
         })),
     },

@@ -38,6 +38,9 @@ export const eliteCompatibility: Record<VariantKind, readonly EliteModifier[]> =
   mirror: ['heavy', 'inverted', 'orbital', 'vampire'],
   parasite: ['heavy', 'inverted', 'orbital', 'reflector'],
   summoner: ['heavy', 'inverted', 'orbital', 'vampire'],
+  railgunner: ['heavy', 'inverted', 'orbital'],
+  null_shepherd: ['heavy', 'inverted', 'reflector'],
+  salvager: ['heavy', 'inverted', 'orbital'],
 };
 const descriptions: Record<EliteModifier, string> = {
   heavy: 'Five times the mass changes how impacts and impulses move this enemy.',

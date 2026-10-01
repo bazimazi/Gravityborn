@@ -56,6 +56,8 @@ export class EnemySystem {
     const distance = length(delta);
     const ready = this.host.time >= state.next;
     entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / tuning.telegraph);
+    if (entity.kind === 'railgunner' && entity.telegraph > 0 && !ready && !entity.attackAim)
+      entity.attackAim = { ...this.host.player.body.position };
     const field = (
       mode: GravityField['mode'],
       strength: number,
@@ -124,6 +126,72 @@ export class EnemySystem {
           remaining: tuning.slime.duration,
         });
       state.next = this.host.time + tuning.slime.cooldown;
+    }
+    if (entity.kind === 'null_shepherd')
+      field('zero', tuning.nullShepherd.strength, tuning.nullShepherd.radius, 1, 'damping');
+    if (entity.kind === 'railgunner') {
+      if (distance < tuning.railgunner.range)
+        this.host.world.accelerate(entity, scale(toward, -2 * tuning.acceleration));
+      if (ready) {
+        if (!entity.attackAim) state.next = this.host.time + tuning.telegraph;
+        else {
+          const ammo = [...this.host.world.entities.values()]
+            .filter(
+              (candidate) =>
+                candidate.alive &&
+                !candidate.body.isStatic &&
+                candidate.definition.faction === 'neutral' &&
+                !['xp', 'shard'].includes(candidate.kind) &&
+                length(subtract(candidate.body.position, entity.body.position)) <
+                  tuning.railgunner.ammoRadius,
+            )
+            .sort(
+              (a, b) =>
+                length(subtract(a.body.position, entity.body.position)) -
+                length(subtract(b.body.position, entity.body.position)),
+            )[0];
+          if (ammo) {
+            this.host.world.impulse(
+              ammo,
+              scale(
+                normalize(subtract(entity.attackAim, ammo.body.position)),
+                tuning.railgunner.impulse / Math.sqrt(ammo.body.mass),
+              ),
+            );
+            this.host.markCause(ammo, this.host.createCause('enemy'));
+          }
+          entity.attackAim = undefined;
+          state.next = this.host.time + tuning.railgunner.cooldown;
+        }
+      }
+    }
+    if (entity.kind === 'salvager' && ready) {
+      const scrap = [...this.host.world.entities.values()]
+        .filter(
+          (candidate) =>
+            candidate.alive &&
+            !candidate.body.isStatic &&
+            candidate.definition.faction === 'neutral' &&
+            candidate.definition.breakable &&
+            length(subtract(candidate.body.position, entity.body.position)) <
+              tuning.salvager.radius,
+        )
+        .sort(
+          (a, b) =>
+            length(subtract(a.body.position, entity.body.position)) -
+            length(subtract(b.body.position, entity.body.position)),
+        )[0];
+      if (scrap) {
+        this.host.applyDamage(
+          scrap,
+          tuning.salvager.damage,
+          this.host.createCause('enemy'),
+          'Crush',
+        );
+        if (!scrap.alive && entity.alive)
+          entity.health = Math.min(entity.maxHealth, entity.health + tuning.salvager.repair);
+      }
+      state.next = this.host.time + tuning.salvager.cooldown;
     }
     if (
       entity.kind === 'floater' &&

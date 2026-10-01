@@ -1,6 +1,9 @@
 {
   "heavyMultiplier": 5,
   "initialDelay": 1.2,
+  "railgunner": { "range": 320, "ammoRadius": 240, "impulse": 16, "cooldown": 3.5 },
+  "nullShepherd": { "radius": 200, "strength": 1 },
+  "salvager": { "radius": 120, "damage": 85, "repair": 18, "cooldown": 2.5 },
   "telegraph": 0.7,
   "orbit": {
     "radius": 200,
