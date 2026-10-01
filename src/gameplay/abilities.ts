@@ -13,7 +13,7 @@ export interface AbilityHost {
   player: Entity;
   time: number;
   events: EventBus;
-  createCause(): number;
+  createCause(source?: string): number;
   markCause(entity: Entity, id: number, depth?: number): void;
   applyDamage(entity: Entity, amount: number, cause: number): void;
   flip(direction: Vec2): boolean;
@@ -102,7 +102,7 @@ export class AbilitySystem {
       definition.tags,
     );
     const duration = this.modifiers.evaluate('duration', definition.duration, definition.tags);
-    const chain = this.host.createCause();
+    const chain = this.host.createCause(id);
     const targets = this.near(point, radius);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
       this.host.markCause(entity, chain);
@@ -203,7 +203,10 @@ export class AbilitySystem {
           kind: 'theft',
           original: victim.gravityScale,
         });
-        victim.gravityScale *= strength;
+        victim.gravityScale *= Math.max(
+          0.02,
+          definition.strength ** (strength / definition.strength),
+        );
         this.stored = Math.min(100, this.stored + victim.body.mass * 8);
         this.host.markCause(victim, chain);
         break;

@@ -102,7 +102,10 @@ export class BossSystem {
         { x: 0, y: 1 },
       ];
       this.host.gravity.setDirection(directions[state.cycle % 4]);
-      this.host.events.emit('gravityChanged', { direction: this.host.gravity.direction });
+      this.host.events.emit('gravityChanged', {
+        direction: this.host.gravity.direction,
+        source: 'enemy',
+      });
       field(state.phase === 3 ? 'vortex' : 'radial', -0.003, 280, 1.5);
     }
     if (entity.kind === 'planet_eater' && state.satellites.length < 3)

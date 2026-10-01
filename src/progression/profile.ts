@@ -3,6 +3,8 @@ import { record, finite, strings } from '../core/save';
 import type { Expedition } from './expedition';
 import { equipmentById, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
+import { readMastery, mergeMastery, type MasteryProgress } from './mastery';
+import { challenges } from '../content/challenges';
 export interface Profile {
   shards: number;
   research: number;
@@ -19,6 +21,9 @@ export interface Profile {
   loadout: Record<string, string>;
   affixes: Record<string, string>;
   mutation: string;
+  abilityMastery: Record<string, MasteryProgress>;
+  metrics: Record<string, number>;
+  challenges: string[];
 }
 export function newProfile(): Profile {
   return {
@@ -37,6 +42,9 @@ export function newProfile(): Profile {
     loadout: {},
     affixes: {},
     mutation: '',
+    abilityMastery: {},
+    metrics: {},
+    challenges: [],
   };
 }
 export function readProfile(value: unknown): Profile {
@@ -52,6 +60,12 @@ export function readProfile(value: unknown): Profile {
     profile.claimed = strings(data.claimed, 200);
     profile.discoveries = strings(data.discoveries, 1000);
     profile.skills = strings(data.skills ?? [], 100);
+    profile.abilityMastery = readMastery(data.abilityMastery ?? {});
+    profile.challenges = strings(data.challenges ?? [], 100).filter((id) =>
+      challenges.some((challenge) => challenge.id === id),
+    );
+    for (const [id, value] of Object.entries(record(data.metrics ?? {})))
+      if (id.length < 50) profile.metrics[id] = finite(value, 0, 100000000);
     for (const [id, amount] of Object.entries(record(data.mastery ?? {})))
       if (classById.has(id)) profile.mastery[id] = Math.floor(finite(amount, 0, 100000000));
     for (const [id, level] of Object.entries(record(data.equipment ?? {})))
@@ -93,10 +107,28 @@ export function settleRun(profile: Profile, run: Expedition): boolean {
   profile.shards += Math.max(1, run.rooms * 3 + Math.floor(run.kills / 2) + (run.won ? 25 : 0));
   profile.research += Math.floor(run.rooms / 2) + (run.won ? 5 : 0);
   profile.mastery[run.classId] = (profile.mastery[run.classId] ?? 0) + run.kills;
+  mergeMastery(profile.abilityMastery, run.mastery);
+  for (const [id, value] of Object.entries(run.metrics))
+    profile.metrics[id] = (profile.metrics[id] ?? 0) + value;
+  profile.metrics.kills = profile.kills;
+  profile.metrics.chain = Math.max(profile.metrics.chain ?? 0, run.bestChain);
+  for (const id of run.discoveries)
+    if (!profile.discoveries.includes(id)) profile.discoveries.push(id);
   for (const id of [...run.build.relics, ...run.game.abilities.levels.keys()])
     if (!profile.discoveries.includes(id)) profile.discoveries.push(id);
   for (let biome = run.startBiome; biome <= run.biome; biome++)
     if (!profile.discoveries.includes(`biome:${biome}`)) profile.discoveries.push(`biome:${biome}`);
+  for (const challenge of challenges)
+    if (
+      !profile.challenges.includes(challenge.id) &&
+      (profile.metrics[challenge.metric] ?? 0) >= challenge.target
+    ) {
+      profile.challenges.push(challenge.id);
+      profile.shards += challenge.shards;
+      profile.research += challenge.research;
+      if ('equipment' in challenge && !profile.equipment[challenge.equipment])
+        profile.equipment[challenge.equipment] = 1;
+    }
   return true;
 }
 export function purchaseResearch(profile: Profile, id: string): boolean {

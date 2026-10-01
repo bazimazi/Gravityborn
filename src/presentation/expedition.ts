@@ -2,6 +2,7 @@ import type { Expedition } from '../progression/expedition';
 import { biomes } from '../content/rooms';
 import { relicById } from '../content/relics';
 import { encounters } from '../content/events';
+import { story } from '../content/story';
 
 const escape = (text: string): string =>
   text.replace(
@@ -23,7 +24,7 @@ export function expeditionView(run: Expedition): string {
         '',
       )}</div><button class="text-button" data-run-action="reroll" ${run.build.rerolls ? '' : 'disabled'}>Reroll · ${run.build.rerolls} remaining</button>`;
   else if (run.phase === 'map')
-    content = `<h2>Choose your route</h2><p>Choose an illuminated chamber to continue. Every route reaches the region's guardian.</p><div class="run-map" aria-label="Expedition map">${Array.from(
+    content = `<h2>Choose your route</h2><div class="story-card"><strong>ACT ${escape(story[run.biome].act)} · ${escape(story[run.biome].title)}</strong>${escape(story[run.biome].intro)}</div><p>Choose an illuminated chamber to continue. Every route reaches the region's guardian.</p><div class="run-map" aria-label="Expedition map">${Array.from(
       { length: 7 },
       (_, row) =>
         `<div class="map-row"><span class="mono">${row + 1}</span>${run.map

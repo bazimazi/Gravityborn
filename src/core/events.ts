@@ -1,12 +1,20 @@
 import type { Vec2 } from './vector';
 
 export interface GameEvents {
-  gravityChanged: { direction: Vec2 };
+  gravityChanged: { direction: Vec2; source?: 'player' | 'enemy' };
   wellCreated: { position: Vec2 };
   impact: { position: Vec2; force: number; color: string };
   explosion: { position: Vec2; radius: number; chainId: number | null };
   damaged: { position: Vec2; amount: number; player: boolean };
-  killed: { position: Vec2; kind: string; chainId: number | null; chainLength: number };
+  killed: {
+    position: Vec2;
+    kind: string;
+    chainId: number | null;
+    chainLength: number;
+    source: string;
+    elite: boolean;
+    boss: boolean;
+  };
   ended: { won: boolean };
   abilityUsed: { id: string; tags: string[]; position: Vec2; level: number };
 }

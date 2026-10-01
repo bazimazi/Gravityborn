@@ -412,9 +412,15 @@
     {
       "section": 32,
       "title": "Planet System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 33,
@@ -485,16 +491,28 @@
     {
       "section": 39,
       "title": "Challenge System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 40,
       "title": "Mastery System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 41,
@@ -600,30 +618,54 @@
     {
       "section": 52,
       "title": "Narrative",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 53,
       "title": "Story Structure",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 54,
       "title": "Codex",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 55,
       "title": "Collection",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/story.ts",
+        "src/content/challenges.ts",
+        "src/progression/mastery.ts",
+        "src/presentation/codex.ts",
+        "tests/mastery.test.ts"
+      ],
+      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
     },
     {
       "section": 56,

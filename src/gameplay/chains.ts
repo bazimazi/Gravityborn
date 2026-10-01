@@ -4,6 +4,8 @@ interface Chain {
   id: number;
   expires: number;
   effects: Set<string>;
+  source: string;
+  created: number;
 }
 export class ChainTracker {
   private nextId = 1;
@@ -11,9 +13,15 @@ export class ChainTracker {
   best = 0;
   current = 0;
 
-  start(time: number): number {
+  start(time: number, source = 'environment'): number {
     const id = this.nextId++;
-    this.chains.set(id, { id, expires: time + balance.combat.chainTimeout, effects: new Set() });
+    this.chains.set(id, {
+      id,
+      expires: time + balance.combat.chainTimeout,
+      effects: new Set(),
+      source,
+      created: time,
+    });
     return id;
   }
 
@@ -21,8 +29,8 @@ export class ChainTracker {
     if (id === null || depth > balance.combat.maxChainDepth) return 0;
     const chain = this.chains.get(id);
     if (!chain || chain.expires < time) return 0;
-    chain.effects.add(effect);
-    const length = Math.min(chain.effects.size, balance.combat.maxChainDepth);
+    if (chain.effects.size < balance.combat.maxChainEffects) chain.effects.add(effect);
+    const length = Math.min(chain.effects.size, balance.combat.maxChainEffects);
     this.current = Math.max(this.current, length);
     this.best = Math.max(this.best, length);
     return length;
@@ -35,7 +43,18 @@ export class ChainTracker {
     for (const chain of this.chains.values())
       this.current = Math.max(
         this.current,
-        Math.min(chain.effects.size, balance.combat.maxChainDepth),
+        Math.min(chain.effects.size, balance.combat.maxChainEffects),
+      );
+  }
+  source(id: number | null): string {
+    return id === null ? 'environment' : (this.chains.get(id)?.source ?? 'environment');
+  }
+  touch(id: number, time: number): void {
+    const chain = this.chains.get(id);
+    if (chain)
+      chain.expires = Math.min(
+        chain.created + balance.combat.maxChainLifetime,
+        time + balance.combat.chainTimeout,
       );
   }
 

@@ -1449,3 +1449,47 @@ dialog::backdrop {
   min-height: 44px;
   cursor: pointer;
 }
+.codex-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+.codex-entry {
+  padding: 12px;
+  background: #122231;
+  border: 1px solid #304554;
+  border-radius: 6px;
+}
+.codex-entry h3 {
+  color: #d4eee7;
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.codex-entry p {
+  color: #aec0cf;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+}
+.codex-entry.undiscovered {
+  opacity: 0.5;
+}
+.story-card {
+  border-left: 2px solid #88cbbb;
+  padding: 8px 12px;
+  background: #14302980;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+.story-card strong {
+  display: block;
+  color: #9fe6d6;
+  margin-bottom: 5px;
+}
+@media (max-width: 600px) {
+  .codex-grid {
+    grid-template-columns: 1fr;
+  }
+}

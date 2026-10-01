@@ -34,6 +34,8 @@
     "playerExplosionMultiplier": 0.45,
     "impactFeedbackThreshold": 1.8,
     "maxChainDepth": 12,
+    "maxChainEffects": 64,
+    "maxChainLifetime": 20,
     "chainTimeout": 6
   },
   "enemies": {

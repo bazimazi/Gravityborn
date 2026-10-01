@@ -14,6 +14,7 @@ import type { Trigger } from '../progression/modifiers';
 import { Random } from '../core/random';
 import { BossSystem } from './bosses';
 import { RuleSystem } from './rules';
+import { bossDefinitions } from '../content/bosses';
 
 const laboratory: RoomDefinition = {
   ...arena,
@@ -32,6 +33,7 @@ export interface RunStats {
   wells: number;
   redirectedKills: number;
   score: number;
+  zeroSeconds: number;
 }
 interface Cause {
   id: number | null;
@@ -54,7 +56,7 @@ export class Game {
   time = 0;
   wellCooldown = 0;
   move: Vec2 = { x: 0, y: 0 };
-  stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0 };
+  stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
   private readonly explosions: { entity: Entity; cause: Cause }[] = [];
   private readonly wellChains = new Map<number, number>();
   private readonly echoes: { id: string; position: Vec2; time: number }[] = [];
@@ -65,7 +67,9 @@ export class Game {
     this.events.on('abilityUsed', (event) => {
       if (!event.tags.includes('Echo')) this.trigger('OnAbilityCast', event.tags, event);
     });
-    this.events.on('gravityChanged', () => this.trigger('OnGravityChange'));
+    this.events.on('gravityChanged', (event) => {
+      if (event.source !== 'enemy') this.trigger('OnGravityChange');
+    });
     this.events.on('damaged', (event) => {
       if (event.player) this.trigger('OnDamage');
     });
@@ -149,7 +153,7 @@ export class Game {
     this.wellCooldown = 0;
     this.state = 'ready';
     this.move = { x: 0, y: 0 };
-    this.stats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0 };
+    this.stats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
     this.enemies = new EnemySystem(this);
     this.bosses = new BossSystem(this);
     this.rules = new RuleSystem(this);
@@ -168,8 +172,8 @@ export class Game {
   castAbility(id: string, position: Vec2): boolean {
     return this.state === 'playing' && this.abilities.cast(id, position);
   }
-  createCause(): number {
-    return this.chains.start(this.time);
+  createCause(source = 'environment'): number {
+    return this.chains.start(this.time, source);
   }
   markCause(entity: Entity, id: number, depth = 0): void {
     this.attribute(entity, { id, depth });
@@ -220,7 +224,7 @@ export class Game {
     if (this.state !== 'playing' || !this.gravity.setDirection(direction)) return false;
     if (previous.x === this.gravity.direction.x && previous.y === this.gravity.direction.y)
       return false;
-    const chain = this.chains.start(this.time);
+    const chain = this.chains.start(this.time, 'flip');
     for (const entity of this.world.entities.values()) {
       if (entity.kind !== 'player') this.attribute(entity, { id: chain, depth: 0 });
       if (entity.kind === 'projectile') entity.redirected = true;
@@ -247,7 +251,7 @@ export class Game {
     if (wells.length >= this.abilities.modifiers.evaluate('maxWells', balance.gravity.maxWells))
       this.gravity.removeField(wells[0].id);
     if (this.gravity.fields.size >= balance.physics.maxFields) return false;
-    const chain = this.chains.start(this.time);
+    const chain = this.chains.start(this.time, 'well');
     const fieldId = this.gravity.addField({
       source: 'player-well',
       mode: 'radial',
@@ -299,6 +303,8 @@ export class Game {
     this.abilities.tick(dt);
     this.rules.tick();
     this.environment.tick();
+    if (length(this.gravity.sample(this.player.body.position)) < 0.00001)
+      this.stats.zeroSeconds += dt;
     this.wellCooldown = Math.max(0, this.wellCooldown - dt);
     this.gravity.tick(dt);
     for (const id of this.wellChains.keys())
@@ -457,6 +463,7 @@ export class Game {
   private attribute(entity: Entity, cause: Cause): void {
     if (cause.id === null || cause.depth > balance.combat.maxChainDepth) return;
     entity.chainId = cause.id;
+    this.chains.touch(cause.id, this.time);
     entity.chainDepth = cause.depth;
     entity.chainExpires = this.time + balance.combat.chainTimeout;
   }
@@ -499,6 +506,9 @@ export class Game {
       kind: entity.kind,
       chainId: cause.id,
       chainLength,
+      source: this.chains.source(cause.id),
+      elite: Boolean(entity.elite),
+      boss: entity.kind in bossDefinitions,
     });
   }
 

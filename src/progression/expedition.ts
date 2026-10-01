@@ -14,6 +14,8 @@ import { Random } from '../core/random';
 import { modes, rotatingChallenge, type RunMode } from '../content/modes';
 import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
 import { bossDefinitions, type BossKind } from '../content/bosses';
+import { freshMastery, readMastery, type MasteryProgress } from './mastery';
+import { story } from '../content/story';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -23,6 +25,9 @@ export interface RunOptions {
 
 export type ExpeditionPhase = 'inactive' | 'map' | 'room' | 'reward' | 'shop' | 'event' | 'summary';
 export class Expedition {
+  discoveries = new Set<string>();
+  mastery: Record<string, MasteryProgress> = {};
+  metrics: Record<string, number> = {};
   id = '';
   classId = 'manipulator';
   startBiome = 0;
@@ -47,10 +52,33 @@ export class Expedition {
   message = '';
   shop: { id: string; price: number; sold: boolean }[] = [];
   constructor(readonly game: Game) {
+    game.events.on('abilityUsed', (event) => {
+      if (this.phase === 'room' && !event.tags.includes('Echo')) {
+        (this.mastery[event.id] ??= freshMastery()).casts++;
+        this.discoveries.add(`ability:${event.id}`);
+      }
+    });
+    game.events.on('wellCreated', () => {
+      if (this.phase === 'room') (this.mastery.well ??= freshMastery()).casts++;
+    });
+    game.events.on('gravityChanged', (event) => {
+      if (this.phase === 'room' && event.source !== 'enemy')
+        (this.mastery.flip ??= freshMastery()).casts++;
+    });
     game.events.on('killed', (event) => {
       if (this.phase !== 'room' || entityDefinitions[event.kind as EntityKind]?.faction !== 'enemy')
         return;
       this.kills++;
+      this.discoveries.add(`${event.boss ? 'boss' : 'enemy'}:${event.kind}`);
+      const progress = (this.mastery[event.source] ??= freshMastery());
+      progress.kills++;
+      progress.elites += Number(event.elite);
+      progress.bosses += Number(event.boss);
+      progress.chain = Math.max(progress.chain, event.chainLength);
+      this.metrics.bosses = (this.metrics.bosses ?? 0) + Number(event.boss);
+      this.metrics.elites = (this.metrics.elites ?? 0) + Number(event.elite);
+      if (event.boss && event.source === 'well')
+        this.metrics.wellBosses = (this.metrics.wellBosses ?? 0) + 1;
       this.build.gainXP(18 + Math.min(30, event.chainLength * 3));
       this.build.currency += 5;
     });
@@ -59,6 +87,8 @@ export class Expedition {
       this.elapsed += game.time;
       this.score += game.stats.score;
       this.bestChain = Math.max(this.bestChain, game.chains.best);
+      this.metrics.redirected = (this.metrics.redirected ?? 0) + game.stats.redirectedKills;
+      this.metrics.zeroSeconds = (this.metrics.zeroSeconds ?? 0) + game.stats.zeroSeconds;
       if (!event.won) {
         this.phase = 'summary';
         this.message = 'The core fell silent. Your discoveries remain.';
@@ -110,6 +140,9 @@ export class Expedition {
     }
     if (this.mode === 'campaign') biome = 0;
     this.id = crypto.randomUUID();
+    this.discoveries = new Set();
+    this.mastery = {};
+    this.metrics = {};
     this.classId = classById.has(classId) ? classId : 'manipulator';
     this.seed = seed.trim().slice(0, 64) || 'gravityborn';
     this.startBiome =
@@ -141,6 +174,9 @@ export class Expedition {
     const health = this.game.player.health;
     const powers = this.game.abilities.snapshot();
     this.current = node;
+    this.discoveries.add(`biome:${this.biome}`);
+    this.discoveries.add(`planet:${this.biome}`);
+    this.discoveries.add(`lore:${this.biome}`);
     const room = buildRoom(
       `${this.seed}:${this.depth}`,
       node.id,
@@ -174,6 +210,9 @@ export class Expedition {
         phase: 0,
       });
     this.game.reset(true, room);
+    for (const spawn of room.spawns)
+      if (entityDefinitions[spawn.kind].faction === 'enemy')
+        this.discoveries.add(`${spawn.kind in bossDefinitions ? 'boss' : 'enemy'}:${spawn.kind}`);
     this.game.abilities.restore(powers);
     this.build.apply();
     this.game.abilities.restore(powers);
@@ -192,6 +231,7 @@ export class Expedition {
       this.contract,
       Math.min(12, this.difficulty + this.depth),
     );
+    if (phenomenon) this.discoveries.add(`phenomenon:${phenomenon}`);
     if (['combat', 'elite', 'challenge', 'boss', 'puzzle'].includes(node.type)) {
       this.phase = 'room';
       this.message =
@@ -276,6 +316,15 @@ export class Expedition {
       const limit = modes.find((mode) => mode.id === this.mode)!.regions;
       if (this.mode !== 'endless' && this.biome >= Math.min(7, this.startBiome + limit - 1)) {
         this.won = true;
+        for (const progress of Object.values(this.mastery))
+          if (progress.kills >= Math.max(1, this.kills * 0.5)) progress.wins++;
+        if (
+          Object.entries(this.mastery)
+            .filter(([id]) => ['planet', 'binary', 'vortex', 'reflect', 'rotate'].includes(id))
+            .reduce((sum, [, progress]) => sum + progress.kills, 0) >=
+          Math.max(1, this.kills * 0.75)
+        )
+          this.metrics.orbitalWins = 1;
         this.phase = 'summary';
         this.message = 'The route is liberated. The expedition returns with new knowledge.';
         return true;
@@ -296,6 +345,9 @@ export class Expedition {
     if (this.phase === 'inactive' || this.phase === 'room') return null;
     return {
       id: this.id,
+      discoveries: [...this.discoveries],
+      mastery: this.mastery,
+      metrics: this.metrics,
       classId: this.classId,
       startBiome: this.startBiome,
       eventId: this.eventId,
@@ -357,6 +409,14 @@ export class Expedition {
       const kills = finite(data.kills, 0, 10000000);
       const elapsed = finite(data.elapsed, 0, 100000000);
       const health = finite(data.health, 0, 100000);
+      const discoveries = strings(data.discoveries ?? [], 2000);
+      const mastery = readMastery(data.mastery ?? {});
+      const metrics: Record<string, number> = {};
+      for (const [id, value] of Object.entries(record(data.metrics ?? {})))
+        if (id.length < 50) metrics[id] = finite(value, 0, 100000000);
+      const difficulty = finite(data.difficulty ?? 0, 0, 6);
+      const score = finite(data.score ?? 0, 0, 1000000000);
+      const bestChain = finite(data.bestChain ?? 0, 0, 1000);
       const build = new RunBuild(this.game, data.seed, data.classId);
       build.restore(data.build);
       const shop: { id: string; price: number; sold: boolean }[] = [];
@@ -367,6 +427,9 @@ export class Expedition {
         shop.push({ id: item.id, price: finite(item.price, 0, 1000), sold: item.sold === true });
       }
       this.game.reset(false);
+      this.discoveries = new Set(discoveries);
+      this.mastery = mastery;
+      this.metrics = metrics;
       this.id = data.id;
       this.seed = data.seed;
       this.classId = data.classId;
@@ -377,12 +440,12 @@ export class Expedition {
       this.contract = contracts.some((contract) => contract.id === data.contract)
         ? (data.contract as Contract)
         : 'none';
-      this.difficulty = finite(data.difficulty ?? 0, 0, 6);
+      this.difficulty = difficulty;
       this.phenomenon = phenomena.some((item) => item.id === data.phenomenon)
         ? (data.phenomenon as Phenomenon)
         : '';
-      this.score = finite(data.score ?? 0, 0, 1000000000);
-      this.bestChain = finite(data.bestChain ?? 0, 0, 1000);
+      this.score = score;
+      this.bestChain = bestChain;
       this.eventId =
         typeof data.eventId === 'string' && encounters.some((event) => event.id === data.eventId)
           ? data.eventId
@@ -451,6 +514,7 @@ export class Expedition {
       this.message = `Chamber cleared. +${currency} matter shards.`;
       if (['elite', 'boss', 'puzzle', 'challenge'].includes(this.current.type))
         this.grantRelic(this.current.type === 'boss');
+      if (this.current.type === 'boss') this.message += ` ${story[this.biome].memory}`;
     }
     this.phase = 'reward';
   }

@@ -225,6 +225,7 @@ function refreshRun(): void {
     runViewKey = key;
     clearInput();
     overlay.innerHTML = expeditionView(run);
+    overlay.scrollTop = 0;
     if (run.phase !== 'room') persist();
   }
   overlay.classList.add('run-overlay');

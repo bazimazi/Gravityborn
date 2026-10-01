@@ -2,7 +2,7 @@
 
 Turn the entire room into a weapon. Gravityborn is a mobile-first physics action roguelite in development.
 
-This repository currently delivers the **first playable physics/combat prototype**, following section 103 of the [design specification](docs/design-specification.md). It is a browser game built with TypeScript, Matter.js, and Canvas 2D. The larger roguelite and native Android/iOS releases remain later milestones.
+This repository contains a playable roguelite built with TypeScript, Matter.js, and Canvas 2D. It now supports complete expeditions, branching routes, upgrades, relics, bosses, equipment, classes, persistent progression, and a campaign route. Work continues against all 113 sections of the [design specification](docs/design-specification.md); the [implementation ledger](docs/implementation-status.json) distinguishes partial systems from completed requirements. Native Android/iOS delivery and real-device validation remain unfinished.
 
 ## Play locally
 
@@ -31,11 +31,13 @@ Open http://127.0.0.1:4180. All art and sound are generated locally; gameplay ma
 | Move | W A S D | Drag joystick |
 | Change global gravity | Arrow keys | Four arrow buttons |
 | Place gravity well | Click arena; Space at cursor or ahead | Tap arena; well button shows targeting hint |
+| Cast selected power | Q or Cast button | Select a power and tap Cast |
+| Progression / saved route | Observatory button (star) | Observatory button |
 | Pause / resume | Escape or pause button | Pause button |
 | Restart after a result | R or result button | Result button |
 | Physics inspector | Backtick or sidebar button | Sidebar on larger screens |
 
-Clear six hostiles using momentum, heavy objects, exploding barrels, and redirected shots. There is no attack button. Health, damage immunity, cooldowns, and field lifetimes advance only while the simulation runs. Focus loss automatically pauses the game.
+Choose **Enter the chamber** for the original six-hostile laboratory, or **Begin expedition** for a run. The observatory provides class selection, equipment, research, mutations, run modes, difficulty, contracts, the codex, and saved-route recovery. Health, immunity, cooldowns, and fields advance only while the simulation runs. Focus loss automatically pauses the game.
 
 ## Implemented scope
 
@@ -49,7 +51,17 @@ Clear six hostiles using momentum, heavy objects, exploding barrels, and redirec
 - Portrait camera, landscape layout, left-handed controls, volume, reduced motion, low-power rendering, and versioned settings storage.
 - Inspector with spawning, health restoration, gravity strength, wells, frame stepping, collision bounds, velocity/gravity vectors, mass, chain IDs, and performance data.
 
-XP, relics, bosses, procedural runs, meta progression, equipment, classes, and run saves are deliberately deferred until player testing validates the core mechanic. Settings are the only persisted data in this prototype.
+Beyond the original laboratory, the current implementation includes:
+
+- 21 physical powers with levels/evolutions, 15 relics, tagged modifiers, triggers, and four build synergies.
+- 13 additional enemy behaviors, eight elite modifiers, five bosses, and eight biome definitions.
+- Seeded authored-room composition, branching routes, puzzles, hazards, shops, six events, and three-choice XP upgrades.
+- Eight classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and seven mutations.
+- Quick, standard, long, campaign, endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
+- Five story acts, eight collectible planet records, a discovery codex, causal ability mastery, and challenge rewards.
+- Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. A reload restarts from the last saved route rather than restoring every moving body.
+
+Content counts describe implemented definitions, not independently balanced or externally playtested content. Full launch breadth, physical resource pickups, additional material interactions, accessibility polish, music, offline/native packaging, and release validation remain in progress.
 
 ## Verify
 
