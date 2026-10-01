@@ -421,6 +421,7 @@ export class AbilitySystem {
   }
 
   tick(dt: number): void {
+    this.modifiers.tick(this.host.time);
     this.energy = Math.min(
       this.maxEnergy,
       this.energy + this.modifiers.evaluate('energyRegen', balance.abilities.energyRegen) * dt,

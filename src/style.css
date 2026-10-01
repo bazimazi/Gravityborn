@@ -266,6 +266,17 @@ kbd {
   border-radius: 2px;
   overflow: hidden;
 }
+.run-progress {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 7px;
+  color: #a8deff;
+  font-size: calc(9px * var(--ui-scale, 1));
+}
+.run-progress[hidden] {
+  display: none;
+}
 .health-fill {
   height: 100%;
   background: var(--mint);

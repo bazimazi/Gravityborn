@@ -122,3 +122,35 @@ it('keeps an extensively stacked build playable and serializable', () => {
   restored.apply();
   expect(restored.game.maxHealth).toBe(2000);
 });
+it('long player-caused chains grant a bounded temporary bonus that survives build changes and pause', () => {
+  const game = new Game(false);
+  game.world.spawn('heavy', { x: 1000, y: 250 });
+  game.start();
+  const enemyCause = game.createCause('environment');
+  for (let i = 0; i < 5; i++) game.chains.extend(enemyCause, `enemy:${i}`, 1, game.time);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(8);
+  const cause = game.createCause('pulse');
+  for (let i = 0; i < 5; i++) game.chains.extend(cause, `object:${i}`, 1, game.time);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(12);
+  new RunBuild(game, 'keep-rush').addRelic('battery');
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(12);
+  game.pause();
+  for (let i = 0; i < 1000; i++) game.step();
+  expect(game.abilities.modifiers.remaining('temporary:chain-rush', game.time)).toBe(4);
+  game.time = 4;
+  game.abilities.tick(0);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(8);
+});
+it('a smaller new chain refreshes without weakening or shortening a stronger active rush', () => {
+  const game = new Game(false);
+  game.start();
+  const cause = game.createCause('well');
+  for (let i = 0; i < 20; i++) game.chains.extend(cause, `object:${i}`, 1, game.time);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(16);
+  const next = game.createCause('flip');
+  for (let i = 0; i < 5; i++) game.chains.extend(next, `other:${i}`, 1, game.time);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(16);
+  expect(game.abilities.modifiers.remaining('temporary:chain-rush', game.time)).toBe(6);
+  game.reset(false);
+  expect(game.abilities.modifiers.evaluate('energyRegen', 8)).toBe(8);
+});

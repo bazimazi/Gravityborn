@@ -46,6 +46,10 @@ import { statusBadges } from './presentation/status';
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
   document.querySelector<T>(selector)!;
+element('.health-block').insertAdjacentHTML(
+  'beforeend',
+  '<div id="run-progress" class="run-progress mono" hidden><span id="level-value"></span><span id="xp-value"></span></div>',
+);
 const storage = await openStorage();
 let settings: Settings;
 try {
@@ -795,6 +799,11 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  element('#run-progress').hidden = !run.active;
+  if (run.active) {
+    element('#level-value').textContent = `LEVEL ${run.build.level}`;
+    element('#xp-value').textContent = `${Math.floor(run.build.xp)} / ${run.build.threshold} XP`;
+  }
   const badges = statusBadges(game);
   const statusEffects = element('#status-effects');
   statusEffects.style.visibility =
@@ -854,9 +863,10 @@ function updateHud(fps: number): void {
   element('#health-fill').style.width = `${(health / game.maxHealth) * 100}%`;
   element('[role="progressbar"]').setAttribute('aria-valuemax', String(game.maxHealth));
   element('[role="progressbar"]').setAttribute('aria-valuenow', String(health));
-  element('#timer').textContent = `${Math.floor(game.time / 60)
+  const elapsed = run.active ? run.elapsed + (run.phase === 'room' ? game.time : 0) : game.time;
+  element('#timer').textContent = `${Math.floor(elapsed / 60)
     .toString()
-    .padStart(2, '0')}:${Math.floor(game.time % 60)
+    .padStart(2, '0')}:${Math.floor(elapsed % 60)
     .toString()
     .padStart(2, '0')}`;
   const g = game.gravity.direction;

@@ -23,6 +23,12 @@ export function statusBadges(game: Game): StatusBadge[] {
       description: 'Stored charge strengthens Stored Burst and is spent when it fires.',
     });
   const modifiers = game.abilities.modifiers;
+  const rush = modifiers.remaining('temporary:chain-rush', game.time);
+  if (rush > 0)
+    badges.push({
+      label: `Chain rush ${rush.toFixed(1)}s`,
+      description: `Regenerate ${modifiers.values.get('temporary:chain-rush')!.value} extra energy per second after a long player-caused chain.`,
+    });
   const context = game.abilities.context();
   const active = new Set<string>();
   for (const rule of [...modifiers.values.values(), ...modifiers.rules.values()]) {

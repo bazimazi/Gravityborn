@@ -59,6 +59,8 @@ test('starts a seeded expedition and restricts powers to the current build', asy
   await page.locator('[data-room]:enabled').click();
   await expect(page.locator('#overlay')).toBeHidden();
   await expect(page.locator('#ability-select option')).toHaveCount(2);
+  await expect(page.locator('#level-value')).toHaveText('LEVEL 1');
+  await expect(page.locator('#xp-value')).toHaveText('0 / 60 XP');
   expect((await snapshot(page)).state).toBe('playing');
   await page.getByRole('button', { name: 'Pause game', exact: true }).click();
   expect((await snapshot(page)).state).toBe('paused');

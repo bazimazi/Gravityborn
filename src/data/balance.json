@@ -24,6 +24,11 @@
   },
   "player": { "acceleration": 0.0028, "invulnerability": 0.8, "contactDamage": 9 },
   "combat": {
+    "chainRush": [
+      { "length": 5, "regeneration": 4, "duration": 4 },
+      { "length": 10, "regeneration": 6, "duration": 5 },
+      { "length": 20, "regeneration": 8, "duration": 6 }
+    ],
     "impactThreshold": 3.8,
     "impactCoefficient": 1.1,
     "impactCooldown": 0.25,

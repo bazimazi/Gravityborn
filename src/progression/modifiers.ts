@@ -70,15 +70,33 @@ export class ModifierSet {
   readonly values = new Map<string, Modifier>();
   readonly rules = new Map<string, TriggerRule>();
   private readonly ready = new Map<string, number>();
+  private readonly expiry = new Map<string, number>();
   constructor(readonly context: () => ModifierContext = () => ({})) {}
   add(modifier: Modifier): void {
     if (!Number.isFinite(modifier.value)) throw new Error('Invalid modifier');
     this.values.set(modifier.id, modifier);
   }
+  addTemporary(modifier: Modifier, until: number): void {
+    if (!modifier.id.startsWith('temporary:') || !Number.isFinite(until))
+      throw new Error('Invalid temporary modifier');
+    if (!this.expiry.has(modifier.id) && this.expiry.size >= 16) return;
+    this.add(modifier);
+    this.expiry.set(modifier.id, until);
+  }
+  remaining(id: string, time: number): number {
+    return Math.max(0, (this.expiry.get(id) ?? 0) - time);
+  }
+  tick(time: number): void {
+    for (const [id, until] of this.expiry) if (until <= time) this.remove(id);
+  }
+  clearPermanent(): void {
+    for (const id of this.values.keys()) if (!this.expiry.has(id)) this.values.delete(id);
+  }
   remove(id: string): void {
     this.values.delete(id);
     this.rules.delete(id);
     this.ready.delete(id);
+    this.expiry.delete(id);
   }
   evaluate(
     stat: string,
@@ -126,5 +144,6 @@ export class ModifierSet {
     this.values.clear();
     this.rules.clear();
     this.ready.clear();
+    this.expiry.clear();
   }
 }

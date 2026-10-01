@@ -926,17 +926,15 @@
     {
       "section": 72,
       "title": "Combat HUD",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/main.ts",
+        "src/presentation/status.ts",
+        "src/presentation/shell.ts",
+        "tests/browser/game.spec.ts",
+        "tests/modifiers.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Health, energy, direction, owned-power selection/cooldown, level, XP, total expedition time, shield/stored-charge/conditional-effect/chain-rush status and chain count are visible. Human clutter/readability review remains part of device validation."
     },
     {
       "section": 73,

@@ -204,7 +204,7 @@ export class RunBuild {
   apply(): void {
     const modifiers = this.game.abilities.modifiers;
     // Preserve trigger clocks within a room while rebuilding derived modifiers.
-    modifiers.values.clear();
+    modifiers.clearPermanent();
     modifiers.rules.clear();
     for (let level = 1; level < this.wellLevel; level++)
       wellEvolutions[level].modifiers.forEach((modifier, index) =>

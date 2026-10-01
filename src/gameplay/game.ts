@@ -17,6 +17,7 @@ import { RuleSystem } from './rules';
 import { bossDefinitions } from '../content/bosses';
 import { ObjectSystem } from './objects';
 import { MaterialSystem } from './materials';
+import { abilityById } from '../content/abilities';
 
 const laboratory: RoomDefinition = {
   ...arena,
@@ -85,6 +86,26 @@ export class Game {
     this.events.on('damaged', (event) => {
       if (event.player) this.trigger('OnDamage');
     });
+    this.events.on('chainExtended', (event) => {
+      if (
+        this.state !== 'playing' ||
+        (!['well', 'flip', 'relic'].includes(event.source) && !abilityById.has(event.source))
+      )
+        return;
+      const tier = balance.combat.chainRush.find((tier) => tier.length === event.length);
+      if (!tier) return;
+      const id = 'temporary:chain-rush';
+      const active = this.abilities.modifiers.values.get(id);
+      this.abilities.modifiers.addTemporary(
+        {
+          id,
+          stat: 'energyRegen',
+          operation: 'add',
+          value: Math.max(tier.regeneration, active?.value ?? 0),
+        },
+        this.time + Math.max(tier.duration, this.abilities.modifiers.remaining(id, this.time)),
+      );
+    });
   }
 
   get maxHealth(): number {
@@ -123,7 +144,7 @@ export class Game {
         this.gravity.fields.size < 48 &&
         (rule.effect !== 'horizon' || this.player.health < this.maxHealth * 0.35)
       ) {
-        const cause = this.createCause();
+        const cause = this.createCause('relic');
         this.gravity.addField({
           source: 'relic',
           mode:
