@@ -12,6 +12,10 @@
     "maxBodies": 220,
     "maxFields": 50,
     "maxTethers": 12,
+    "dormancyDistance": 450,
+    "dormancySpeed": 0.02,
+    "dormancyAngularSpeed": 0.001,
+    "dormancyDelayMs": 1000,
     "positionIterations": 8,
     "velocityIterations": 8
   },

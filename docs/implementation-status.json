@@ -274,7 +274,7 @@
         "scripts/expedition-playtest.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Multiwave encounters implemented. Twelve input-only quick seeds produced seven wins and no stalls; successful runs are still shorter than target duration. Human balance validation remains open."
+      "remaining": "Multiwave encounters and all run modes are implemented. The latest twelve input-only quick seeds produced six wins, six defeats and no stalls; successful runs took 43–108 simulated seconds with instant bot decisions. Human pacing/balance validation remains open."
     },
     {
       "section": 22,
@@ -890,9 +890,10 @@
         "src/physics/gravity.ts",
         "src/presentation/feedback.ts",
         "src/core/settings.ts",
-        "scripts/benchmark.ts"
+        "scripts/benchmark.ts",
+        "tests/dormancy.test.ts"
       ],
-      "remaining": "Spatial field queries, projectile/particle pools, collision masks, finite caps and 30/60 Hz rendering are implemented. Host stress fits the step budget, but phone frame rates and thermal load require devices. Distant-object throttling remains to evaluate against physical correctness."
+      "remaining": "Spatial field queries, pools, collision masks, finite caps, 30/60 Hz rendering and conservative distant-prop dormancy are implemented. Only stationary force-free neutral props beyond 450 units can sleep; forces, proximity, links, collisions and geometry changes wake them. Host stress fits the step budget; sustained phone frame rates and thermal load remain device gates."
     },
     {
       "section": 67,

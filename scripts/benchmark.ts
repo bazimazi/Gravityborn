@@ -73,6 +73,34 @@ for (const [count, sources] of [
   world.dispose();
 }
 
+for (const spacing of [55, 44])
+  for (const enabled of [false, true]) {
+    const world = new PhysicsWorld(new GravitySystem(0, balance.physics.maxAcceleration));
+    if (enabled) world.focus = { x: 0, y: 0 };
+    for (let index = 0; index < balance.physics.maxBodies; index++)
+      world.spawn('rock', {
+        x: 600 + (index % 20) * spacing,
+        y: 80 + Math.floor(index / 20) * spacing,
+      });
+    const timings: number[] = [];
+    for (let step = 0; step < 1500; step++) {
+      const start = performance.now();
+      world.step();
+      if (step >= 1000) timings.push(performance.now() - start);
+    }
+    timings.sort((a, b) => a - b);
+    console.log(
+      JSON.stringify({
+        stage: 'distant-force-free-props',
+        dormancy: enabled,
+        spacing,
+        sleeping: [...world.entities.values()].filter((entity) => entity.body.isSleeping).length,
+        p95Ms: +timings[Math.floor(timings.length * 0.95)].toFixed(3),
+      }),
+    );
+    world.dispose();
+  }
+
 // Exercise gameplay attribution as well as the solver at both shared budgets.
 const saturated = new Game(false);
 saturated.player.invulnerability = 1000;

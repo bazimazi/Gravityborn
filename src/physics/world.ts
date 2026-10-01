@@ -42,6 +42,7 @@ export interface CollisionFact {
 
 export class PhysicsWorld {
   readonly engine = Engine.create({
+    enableSleeping: true,
     positionIterations: balance.physics.positionIterations,
     velocityIterations: balance.physics.velocityIterations,
   });
@@ -51,6 +52,8 @@ export class PhysicsWorld {
   private readonly velocities = new Map<number, Vec2>();
   private readonly projectilePool: Entity[] = [];
   private readonly safePositions = new Map<number, Vec2>();
+  focus?: Vec2;
+  private readonly wallPositions = new Map<Matter.Body, { x: number; y: number; angle: number }>();
 
   constructor(
     readonly gravity: GravitySystem,
@@ -67,6 +70,11 @@ export class PhysicsWorld {
         const a = this.entities.get(pair.bodyA.id);
         const b = this.entities.get(pair.bodyB.id);
         if (!a && !b) continue;
+        // Even a slow moving body must wake dormant matter before collision resolution.
+        if (a?.body.isSleeping && b && !b.body.isSleeping && !b.body.isStatic)
+          Sleeping.set(a.body, false);
+        if (b?.body.isSleeping && a && !a.body.isSleeping && !a.body.isStatic)
+          Sleeping.set(b.body, false);
         const av = this.velocities.get(pair.bodyA.id) ?? { x: 0, y: 0 };
         const bv = this.velocities.get(pair.bodyB.id) ?? { x: 0, y: 0 };
         const normal = pair.collision.normal;
@@ -207,6 +215,7 @@ export class PhysicsWorld {
   accelerate(entity: Entity, acceleration: Vec2): void {
     if (entity.body.isStatic) return;
     const bounded = clampVector(acceleration, balance.physics.maxAcceleration);
+    if (bounded.x !== 0 || bounded.y !== 0) Sleeping.set(entity.body, false);
     Body.applyForce(entity.body, entity.body.position, {
       x: bounded.x * entity.body.mass,
       y: bounded.y * entity.body.mass,
@@ -216,6 +225,7 @@ export class PhysicsWorld {
   impulse(entity: Entity, velocityChange: Vec2): void {
     if (entity.body.isStatic) return;
     const bounded = clampVector(velocityChange, balance.physics.maxImpulse);
+    if (bounded.x !== 0 || bounded.y !== 0) Sleeping.set(entity.body, false);
     Body.setVelocity(
       entity.body,
       clampVector(
@@ -227,6 +237,25 @@ export class PhysicsWorld {
 
   step(): void {
     this.collisions.length = 0;
+    let geometryChanged = this.wallPositions.size !== this.walls.length;
+    for (const wall of this.walls) {
+      const previous = this.wallPositions.get(wall);
+      if (
+        !previous ||
+        previous.x !== wall.position.x ||
+        previous.y !== wall.position.y ||
+        previous.angle !== wall.angle
+      )
+        geometryChanged = true;
+    }
+    this.wallPositions.clear();
+    for (const wall of this.walls)
+      this.wallPositions.set(wall, { ...wall.position, angle: wall.angle });
+    const constrained = new Set<Matter.Body>();
+    for (const constraint of Composite.allConstraints(this.engine.world)) {
+      if (constraint.bodyA) constrained.add(constraint.bodyA);
+      if (constraint.bodyB) constrained.add(constraint.bodyB);
+    }
     for (const entity of this.entities.values()) {
       this.repairIfInvalid(entity);
       if (entity.body.isStatic) continue;
@@ -236,14 +265,36 @@ export class PhysicsWorld {
         !Number.isFinite(velocity.x + velocity.y)
       )
         Body.setVelocity(entity.body, clampVector(velocity, balance.physics.maxVelocity));
-      this.accelerate(
-        entity,
-        this.gravity.sample(
-          entity.body.position,
-          entity.definition.gravityResponse * entity.gravityScale,
-          [entity.definition.material, ...entity.definition.tags],
-        ),
+      const gravity = this.gravity.sample(
+        entity.body.position,
+        entity.definition.gravityResponse * entity.gravityScale,
+        [entity.definition.material, ...entity.definition.tags],
       );
+      const dormantCandidate = Boolean(
+        this.focus &&
+          !geometryChanged &&
+          entity.definition.faction === 'neutral' &&
+          entity.kind !== 'xp' &&
+          entity.kind !== 'shard' &&
+          !constrained.has(entity.body) &&
+          Math.hypot(entity.body.position.x - this.focus.x, entity.body.position.y - this.focus.y) >
+            balance.physics.dormancyDistance &&
+          Math.hypot(velocity.x, velocity.y) < balance.physics.dormancySpeed &&
+          Math.abs(Body.getAngularVelocity(entity.body)) < balance.physics.dormancyAngularSpeed &&
+          gravity.x === 0 &&
+          gravity.y === 0 &&
+          entity.body.force.x === 0 &&
+          entity.body.force.y === 0 &&
+          entity.body.torque === 0,
+      );
+      entity.body.sleepThreshold = dormantCandidate
+        ? entity.body.isSleeping
+          ? 0
+          : balance.physics.dormancyDelayMs / (1000 / 60)
+        : 0;
+      if (!dormantCandidate && entity.body.isSleeping) Sleeping.set(entity.body, false);
+      if (entity.body.isSleeping) continue;
+      this.accelerate(entity, gravity);
       const acceleration = clampVector(
         { x: entity.body.force.x / entity.body.mass, y: entity.body.force.y / entity.body.mass },
         balance.physics.maxAcceleration,
@@ -265,6 +316,7 @@ export class PhysicsWorld {
     }
     Engine.update(this.engine, balance.physics.stepMs);
     for (const entity of this.entities.values()) {
+      if (entity.body.isSleeping) continue;
       this.repairIfInvalid(entity);
       const velocity = Body.getVelocity(entity.body);
       if (
@@ -289,6 +341,7 @@ export class PhysicsWorld {
   private makeBody(kind: EntityKind, position: Vec2): Matter.Body {
     const definition = definitions[kind];
     const options = {
+      sleepThreshold: 0,
       restitution: definition.restitution,
       frictionAir: definition.frictionAir,
       friction: definition.material === 'ice' ? 0.001 : 0.05,
@@ -345,5 +398,6 @@ export class PhysicsWorld {
     this.collisions.length = 0;
     this.projectilePool.length = 0;
     this.safePositions.clear();
+    this.wallPositions.clear();
   }
 }

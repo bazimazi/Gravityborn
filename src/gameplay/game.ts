@@ -501,6 +501,7 @@ export class Game {
       } else if (entity.definition.faction === 'enemy') this.updateEnemy(entity, dt);
       else if (entity.definition.faction === 'neutral') this.objects.update(entity);
     }
+    this.world.focus = this.player.body.position;
     this.world.step();
     for (const collision of this.world.collisions) this.resolveCollision(collision);
     this.resolveExplosions();
