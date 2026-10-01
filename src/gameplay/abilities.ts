@@ -15,7 +15,7 @@ export interface AbilityHost {
   events: EventBus;
   createCause(source?: string): number;
   markCause(entity: Entity, id: number, depth?: number): void;
-  applyDamage(entity: Entity, amount: number, cause: number): void;
+  applyDamage(entity: Entity, amount: number, cause: number, type?: string): void;
   flip(direction: Vec2): boolean;
 }
 interface Binding {
@@ -336,6 +336,7 @@ export class AbilitySystem {
               entity,
               targets.length * Math.sqrt(entity.body.mass) * 12 * binding.collapse.multiplier,
               binding.chain,
+              binding.collapse.multiplier > 1 ? 'Void' : 'Compression',
             );
         }
         this.host.gravity.removeField(binding.field);

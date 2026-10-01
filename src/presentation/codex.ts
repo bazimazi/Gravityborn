@@ -8,6 +8,7 @@ import { planets, story } from '../content/story';
 import { challenges } from '../content/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
 import type { Profile } from '../progression/profile';
+import { materialDescriptions } from '../content/objects';
 interface Entry {
   id: string;
   name: string;
@@ -80,32 +81,7 @@ export function codexView(profile: Profile): string {
     },
     {
       name: 'Materials',
-      entries: [
-        {
-          id: 'metal',
-          name: 'Metal',
-          text: 'Crates, barrels, and drones carry substantial mass. Dense objects make effective impact weapons.',
-          known: true,
-        },
-        {
-          id: 'stone',
-          name: 'Stone',
-          text: 'Heavy rocks survive impacts and transfer their momentum into enemies.',
-          known: true,
-        },
-        {
-          id: 'plasma',
-          name: 'Plasma',
-          text: 'Hostile projectiles have mass and respond strongly to fields. Redirect them before impact.',
-          known: true,
-        },
-        {
-          id: 'energy',
-          name: 'Core energy',
-          text: 'Your core resists part of the global gravity vector. Powers consume energy that recovers over time.',
-          known: true,
-        },
-      ],
+      entries: materialDescriptions.map((material) => ({ ...material, known: true })),
     },
     {
       name: 'Gravity Phenomena',

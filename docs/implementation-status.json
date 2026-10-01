@@ -93,9 +93,12 @@
         "src/gameplay/abilities.ts",
         "src/gameplay/enemies.ts",
         "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/enemies.test.ts",
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "tests/objects.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 10,
@@ -119,16 +122,24 @@
         "src/gameplay/abilities.ts",
         "src/gameplay/enemies.ts",
         "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/enemies.test.ts",
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "tests/objects.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 12,
       "title": "Physics-Based Damage",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "src/gameplay/game.ts",
+        "tests/objects.test.ts"
+      ],
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 13,
@@ -255,9 +266,11 @@
         "src/content/modes.ts",
         "src/gameplay/rules.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/modes.test.ts",
+        "scripts/expedition-playtest.ts",
+        "tests/rooms.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Multiwave encounters implemented. Twelve input-only quick seeds produced seven wins and no stalls; successful runs are still shorter than target duration. Human balance validation remains open."
     },
     {
       "section": 22,
@@ -440,21 +453,31 @@
     {
       "section": 34,
       "title": "Environmental Objects",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "src/gameplay/game.ts",
+        "tests/objects.test.ts"
+      ],
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 35,
       "title": "Physics Materials",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "src/gameplay/game.ts",
+        "tests/objects.test.ts"
+      ],
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 36,
       "title": "Resource Collection",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/equipment.ts",
         "src/content/research.ts",
@@ -462,9 +485,13 @@
         "src/content/modes.ts",
         "src/gameplay/rules.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/modes.test.ts",
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "src/gameplay/game.ts",
+        "tests/objects.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Physical XP and shards participate in gravity, vacuum, collision pickup, and room-clear collection. Device playability validation remains external."
     },
     {
       "section": 37,
@@ -597,9 +624,14 @@
     {
       "section": 49,
       "title": "Chain Reaction System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/objects.ts",
+        "src/gameplay/objects.ts",
+        "src/gameplay/game.ts",
+        "tests/objects.test.ts"
+      ],
+      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
     },
     {
       "section": 50,

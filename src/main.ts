@@ -30,6 +30,7 @@ import {
 import { equipmentById } from './content/equipment';
 import { modes, type RunMode } from './content/modes';
 import { contracts, phenomena, type Contract } from './content/phenomena';
+import { objectDefinitions } from './content/objects';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -71,7 +72,7 @@ element('#start').insertAdjacentHTML(
 );
 element('#spawn-kind').insertAdjacentHTML(
   'beforeend',
-  Object.entries(enemyDefinitions)
+  Object.entries({ ...enemyDefinitions, ...objectDefinitions })
     .map(([id, definition]) => `<option value="${id}">${definition.name}</option>`)
     .join(''),
 );
@@ -673,6 +674,9 @@ function updateHud(fps: number): void {
       ? 'CHAMBER CLEARED · EXPERIMENT COMPLETE'
       : `${game.enemyCount} HOSTILES · ${game.state === 'paused' ? 'PAUSED' : 'CHAMBER SEALED'}`;
   element('#chain').textContent = `${game.chains.current}× CHAIN`;
+  if (game.nextWaveAt !== undefined)
+    element('#chain').textContent =
+      `NEXT WAVE · ${Math.max(0, game.nextWaveAt - game.time).toFixed(1)}s`;
   if (run.active && run.phase === 'room') {
     const phenomenon = phenomena.find((phenomenon) => phenomenon.id === game.rules.phenomenon);
     element('#status').textContent = game.room.puzzle

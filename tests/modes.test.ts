@@ -30,9 +30,13 @@ function progress(run: Expedition): void {
   }
   if (run.phase === 'room') {
     for (const entity of [...run.game.world.entities.values()])
-      if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile')
+      if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile') {
+        entity.invulnerability = 0;
         while (entity.alive) run.game.applyDamage(entity, 85, run.game.createCause());
+      }
     run.game.step();
+    for (let i = 0; i < 190 && run.phase === 'room' && run.game.enemyCount === 0; i++)
+      run.game.step();
   }
 }
 for (const [mode, count] of [
@@ -113,12 +117,21 @@ for (const contract of contracts)
     run.start('contract', 'manipulator', undefined, 0, { contract: contract.id });
     run.enter(run.available[0].id);
     if (contract.id === 'locked') expect(run.game.flip({ x: 1, y: 0 })).toBe(false);
-    for (const entity of [...run.game.world.entities.values()])
-      if (entity.definition.faction === 'enemy')
-        while (entity.alive) run.game.applyDamage(entity, 85, run.game.createCause());
     const before = run.build.currency;
-    run.game.step();
-    expect(run.build.currency - before).toBe(Math.floor(15 * contract.reward));
+    let collectedShards = 0;
+    run.game.events.on('collected', ({ kind, amount }) => {
+      if (kind === 'shard') collectedShards += amount;
+    });
+    for (let i = 0; i < 1000 && run.phase === 'room'; i++) {
+      for (const entity of [...run.game.world.entities.values()]) {
+        if (entity.definition.faction !== 'enemy') continue;
+        entity.invulnerability = 0;
+        while (entity.alive) run.game.applyDamage(entity, 85, run.game.createCause());
+      }
+      run.game.step();
+    }
+    expect(run.phase).toBe('reward');
+    expect(run.build.currency - before).toBe(Math.floor(15 * contract.reward) + collectedShards);
   });
 for (const encounter of encounters)
   it(`${encounter.name} enforces costs and resolves only once`, () => {

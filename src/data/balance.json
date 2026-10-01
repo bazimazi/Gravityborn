@@ -24,6 +24,9 @@
     "impactThreshold": 3.8,
     "impactCoefficient": 1.1,
     "impactCooldown": 0.25,
+    "crushThreshold": 6,
+    "crushCoefficient": 0.5,
+    "crushCooldown": 0.4,
     "maxDamage": 85,
     "explosionRadius": 175,
     "explosionDamage": 62,
@@ -39,6 +42,8 @@
     "chainTimeout": 6
   },
   "enemies": {
+    "waveDelay": 1.5,
+    "spawnProtection": 0.5,
     "chaserAcceleration": 0.00048,
     "heavyAcceleration": 0.00028,
     "shooterAcceleration": 0.0003,

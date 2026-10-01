@@ -61,3 +61,31 @@ it('enemy fields never grant player ownership to hostile projectiles', () => {
   expect(shot.redirected).toBe(false);
   expect(shot.chainId).toBeNull();
 });
+
+it('holds room completion for telegraphed waves and freezes the warning while paused', () => {
+  const game = new Game(false);
+  const room = buildRoom('wave-warning', 'wave', 'combat', 0);
+  game.reset(true, room);
+  game.start();
+  for (const entity of [...game.world.entities.values()]) {
+    if (entity.definition.faction !== 'enemy') continue;
+    while (entity.alive) game.applyDamage(entity, 85, game.createCause());
+  }
+  game.step();
+  expect(game.state).toBe('playing');
+  expect(game.nextWaveAt).toBeGreaterThan(game.time);
+  const time = game.time;
+  game.state = 'paused';
+  for (let i = 0; i < 200; i++) game.step();
+  expect(game.time).toBe(time);
+  expect(game.waveIndex).toBe(0);
+  game.state = 'playing';
+  for (let i = 0; i < 200 && game.waveIndex === 0; i++) game.step();
+  expect(game.waveIndex).toBe(1);
+  expect(game.enemyCount).toBeGreaterThan(0);
+  for (const entity of game.world.entities.values()) {
+    if (entity.definition.faction !== 'enemy') continue;
+    expect(Matter.Query.collides(entity.body, game.world.walls)).toHaveLength(0);
+    expect(entity.invulnerability).toBeGreaterThan(0);
+  }
+});

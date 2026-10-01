@@ -29,7 +29,7 @@ test('observatory purchases equipment and research, then starts a contracted run
   await page.reload();
   await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
   await page.getByText('Codex & collection', { exact: true }).click();
-  await page.getByText('Materials · 4 / 4', { exact: true }).click();
+  await page.getByText('Materials · 9 / 9', { exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Metal', exact: true })).toBeVisible();
   await page.getByText('Research · six progression trees', { exact: true }).click();
   await page.locator('[data-research="field_theory"]').click();

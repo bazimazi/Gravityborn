@@ -15,6 +15,7 @@ import { Random } from '../core/random';
 import { BossSystem } from './bosses';
 import { RuleSystem } from './rules';
 import { bossDefinitions } from '../content/bosses';
+import { ObjectSystem } from './objects';
 
 const laboratory: RoomDefinition = {
   ...arena,
@@ -51,10 +52,16 @@ export class Game {
   environment!: EnvironmentSystem;
   bosses!: BossSystem;
   rules!: RuleSystem;
+  objects!: ObjectSystem;
   room: RoomDefinition = laboratory;
   state: GameState = 'ready';
   time = 0;
   wellCooldown = 0;
+  waveIndex = 0;
+  nextWaveAt: number | undefined;
+  get waveSpawns(): RoomDefinition['spawns'] {
+    return this.room.waves?.[this.waveIndex] ?? [];
+  }
   move: Vec2 = { x: 0, y: 0 };
   stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
   private readonly explosions: { entity: Entity; cause: Cause }[] = [];
@@ -151,12 +158,15 @@ export class Game {
     this.wellChains.clear();
     this.time = 0;
     this.wellCooldown = 0;
+    this.waveIndex = 0;
+    this.nextWaveAt = undefined;
     this.state = 'ready';
     this.move = { x: 0, y: 0 };
     this.stats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
     this.enemies = new EnemySystem(this);
     this.bosses = new BossSystem(this);
     this.rules = new RuleSystem(this);
+    this.objects = new ObjectSystem(this);
     for (const wall of room.walls) this.world.addWall(wall.x, wall.y, wall.width, wall.height);
     if (populate) {
       for (const spawn of room.spawns) {
@@ -178,13 +188,37 @@ export class Game {
   markCause(entity: Entity, id: number, depth = 0): void {
     this.attribute(entity, { id, depth });
   }
-  applyDamage(entity: Entity, amount: number, cause: number): void {
-    this.damage(entity, amount, { id: cause, depth: 1 });
+  applyDamage(entity: Entity, amount: number, cause: number, type = 'Gravity'): void {
+    this.damage(entity, amount, { id: cause, depth: 1 }, [type]);
   }
   detonate(entity: Entity): void {
     if (!entity.alive) return;
     entity.health = 1;
     this.damage(entity, 1, { id: entity.chainId, depth: entity.chainDepth + 1 });
+  }
+  recoverEnergy(amount: number): void {
+    this.abilities.energy = Math.min(this.abilities.maxEnergy, this.abilities.energy + amount);
+  }
+  private drop(kind: 'xp' | 'shard', amount: number, position: Vec2): void {
+    const entity = this.world.spawn(kind, position);
+    if (!entity) {
+      this.events.emit('collected', { kind, amount, position });
+      return;
+    }
+    entity.value = amount;
+    this.world.impulse(entity, {
+      x: (this.random.next() - 0.5) * 4,
+      y: -2 - this.random.next() * 2,
+    });
+  }
+  private collect(entity: Entity): void {
+    if (!entity.alive || (entity.kind !== 'xp' && entity.kind !== 'shard')) return;
+    this.events.emit('collected', {
+      kind: entity.kind,
+      amount: entity.value,
+      position: { ...entity.body.position },
+    });
+    this.world.remove(entity);
   }
 
   start(): void {
@@ -338,13 +372,57 @@ export class Game {
           continue;
         }
       } else if (entity.definition.faction === 'enemy') this.updateEnemy(entity, dt);
+      else if (entity.definition.faction === 'neutral') this.objects.update(entity);
     }
     this.world.step();
     for (const collision of this.world.collisions) this.resolveCollision(collision);
     this.resolveExplosions();
     if (this.player.health <= 0) this.end(false);
-    else if (this.room.puzzle ? this.environment.puzzleComplete : this.enemyCount === 0)
-      this.end(true);
+    else if (this.room.puzzle ? this.environment.puzzleComplete : this.enemyCount === 0) {
+      for (const entity of [...this.world.entities.values()])
+        if (entity.kind === 'xp' || entity.kind === 'shard') this.collect(entity);
+      if (this.waveIndex < (this.room.waves?.length ?? 0)) {
+        this.nextWaveAt ??= this.time + balance.enemies.waveDelay;
+        if (this.time >= this.nextWaveAt) {
+          for (const spawn of this.waveSpawns) {
+            const entity = this.world.spawn(spawn.kind, spawn);
+            if (!entity) continue;
+            for (let attempt = 0; attempt < 12; attempt++) {
+              if (
+                !Matter.Query.collides(entity.body, this.world.walls).length &&
+                length(subtract(entity.body.position, this.player.body.position)) > 100
+              )
+                break;
+              const angle = (attempt * Math.PI) / 3;
+              Matter.Body.setPosition(entity.body, {
+                x: Math.max(
+                  90,
+                  Math.min(
+                    this.room.width - 90,
+                    spawn.x + Math.cos(angle) * (80 + Math.floor(attempt / 6) * 80),
+                  ),
+                ),
+                y: Math.max(
+                  90,
+                  Math.min(
+                    this.room.height - 90,
+                    spawn.y + Math.sin(angle) * (80 + Math.floor(attempt / 6) * 80),
+                  ),
+                ),
+              });
+            }
+            if (Matter.Query.collides(entity.body, this.world.walls).length) {
+              this.world.remove(entity);
+              continue;
+            }
+            entity.invulnerability = balance.enemies.spawnProtection;
+            if (spawn.elite) this.enemies.setElite(entity, spawn.elite);
+          }
+          this.waveIndex++;
+          this.nextWaveAt = undefined;
+        }
+      } else this.end(true);
+    }
   }
 
   private updateEnemy(entity: Entity, dt: number): void {
@@ -392,6 +470,16 @@ export class Game {
 
   private resolveCollision({ a, b, speed, position }: CollisionFact): void {
     if ((a && !a.alive) || (b && !b.alive)) return;
+    const pickup =
+      a?.kind === 'xp' || a?.kind === 'shard'
+        ? a
+        : b?.kind === 'xp' || b?.kind === 'shard'
+          ? b
+          : undefined;
+    if (pickup) {
+      if ((pickup === a ? b : a)?.kind === 'player') this.collect(pickup);
+      return;
+    }
     if (speed > balance.combat.impactThreshold) {
       this.trigger('OnCollision');
       this.rules.impact(position);
@@ -427,7 +515,42 @@ export class Game {
     const other = player === a ? b : a;
     if (player && other?.definition.faction === 'enemy')
       this.damage(player, balance.player.contactDamage, { id: null, depth: 0 });
-    if (speed < balance.combat.impactThreshold) return;
+    if (speed < balance.combat.impactThreshold) {
+      for (const [target, attacker] of [
+        [a, b],
+        [b, a],
+      ]) {
+        if (
+          !target ||
+          target.kind === 'player' ||
+          this.time - target.lastImpact < balance.combat.crushCooldown
+        )
+          continue;
+        const pushing = attacker ?? target;
+        if (pushing.kind === 'player' || pushing.body.isStatic || pushing.chainId === null)
+          continue;
+        const acceleration = this.gravity.sample(
+          pushing.body.position,
+          pushing.definition.gravityResponse * pushing.gravityScale,
+          [pushing.definition.material, ...pushing.definition.tags],
+        );
+        const towardContact = normalize(subtract(position, pushing.body.position));
+        const pressure =
+          Math.max(0, acceleration.x * towardContact.x + acceleration.y * towardContact.y) *
+          pushing.body.mass *
+          1000;
+        if (pressure > balance.combat.crushThreshold) {
+          target.lastImpact = this.time;
+          this.damage(
+            target,
+            pressure * balance.combat.crushCoefficient,
+            { id: pushing.chainId, depth: pushing.chainDepth + 1 },
+            ['Crush', 'Gravity'],
+          );
+        }
+      }
+      return;
+    }
     const origin =
       a?.chainId !== null && a?.chainId !== undefined
         ? a
@@ -455,7 +578,12 @@ export class Game {
           this.abilities.modifiers.evaluate('impactDamage', 1),
       );
       target.lastImpact = this.time;
-      this.damage(target, damage, cause);
+      const source = this.chains.source(cause.id);
+      const tags = ['Impact', 'Velocity'];
+      if (['planet', 'binary', 'vortex', 'reflect', 'rotate'].includes(source))
+        tags.push('Orbital');
+      if (['black_hole', 'rift'].includes(source)) tags.push('Void');
+      this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
     }
   }
@@ -468,14 +596,22 @@ export class Game {
     entity.chainExpires = this.time + balance.combat.chainTimeout;
   }
 
-  private damage(entity: Entity, amount: number, cause: Cause): void {
+  private damage(entity: Entity, amount: number, cause: Cause, tags: string[] = ['Gravity']): void {
     if (
       !entity.alive ||
       (!entity.definition.breakable && entity.kind !== 'player') ||
       entity.invulnerability > 0
     )
       return;
-    const bounded = Math.min(balance.combat.maxDamage, Math.max(0, amount));
+    const bounded = Math.min(
+      balance.combat.maxDamage,
+      Math.max(
+        0,
+        entity.kind === 'player'
+          ? amount
+          : this.abilities.modifiers.evaluate('damage', amount, tags),
+      ),
+    );
     entity.health -= bounded;
     this.attribute(entity, cause);
     if (entity.kind === 'player') entity.invulnerability = balance.player.invulnerability;
@@ -493,13 +629,19 @@ export class Game {
     this.world.remove(entity);
     this.enemies.onDeath(entity);
     this.bosses.onDeath(entity);
-    if (entity.kind === 'barrel' || entity.kind === 'bomber' || entity.elite === 'unstable')
+    this.objects.onDeath(entity);
+    if (
+      ['barrel', 'mine', 'container', 'bomber'].includes(entity.kind) ||
+      entity.elite === 'unstable'
+    )
       this.explosions.push({ entity, cause });
     const chainLength = this.chains.extend(cause.id, `kill:${entity.id}`, cause.depth, this.time);
     if (entity.definition.faction === 'enemy') {
       this.stats.kills++;
       this.stats.score += 100 + chainLength * 25;
       this.trigger('OnKill', entity.definition.tags);
+      this.drop('xp', 18 + Math.min(30, chainLength * 3), entity.body.position);
+      this.drop('shard', 5, { x: entity.body.position.x + 12, y: entity.body.position.y });
     }
     this.events.emit('killed', {
       position: { ...entity.body.position },
@@ -544,6 +686,7 @@ export class Game {
             falloff *
             (target.kind === 'player' ? balance.combat.playerExplosionMultiplier : 1),
           nextCause,
+          ['Environmental', 'Explosion'],
         );
       }
     }

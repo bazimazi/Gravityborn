@@ -57,6 +57,7 @@ export class EnvironmentSystem {
             entity,
             hazard.kind === 'laser' ? 18 : 24,
             entity.chainId ?? this.host.createCause(),
+            'Environmental',
           );
         }
       }

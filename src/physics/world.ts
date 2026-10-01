@@ -14,6 +14,7 @@ export interface Entity {
   body: Matter.Body;
   health: number;
   maxHealth: number;
+  value: number;
   alive: boolean;
   invulnerability: number;
   lastImpact: number;
@@ -105,6 +106,7 @@ export class PhysicsWorld {
       definition,
       health: definition.health,
       maxHealth: definition.health,
+      value: 0,
       alive: true,
       invulnerability: 0,
       lastImpact: -Infinity,
@@ -170,6 +172,7 @@ export class PhysicsWorld {
         this.gravity.sample(
           entity.body.position,
           entity.definition.gravityResponse * entity.gravityScale,
+          [entity.definition.material, ...entity.definition.tags],
         ),
       );
       const acceleration = clampVector(
@@ -219,9 +222,12 @@ export class PhysicsWorld {
     const options = {
       restitution: definition.restitution,
       frictionAir: definition.frictionAir,
-      friction: 0.05,
+      friction: definition.material === 'ice' ? 0.001 : 0.05,
       label: kind,
-      collisionFilter: { category: 2 },
+      collisionFilter: {
+        category: kind === 'player' ? 8 : kind === 'xp' || kind === 'shard' ? 4 : 2,
+        mask: kind === 'xp' || kind === 'shard' ? 9 : 0xffffffff,
+      },
     };
     const body =
       definition.shape === 'rectangle' && 'width' in definition

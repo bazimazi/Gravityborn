@@ -12,6 +12,7 @@ export interface GravityField {
   radius: number;
   falloff: 'constant' | 'linear' | 'inverseSquare';
   remaining: number;
+  affects?: string[];
 }
 
 /** The only gravity authority. Strength is acceleration in px/ms². */
@@ -77,7 +78,7 @@ export class GravitySystem {
     }
   }
 
-  sample(position: Vec2, response = 1): Vec2 {
+  sample(position: Vec2, response = 1, tags: readonly string[] = []): Vec2 {
     if (this.dirty) {
       this.index.clear();
       for (const field of this.fields.values())
@@ -89,6 +90,7 @@ export class GravitySystem {
     const nearby = this.index.at(position);
     if (nearby)
       for (const field of nearby) {
+        if (field.affects && !field.affects.some((tag) => tags.includes(tag))) continue;
         const toward = subtract(field.position, position);
         const distance = Math.hypot(toward.x, toward.y);
         if (distance > field.radius) continue;

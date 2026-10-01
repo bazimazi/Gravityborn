@@ -40,6 +40,7 @@ export interface RoomDefinition {
   hazards: Hazard[];
   fields: Omit<GravityField, 'id'>[];
   puzzle?: { switch: Vec2; exit: Vec2 };
+  waves?: { kind: EntityKind; x: number; y: number; elite?: EliteModifier }[][];
 }
 export const biomes = [
   {
@@ -213,6 +214,18 @@ export function buildRoom(
       ...point,
       kind: index % 3 === 0 ? 'barrel' : index % 3 === 1 ? 'rock' : 'crate',
     });
+  const props: EntityKind[] = [
+    'generator',
+    'crystal',
+    'fragment',
+    'metal_plate',
+    'void_matter',
+    'gravity_core',
+    'rubber',
+    'magnet',
+  ];
+  room.spawns.push({ kind: props[biome], x: 1050, y: 100 });
+  room.spawns.push({ kind: biome % 2 ? 'ice' : 'energy_cell', x: 150, y: 650 });
   if (type === 'boss') {
     room.spawns.push({
       kind: (Object.keys(bossDefinitions) as BossKind[])[biome % 5],
@@ -249,6 +262,17 @@ export function buildRoom(
       period: 4,
       phase: random.next() * 4,
     });
+    room.waves = [];
+    for (let wave = 0; wave < (type === 'challenge' ? 5 : 3); wave++)
+      room.waves.push(
+        layout.enemies
+          .slice(0, Math.min(6, count + Math.floor(wave / 2)))
+          .map((point, index) => ({
+            ...point,
+            kind: random.pick(region.enemies) as EntityKind,
+            elite: type === 'elite' && index === 0 && wave === 2 ? 'inverted' : undefined,
+          })),
+      );
   }
   if (biome === 1 || biome === 2 || biome === 4 || biome === 5)
     room.fields.push({

@@ -17,6 +17,7 @@ export interface GameEvents {
   };
   ended: { won: boolean };
   abilityUsed: { id: string; tags: string[]; position: Vec2; level: number };
+  collected: { kind: 'xp' | 'shard'; amount: number; position: Vec2 };
 }
 
 /** Simulation emits facts. Presentation subscribes without owning gameplay. */

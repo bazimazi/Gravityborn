@@ -52,6 +52,11 @@ export class Expedition {
   message = '';
   shop: { id: string; price: number; sold: boolean }[] = [];
   constructor(readonly game: Game) {
+    game.events.on('collected', (event) => {
+      if (this.phase !== 'room') return;
+      if (event.kind === 'xp') this.build.gainXP(event.amount);
+      else this.build.currency += event.amount;
+    });
     game.events.on('abilityUsed', (event) => {
       if (this.phase === 'room' && !event.tags.includes('Echo')) {
         (this.mastery[event.id] ??= freshMastery()).casts++;
@@ -79,8 +84,6 @@ export class Expedition {
       this.metrics.elites = (this.metrics.elites ?? 0) + Number(event.elite);
       if (event.boss && event.source === 'well')
         this.metrics.wellBosses = (this.metrics.wellBosses ?? 0) + 1;
-      this.build.gainXP(18 + Math.min(30, event.chainLength * 3));
-      this.build.currency += 5;
     });
     game.events.on('ended', (event) => {
       if (this.phase !== 'room') return;

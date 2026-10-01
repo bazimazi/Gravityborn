@@ -8,6 +8,7 @@ import type { Feedback } from './feedback';
 import { computeCamera } from './camera';
 import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';
 import { bossDefinitions } from '../content/bosses';
+import { objectDefinitions } from '../content/objects';
 
 export class Renderer {
   private readonly context: CanvasRenderingContext2D;
@@ -75,6 +76,18 @@ export class Renderer {
     if (!this.settings.reducedMotion && feedback.shake > 0)
       ctx.translate(Math.sin(now * 0.07) * feedback.shake, Math.cos(now * 0.09) * feedback.shake);
     this.drawArena(game, now);
+    if (game.nextWaveAt !== undefined) {
+      ctx.strokeStyle = '#f4a994';
+      ctx.fillStyle = '#f4a994';
+      ctx.lineWidth = 2;
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      for (const spawn of game.waveSpawns) {
+        this.circle(spawn.x, spawn.y, 34 + Math.sin(now * 0.015) * 4);
+        ctx.stroke();
+        ctx.fillText('INCOMING', spawn.x, spawn.y - 43);
+      }
+    }
     const boss = game.bosses.active;
     if (boss) {
       ctx.fillStyle = '#171421';
@@ -305,7 +318,12 @@ export class Renderer {
       ctx.globalAlpha = 1;
     }
     ctx.save();
-    if (entity.kind === 'player' || entity.kind === 'projectile') {
+    if (
+      entity.kind === 'player' ||
+      entity.kind === 'projectile' ||
+      entity.kind === 'xp' ||
+      entity.kind === 'shard'
+    ) {
       if (!this.settings.lowQuality) {
         ctx.shadowBlur = entity.kind === 'player' ? 24 : 10;
         ctx.shadowColor = color;
@@ -377,6 +395,31 @@ export class Renderer {
         ctx.strokeRect(-12, -12, 24, 24);
         ctx.fillStyle = color;
         ctx.fillRect(-5, -5, 10, 10);
+      } else if (entity.kind in objectDefinitions) {
+        ctx.font = 'bold 17px monospace';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(
+          (
+            {
+              crystal: '◇',
+              mine: '!',
+              generator: 'G',
+              gravity_core: '◎',
+              metal_plate: '=',
+              container: '!!',
+              energy_cell: '+',
+              fragment: '◌',
+              rubber: 'R',
+              ice: '❄',
+              void_matter: 'V',
+              magnet: 'M',
+            } as Record<string, string>
+          )[entity.kind] ?? '•',
+          0,
+          0,
+        );
       } else if (entity.kind in bossDefinitions) {
         ctx.lineWidth = 3;
         this.circle(0, 0, 20);

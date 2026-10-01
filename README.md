@@ -59,9 +59,10 @@ Beyond the original laboratory, the current implementation includes:
 - Eight classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and seven mutations.
 - Quick, standard, long, campaign, endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
 - Five story acts, eight collectible planet records, a discovery codex, causal ability mastery, and challenge rewards.
+- Physical XP/shard pickups, nine material definitions, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. A reload restarts from the last saved route rather than restoring every moving body.
 
-Content counts describe implemented definitions, not independently balanced or externally playtested content. Full launch breadth, physical resource pickups, additional material interactions, accessibility polish, music, offline/native packaging, and release validation remain in progress.
+Content counts describe implemented definitions, not independently balanced or externally playtested content. Full launch breadth, additional material interactions, accessibility polish, music, offline/native packaging, and release validation remain in progress.
 
 ## Verify
 

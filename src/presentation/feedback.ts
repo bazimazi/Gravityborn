@@ -52,6 +52,13 @@ export class Feedback {
     events.on('wellCreated', (event) => {
       this.ring(event.position, 70, '#b5a0ff');
     });
+    events.on('collected', (event) => {
+      this.label(
+        event.position,
+        `+${event.amount} ${event.kind === 'xp' ? 'XP' : 'SHARDS'}`,
+        event.kind === 'xp' ? '#a8deff' : '#e4c28d',
+      );
+    });
     events.on('abilityUsed', (event) => {
       this.ring(event.position, 160, '#80e6d1');
       this.burst(event.position, '#b5a0ff', 12, 110);

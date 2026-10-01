@@ -101,9 +101,12 @@ it('completes a three-region run with upgrades, valid routes, shops, and single 
       expect(run.enter(node.id)).toBe(true);
     } else if (run.phase === 'room') {
       for (const entity of [...game.world.entities.values()])
-        if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile')
+        if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile') {
+          entity.invulnerability = 0;
           while (entity.alive) game.applyDamage(entity, 85, game.createCause());
+        }
       game.step();
+      for (let i = 0; i < 190 && run.phase === 'room' && game.enemyCount === 0; i++) game.step();
     } else if (run.phase === 'shop') {
       const item = run.shop.find((item) => item.price <= run.build.currency);
       if (item) {
