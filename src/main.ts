@@ -932,11 +932,15 @@ function frame(now: number): void {
   };
   if (game.state === 'playing') {
     if (Math.hypot(game.move.x, game.move.y) > 0.1) moved = true;
-    accumulator += elapsed;
+    accumulator += feedback.simulationElapsed(elapsed, settings.reducedMotion);
     while (accumulator >= balance.physics.stepMs) {
       game.step();
       tutorial.tick();
       accumulator -= balance.physics.stepMs;
+      if (feedback.hitPause > 0 && !settings.reducedMotion) {
+        accumulator = 0;
+        break;
+      }
     }
   } else accumulator = 0;
   feedback.update(elapsed / 1000);

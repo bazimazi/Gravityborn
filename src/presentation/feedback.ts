@@ -28,6 +28,11 @@ export interface Label {
 }
 
 export class Feedback {
+  readonly reactions = new Map<number, { normal: Vec2; life: number; strength: number }>();
+  hitPause = 0;
+  gravityTurn = 0;
+  activation = 0;
+  private hitPauseCooldown = 0;
   readonly arcs: { from: Vec2; to: Vec2; life: number }[] = [];
   readonly particles: Particle[] = [];
   readonly rings: Ring[] = [];
@@ -35,6 +40,22 @@ export class Feedback {
   private readonly pool: Particle[] = [];
   shake = 0;
   constructor(events: EventBus) {
+    events.on('gravityChanged', () => {
+      this.gravityTurn = 0.3;
+    });
+    events.on('collisionOccurred', (event) => {
+      if (event.speed < balance.combat.impactFeedbackThreshold) return;
+      for (const id of [event.a, event.b]) {
+        if (id === undefined) continue;
+        if (!this.reactions.has(id) && this.reactions.size >= balance.presentation.maxReactions)
+          this.reactions.delete(this.reactions.keys().next().value!);
+        this.reactions.set(id, {
+          normal: { ...event.normal },
+          life: balance.presentation.reactionDuration,
+          strength: Math.min(balance.presentation.reactionStrength, event.speed * 0.016),
+        });
+      }
+    });
     events.on('materialReaction', (event) => {
       if (event.kind === 'arc' && event.from && this.arcs.length < 24)
         this.arcs.push({ from: event.from, to: event.position, life: 0.35 });
@@ -48,6 +69,10 @@ export class Feedback {
     for (let i = 0; i < balance.presentation.maxParticles; i++)
       this.pool.push({ x: 0, y: 0, vx: 0, vy: 0, life: 0, maxLife: 0, color: '', size: 0 });
     events.on('impact', (event) => {
+      if (event.force >= balance.presentation.hitPauseThreshold && this.hitPauseCooldown <= 0) {
+        this.hitPause = balance.presentation.hitPauseMs;
+        this.hitPauseCooldown = balance.presentation.hitPauseCooldown;
+      }
       this.burst(
         event.position,
         event.color,
@@ -72,6 +97,7 @@ export class Feedback {
       );
     });
     events.on('abilityUsed', (event) => {
+      this.activation = 0.25;
       const style = abilityFeedback(event.id);
       this.ring(event.position, style.radius, style.color);
       this.burst(event.position, style.color, 12, 110);
@@ -128,6 +154,11 @@ export class Feedback {
     }
   }
   update(dt: number): void {
+    this.gravityTurn = Math.max(0, this.gravityTurn - dt);
+    this.activation = Math.max(0, this.activation - dt);
+    this.hitPauseCooldown = Math.max(0, this.hitPauseCooldown - dt);
+    for (const [id, reaction] of this.reactions)
+      if ((reaction.life -= dt) <= 0) this.reactions.delete(id);
     for (let i = this.arcs.length - 1; i >= 0; i--)
       if ((this.arcs[i].life -= dt) <= 0) this.arcs.splice(i, 1);
     this.shake = Math.max(0, this.shake - dt * 15);
@@ -154,11 +185,25 @@ export class Feedback {
     }
   }
   clear(): void {
+    this.reactions.clear();
+    this.hitPause = 0;
+    this.gravityTurn = 0;
+    this.activation = 0;
+    this.hitPauseCooldown = 0;
     this.arcs.length = 0;
     this.pool.push(...this.particles);
     this.particles.length = 0;
     this.rings.length = 0;
     this.labels.length = 0;
     this.shake = 0;
+  }
+  simulationElapsed(elapsedMs: number, reducedMotion: boolean): number {
+    if (reducedMotion) {
+      this.hitPause = 0;
+      return elapsedMs;
+    }
+    const stopped = Math.min(elapsedMs, this.hitPause);
+    this.hitPause -= stopped;
+    return elapsedMs - stopped;
   }
 }

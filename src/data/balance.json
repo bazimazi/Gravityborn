@@ -109,5 +109,15 @@
     "lockResistance": 4,
     "energyRegen": 8
   },
-  "presentation": { "maxParticles": 200, "maxPixelRatio": 2, "shake": 5 }
+  "presentation": {
+    "maxParticles": 200,
+    "maxPixelRatio": 2,
+    "shake": 5,
+    "maxReactions": 64,
+    "reactionDuration": 0.22,
+    "reactionStrength": 0.22,
+    "hitPauseThreshold": 10,
+    "hitPauseMs": 32,
+    "hitPauseCooldown": 0.18
+  }
 }

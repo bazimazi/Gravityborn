@@ -226,7 +226,7 @@ export class Renderer {
       ctx.restore();
     }
     for (const id of this.trails.keys()) if (!game.world.entities.has(id)) this.trails.delete(id);
-    for (const entity of game.world.entities.values()) this.drawEntity(entity, game, now);
+    for (const entity of game.world.entities.values()) this.drawEntity(entity, game, now, feedback);
     if (this.debug) {
       ctx.strokeStyle = '#ff8aa5';
       ctx.lineWidth = 2;
@@ -407,7 +407,7 @@ export class Renderer {
     }
   }
 
-  private drawEntity(entity: Entity, game: Game, now: number): void {
+  private drawEntity(entity: Entity, game: Game, now: number, feedback: Feedback): void {
     const ctx = this.context;
     const { x, y } = entity.body.position;
     const radius = entity.definition.radius;
@@ -437,6 +437,22 @@ export class Renderer {
       ctx.globalAlpha = 1;
     }
     ctx.save();
+    if (!this.settings.reducedMotion && !this.debug && !entity.body.isStatic) {
+      const reaction = feedback.reactions.get(entity.id);
+      const motion = Math.min(0.12, entity.body.speed * 0.008);
+      const angle = reaction
+        ? Math.atan2(reaction.normal.y, reaction.normal.x)
+        : Math.atan2(entity.body.velocity.y, entity.body.velocity.x);
+      const squash = reaction
+        ? reaction.strength *
+          Math.sin((Math.PI * reaction.life) / balance.presentation.reactionDuration)
+        : -motion;
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.scale(1 - squash, 1 / (1 - squash));
+      ctx.rotate(-angle);
+      ctx.translate(-x, -y);
+    }
     if (
       entity.kind === 'player' ||
       entity.kind === 'projectile' ||
@@ -455,12 +471,17 @@ export class Renderer {
       this.circle(x - radius * 0.17, y - radius * 0.17, radius * 0.32);
       ctx.fill();
       if (entity.kind === 'player') {
+        const pulse =
+          this.settings.reducedMotion || this.settings.reducedFlashing
+            ? 0
+            : Math.sin(Math.PI * Math.max(feedback.gravityTurn / 0.3, feedback.activation / 0.25)) *
+              7;
         ctx.strokeStyle = '#98f2e8';
         ctx.lineWidth = 1.5;
-        this.circle(x, y, radius + 5);
+        this.circle(x, y, radius + 5 + pulse);
         ctx.stroke();
         ctx.strokeStyle = '#98f2e860';
-        this.circle(x, y, radius + 10);
+        this.circle(x, y, radius + 10 + pulse);
         ctx.stroke();
         const g = game.gravity.direction;
         ctx.fillStyle = '#bffff7';

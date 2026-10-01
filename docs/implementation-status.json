@@ -612,30 +612,49 @@
     {
       "section": 45,
       "title": "Visual Direction",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/presentation/renderer.ts",
+        "src/presentation/feedback.ts",
+        "scripts/visual-check.mjs"
+      ],
+      "remaining": "Procedural silhouettes, trails, pooled particles, impact deformation, strong-impact hit pause and a responsive HUD are present. Human visual-quality review and further field distortion polish remain."
     },
     {
       "section": 46,
       "title": "Gravity Visual Language",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/presentation/renderer.ts",
+        "src/content/ability-feedback.ts",
+        "src/presentation/feedback.ts"
+      ],
+      "remaining": "Fields use mode glyphs, oriented chevrons, power colors and bounded curves. Pulses expand, zero zones retain distinct boundaries, and gravity changes animate the core. Stronger black-hole lensing and human readability review remain."
     },
     {
       "section": 47,
       "title": "Animation",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/presentation/renderer.ts",
+        "src/presentation/feedback.ts",
+        "tests/feedback.test.ts",
+        "scripts/visual-check.mjs"
+      ],
+      "remaining": "Velocity stretch, impact-normal deformation, gravity-flip/power pulses, physical spin/bounce/orbit, damage labels, shield outlines, telegraphs and death/explosion particles cover core motion states. These do not change collider geometry; reduced-motion/flashing settings suppress applicable effects. Human animation quality remains a separate review."
     },
     {
       "section": 48,
       "title": "Juice System",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/presentation/feedback.ts",
+        "src/presentation/audio.ts",
+        "src/presentation/renderer.ts",
+        "src/core/platform.ts",
+        "tests/feedback.test.ts"
+      ],
+      "remaining": "Central typed-event feedback coordinates bounded particles, labels, rings, trails, deformation, sound, shake, haptics and rate-limited 32 ms hit pause. Reduced motion disables hit pause and deformation."
     },
     {
       "section": 49,
