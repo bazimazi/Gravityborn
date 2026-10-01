@@ -1,6 +1,8 @@
 import type { Vec2 } from './vector';
+import type { DiagnosticSample } from './diagnostics';
 
 export interface GameEvents {
+  diagnostic: DiagnosticSample;
   materialReaction: { kind: 'ignite' | 'quench' | 'arc'; position: Vec2; from?: Vec2 };
   gravityChanged: { direction: Vec2; source?: 'player' | 'enemy' };
   wellCreated: { position: Vec2 };

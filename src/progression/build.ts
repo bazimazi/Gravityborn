@@ -87,6 +87,7 @@ export class RunBuild {
   reroll(): boolean {
     if (!this.pending || !this.rerolls) return false;
     this.rerolls--;
+    this.game.events.emit('diagnostic', { event: 'UpgradeRerolls' });
     this.choices = [];
     this.offer();
     return true;
@@ -179,6 +180,10 @@ export class RunBuild {
     else if (choice.kind === 'relic') this.relics.push(choice.target);
     else this.passives.push(choice.target);
     this.pending--;
+    this.game.events.emit('diagnostic', {
+      event: choice.kind === 'relic' ? 'RelicChoices' : 'AbilityChoices',
+      subject: choice.target,
+    });
     this.choices = [];
     this.apply();
     if (choice.target === 'integrity')

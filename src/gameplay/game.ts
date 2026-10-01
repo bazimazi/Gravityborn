@@ -58,6 +58,7 @@ export class Game {
   room: RoomDefinition = laboratory;
   state: GameState = 'ready';
   time = 0;
+  lastDamage = 'Unknown';
   wellCooldown = 0;
   waveIndex = 0;
   nextWaveAt: number | undefined;
@@ -160,6 +161,7 @@ export class Game {
     this.explosions.length = 0;
     this.wellChains.clear();
     this.time = 0;
+    this.lastDamage = 'Unknown';
     this.wellCooldown = 0;
     this.waveIndex = 0;
     this.nextWellCompression = 0;
@@ -554,7 +556,7 @@ export class Game {
     const player = a?.kind === 'player' ? a : b?.kind === 'player' ? b : undefined;
     const other = player === a ? b : a;
     if (player && other?.definition.faction === 'enemy')
-      this.damage(player, balance.player.contactDamage, { id: null, depth: 0 });
+      this.damage(player, balance.player.contactDamage, { id: null, depth: 0 }, ['Contact']);
     if (speed < balance.combat.impactThreshold) {
       for (const [target, attacker] of [
         [a, b],
@@ -653,6 +655,7 @@ export class Game {
       ),
     );
     entity.health -= bounded;
+    if (entity.kind === 'player' && bounded > 0) this.lastDamage = tags.join('+');
     this.attribute(entity, cause);
     if (entity.kind === 'player') entity.invulnerability = balance.player.invulnerability;
     this.events.emit('damaged', {

@@ -236,6 +236,24 @@ test('playable training advances from movement to a gravity flip', async ({ page
   await expect(page.locator('#tutorial-next')).toBeDisabled();
 });
 
+test('local diagnostics can be exported, disabled, cleared and restored', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
+  await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+  await page.getByText('Local play diagnostics · recording', { exact: true }).click();
+  await expect(page.getByText(/1 starts · 0 endings/)).toBeVisible();
+  const downloaded = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export diagnostics', exact: true }).click();
+  expect((await downloaded).suggestedFilename()).toBe('gravityborn-diagnostics.json');
+  await page.getByRole('button', { name: 'Disable recording', exact: true }).click();
+  await page.getByRole('button', { name: 'Clear diagnostics', exact: true }).click();
+  await expect(page.getByText(/0 starts · 0 endings/)).toBeVisible();
+  await page.reload();
+  await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+  await page.getByText('Local play diagnostics · disabled', { exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Enable recording', exact: true })).toBeVisible();
+});
+
 test('clears held input when focus is lost and supports inspector frame stepping', async ({
   page,
 }) => {

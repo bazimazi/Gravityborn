@@ -6,7 +6,9 @@ import { researchNodes, mutations } from '../content/research';
 import { readMastery, mergeMastery, type MasteryProgress } from './mastery';
 import { challenges } from '../content/challenges';
 import { challengeProgress } from './challenges';
+import { newDiagnostics, readDiagnostics, type LocalDiagnostics } from '../core/diagnostics';
 export interface Profile {
+  diagnostics: LocalDiagnostics;
   tutorialCompleted: boolean;
   shards: number;
   research: number;
@@ -29,6 +31,7 @@ export interface Profile {
 }
 export function newProfile(): Profile {
   return {
+    diagnostics: newDiagnostics(),
     tutorialCompleted: false,
     shards: 0,
     research: 0,
@@ -54,6 +57,7 @@ export function readProfile(value: unknown): Profile {
   try {
     const data = record(value);
     const profile = newProfile();
+    profile.diagnostics = readDiagnostics(data.diagnostics);
     profile.tutorialCompleted = data.tutorialCompleted === true;
     for (const key of ['shards', 'research', 'runs', 'wins', 'kills'] as const)
       profile[key] = Math.floor(finite(data[key], 0, 100000000));

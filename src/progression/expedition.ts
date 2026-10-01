@@ -62,24 +62,39 @@ export class Expedition {
     game.events.on('abilityUsed', (event) => {
       if (this.phase === 'room' && !event.tags.includes('Echo')) {
         (this.mastery[event.id] ??= freshMastery()).casts++;
+        game.events.emit('diagnostic', { event: 'AbilityUsage', subject: event.id });
         this.discoveries.add(`ability:${event.id}`);
       }
     });
     game.events.on('wellCreated', () => {
-      if (this.phase === 'room') (this.mastery.well ??= freshMastery()).casts++;
+      if (this.phase === 'room') {
+        (this.mastery.well ??= freshMastery()).casts++;
+        game.events.emit('diagnostic', { event: 'AbilityUsage', subject: 'well' });
+      }
     });
     game.events.on('gravityChanged', (event) => {
-      if (this.phase === 'room' && event.source !== 'enemy')
+      if (this.phase === 'room' && event.source !== 'enemy') {
         (this.mastery.flip ??= freshMastery()).casts++;
+        game.events.emit('diagnostic', { event: 'GravityChanges' });
+      }
     });
     game.events.on('killed', (event) => {
-      if (this.phase === 'room' && event.kind === 'rift_seal' && !this.discoveries.has(this.secretKey)) {
+      if (
+        this.phase === 'room' &&
+        event.kind === 'rift_seal' &&
+        !this.discoveries.has(this.secretKey)
+      ) {
         this.discoveries.add(this.secretKey);
         this.metrics.secretsRevealed = (this.metrics.secretsRevealed ?? 0) + 1;
       }
       if (this.phase !== 'room' || entityDefinitions[event.kind as EntityKind]?.faction !== 'enemy')
         return;
       this.kills++;
+      game.events.emit('diagnostic', { event: 'EnemyKills', subject: event.kind });
+      game.events.emit('diagnostic', { event: 'ChainLength', value: event.chainLength });
+      if (event.damageTags.includes('Impact'))
+        game.events.emit('diagnostic', { event: 'CollisionKills', subject: event.kind });
+      if (event.boss) game.events.emit('diagnostic', { event: 'BossKills', subject: event.kind });
       for (const tag of event.damageTags) {
         const metric = `${tag.toLowerCase()}Kills`;
         this.metrics[metric] = (this.metrics[metric] ?? 0) + 1;
@@ -102,12 +117,15 @@ export class Expedition {
       this.elapsed += game.time;
       this.score += game.stats.score;
       this.bestChain = Math.max(this.bestChain, game.chains.best);
+      game.events.emit('diagnostic', { event: 'LongestChain', value: this.bestChain });
       this.metrics.redirected = (this.metrics.redirected ?? 0) + game.stats.redirectedKills;
       this.metrics.zeroSeconds = (this.metrics.zeroSeconds ?? 0) + game.stats.zeroSeconds;
       if (!event.won) {
         this.phase = 'summary';
         this.message = 'The core fell silent. Your discoveries remain.';
         this.won = false;
+        game.events.emit('diagnostic', { event: 'CauseOfDeath', subject: game.lastDamage });
+        this.recordEnd('defeat');
         return;
       }
       this.completeRoom();
@@ -137,6 +155,7 @@ export class Expedition {
     biome = 0,
     options: RunOptions = {},
   ): void {
+    if (this.active && this.phase !== 'summary') this.abandon();
     this.mode = modes.some((mode) => mode.id === options.mode) ? options.mode! : 'standard';
     if (this.mode === 'endless' && !profile?.skills.includes('endless')) this.mode = 'standard';
     this.contract = contracts.some((contract) => contract.id === options.contract)
@@ -189,6 +208,8 @@ export class Expedition {
     this.current = undefined;
     this.phase = 'map';
     this.message = 'Choose a route. Health and your build carry between rooms.';
+    this.game.events.emit('diagnostic', { event: 'RunStarted', subject: this.mode });
+    this.game.events.emit('diagnostic', { event: 'DifficultySelected', value: this.difficulty });
   }
   enter(id: string): boolean {
     if (this.phase !== 'map' || this.build.pending > 0) return false;
@@ -269,6 +290,14 @@ export class Expedition {
             ? 'Defeat the vault keepers to recover a rare relic and a hidden memory.'
             : 'Clear the chamber with gravity.';
       this.game.start();
+      if (node.type === 'boss')
+        this.game.events.emit('diagnostic', {
+          event: 'BossAttempts',
+          subject:
+            this.mode === 'boss_rush'
+              ? room.spawns.find((spawn) => spawn.kind in bossDefinitions)!.kind
+              : String(this.biome),
+        });
     } else if (node.type === 'shop') {
       this.phase = 'shop';
       this.shop = shopInventory(this.build);
@@ -291,6 +320,8 @@ export class Expedition {
   buy(id: string): boolean {
     const item = this.shop.find((item) => item.id === id);
     if (this.phase !== 'shop' || !item || !purchase(this.build, item)) return false;
+    if (relics.some(relic => relic.id === id)) this.game.events.emit('diagnostic', { event: 'RelicChoices', subject: id });
+    if (id.startsWith('ability:')) this.game.events.emit('diagnostic', { event: 'AbilityChoices', subject: id.slice(8) });
     this.discoveries.add(id.includes(':') ? id : `relic:${id}`);
     this.message = `Acquired ${shopDescription(id)!.name}.`;
     return true;
@@ -347,6 +378,7 @@ export class Expedition {
           this.metrics.orbitalWins = 1;
         this.phase = 'summary';
         this.message = 'The route is liberated. The expedition returns with new knowledge.';
+        this.recordEnd('victory');
         return true;
       }
       this.biome = (this.biome + 1) % 8;
@@ -358,8 +390,27 @@ export class Expedition {
     return true;
   }
   abandon(): void {
+    if (this.active && this.phase !== 'summary') {
+      this.game.events.emit('diagnostic', { event: 'RunAbandoned', subject: this.mode });
+      this.game.events.emit('diagnostic', {
+        event: 'RunDuration',
+        subject: 'abandoned',
+        value: this.elapsed + (this.phase === 'room' ? this.game.time : 0),
+      });
+    }
     this.game.pause();
     this.phase = 'inactive';
+  }
+  private recordEnd(outcome: 'victory' | 'defeat'): void {
+    this.game.events.emit('diagnostic', {
+      event: 'RunEnded',
+      subject: this.metrics.assisted ? `assisted:${outcome}` : outcome,
+    });
+    this.game.events.emit('diagnostic', {
+      event: 'RunDuration',
+      subject: outcome,
+      value: this.elapsed,
+    });
   }
   snapshot(): unknown {
     if (this.phase === 'inactive' || this.phase === 'room') return null;

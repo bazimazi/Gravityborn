@@ -1037,9 +1037,17 @@
     {
       "section": 87,
       "title": "Analytics",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/core/diagnostics.ts",
+        "src/core/events.ts",
+        "src/progression/expedition.ts",
+        "src/progression/build.ts",
+        "src/presentation/diagnostics.ts",
+        "tests/diagnostics.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "All listed gameplay events record bounded local counts/totals/maxima and a 300-event history. Export, disable and clear are tested across three browsers; no network analytics service is required. Human playtest evidence is still needed for balance decisions."
     },
     {
       "section": 88,

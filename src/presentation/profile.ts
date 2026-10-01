@@ -7,6 +7,7 @@ import type { SaveState } from '../core/save';
 import { modes } from '../content/modes';
 import { contracts, difficulties } from '../content/phenomena';
 import { codexView } from './codex';
+import { diagnosticsView } from './diagnostics';
 
 export function profileView(profile: Profile, state: SaveState, checkpoint: boolean): string {
   const regionAllowed = (index: number): boolean =>
@@ -52,6 +53,7 @@ export function profileView(profile: Profile, state: SaveState, checkpoint: bool
   <details><summary>Research · six progression trees</summary><div class="class-grid">${researchNodes.map((node) => `<button class="run-card" data-research="${node.id}" ${profile.skills.includes(node.id) || profile.research < node.cost || (node.requires && !profile.skills.includes(node.requires)) ? 'disabled' : ''}><small>${node.tree.toUpperCase()} · ${profile.skills.includes(node.id) ? 'LEARNED' : `${node.cost} RESEARCH`}</small><strong>${node.name}</strong><span>${node.description}${node.requires ? ` Requires ${researchNodes.find((candidate) => candidate.id === node.requires)!.name}.` : ''}</span></button>`).join('')}</div></details>
   <label class="setting-row">Physics mutation <select id="mutation-select" ${profile.skills.includes('mutations') ? '' : 'disabled'}><option value="">None</option>${mutations.map((mutation) => `<option value="${mutation.id}" ${profile.mutation === mutation.id ? 'selected' : ''}>${mutation.name}</option>`).join('')}</select></label><p class="dialog-copy">${mutations.find((mutation) => mutation.id === profile.mutation)?.description ?? 'Research Mutable Core to select one physics mutation.'}</p>
   ${codexView(profile)}
+  ${diagnosticsView(profile.diagnostics)}
   <button class="primary-button" data-run-action="new">Start selected class</button>
   <div class="save-tools"><button class="text-button" data-run-action="export">Export save</button><label class="text-button">Import save <input id="import-save" type="file" accept="application/json" hidden></label><span class="mono">SAVE: ${state.toUpperCase()}</span></div>`;
 }

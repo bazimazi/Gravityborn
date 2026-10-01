@@ -38,6 +38,7 @@ import { Tutorial } from './gameplay/tutorial';
 import { DebugSession, type PlayerStat } from './gameplay/debug';
 import { bossDefinitions } from './content/bosses';
 import { relics } from './content/relics';
+import { newDiagnostics, recordDiagnostic } from './core/diagnostics';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -89,6 +90,7 @@ element('.debug-grid').insertAdjacentHTML(
   `<label>Elite modifier <select id="elite-modifier"><option value="">None</option>${eliteModifiers.map((id) => `<option>${id}</option>`).join('')}</select></label>`,
 );
 const inspector = new DebugSession(game, run);
+game.events.on('diagnostic', (sample) => recordDiagnostic(profile.diagnostics, sample));
 element('.debug-grid').insertAdjacentHTML(
   'beforeend',
   `
@@ -128,6 +130,7 @@ const canvas = element<HTMLCanvasElement>('#game');
 const renderer = new Renderer(canvas, settings);
 const tutorial = new Tutorial(game, () => {
   profile.tutorialCompleted = true;
+  recordDiagnostic(profile.diagnostics, { event: 'TutorialCompleted' });
   persist();
   restart();
   toast('Training complete. Begin an expedition when you are ready.');
@@ -316,6 +319,33 @@ document.addEventListener('click', (event) => {
     link.download = 'gravityborn-save.json';
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return;
+  }
+  if (button.dataset.runAction?.startsWith('diagnostics-')) {
+    if (button.dataset.runAction === 'diagnostics-export') {
+      const url = URL.createObjectURL(
+        new Blob(
+          [
+            JSON.stringify(
+              { version: 1, game: 'Gravityborn', diagnostics: profile.diagnostics },
+              null,
+              2,
+            ),
+          ],
+          { type: 'application/json' },
+        ),
+      );
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'gravityborn-diagnostics.json';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } else if (button.dataset.runAction === 'diagnostics-toggle')
+      profile.diagnostics.enabled = !profile.diagnostics.enabled;
+    else if (button.dataset.runAction === 'diagnostics-clear')
+      profile.diagnostics = { ...newDiagnostics(), enabled: profile.diagnostics.enabled };
+    persist();
+    renderProfile();
     return;
   }
   if (button.dataset.runAction === 'new') {
