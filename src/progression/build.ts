@@ -302,7 +302,7 @@ export class RunBuild {
     return synergies.filter((synergy) => matchesSynergy(synergy, powers, tags));
   }
   snapshot(): unknown {
-    return {
+    return structuredClone({
       equipment: this.equipment,
       wellLevel: this.wellLevel,
       skills: this.skills,
@@ -316,7 +316,7 @@ export class RunBuild {
       passives: this.passives,
       choices: this.choices,
       random: this.random.state,
-    };
+    });
   }
   restore(value: unknown): void {
     const data = record(value);

@@ -178,6 +178,12 @@ for (const encounter of encounters)
       run.game.player.health = 100;
     }
     expect(run.resolveEvent(choice.id)).toBe(true);
+    if (choice.combat) {
+      expect(run.phase).toBe('room');
+      expect(run.resolveEvent(choice.id)).toBe(false);
+      run.game.player.invulnerability = 100;
+      for (let i = 0; i < 40 && !run.current?.visited; i++) progress(run);
+    }
     expect(run.phase).toBe('reward');
     const currency = run.build.currency;
     expect(run.resolveEvent(choice.id)).toBe(false);

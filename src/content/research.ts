@@ -118,6 +118,24 @@ export const mutations: {
     modifiers: [{ stat: 'gravityResponse', operation: 'multiply', value: -1 }],
   },
   {
+    id: 'dense',
+    name: 'Dense Matter',
+    description: 'Triple your core mass, but lose 20% movement acceleration.',
+    modifiers: [
+      { stat: 'mass', operation: 'multiply', value: 3 },
+      { stat: 'movement', operation: 'multiply', value: 0.8 },
+    ],
+  },
+  {
+    id: 'light',
+    name: 'Light Matter',
+    description: 'Halve your core mass and gain 30% movement acceleration.',
+    modifiers: [
+      { stat: 'mass', operation: 'multiply', value: 0.5 },
+      { stat: 'movement', operation: 'multiply', value: 1.3 },
+    ],
+  },
+  {
     id: 'dual',
     name: 'Dual Gravity',
     description: 'Maintain an additional gravity well, at the cost of longer well cooldowns.',

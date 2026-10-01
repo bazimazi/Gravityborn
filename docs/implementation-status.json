@@ -1,4 +1,4 @@
-{
+﻿{
   "updated": "2026-10-02",
   "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
   "requirements": [
@@ -79,7 +79,7 @@
         "tests/abilities.test.ts",
         "tests/enemies.test.ts"
       ],
-      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain circulates signed response through up to five eligible targets; Transfer exchanges a pair's gravity and momentum. Independent generation-bound factors expire without erasing phase/theft/parasite effects. Static or suppressed bodies no longer acquire flip/rotation ownership."
+      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain circulates signed response through up to five eligible targets; Transfer exchanges a pair\u0027s gravity and momentum. Independent generation-bound factors expire without erasing phase/theft/parasite effects. Static or suppressed bodies no longer acquire flip/rotation ownership."
     },
     {
       "section": 8,
@@ -681,9 +681,17 @@
     {
       "section": 51,
       "title": "Run Events",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/content/events.ts",
+        "src/content/research.ts",
+        "src/progression/expedition.ts",
+        "src/progression/build.ts",
+        "tests/run-events.test.ts",
+        "tests/modes.test.ts",
+        "tests/browser/run-events.spec.ts"
+      ],
+      "remaining": "Ten encounters include merchants, experiments, run-long gravity changes, resource sacrifices, wreckage exploration and optional combat trials. Combat rewards require victory, preserve the original route node, and cannot be claimed twice. Dense/Light mutations alter actual core mass and acceleration. Checkpoint snapshots are detached from live state; combat recovery returns to the preceding unclaimed event. Human risk/reward balance remains open."
     },
     {
       "section": 52,

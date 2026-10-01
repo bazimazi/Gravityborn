@@ -4,9 +4,30 @@ import { validateAbilities, validateContent } from '../src/content/validate';
 import { abilityFeedback } from '../src/content/ability-feedback';
 import { Game } from '../src/gameplay/game';
 import Matter from 'matter-js';
+import { encounters } from '../src/content/events';
 
 it('all shipped content has valid values, unique identifiers and resolvable references', () => {
   expect(validateContent()).toEqual([]);
+});
+it('rejects duplicate event choices, unknown gravity rules and nonfinite costs', () => {
+  const bad = {
+    id: 'leave',
+    name: 'Invalid',
+    description: '',
+    currencyCost: NaN,
+    phenomenon: 'missing' as never,
+  };
+  encounters.push({ id: 'test_event', name: 'Test', text: '', choices: [bad, bad] });
+  try {
+    const issues = validateContent().filter((issue) =>
+      issue.path.startsWith('encounters.test_event'),
+    );
+    expect(issues.some((issue) => issue.message.includes('unique'))).toBe(true);
+    expect(issues.some((issue) => issue.message.includes('gravity rule'))).toBe(true);
+    expect(issues.some((issue) => issue.path.endsWith('currencyCost'))).toBe(true);
+  } finally {
+    encounters.pop();
+  }
 });
 it('authoring validation detects cycles, missing evolutions, invalid parameters and feedback', () => {
   const pulse = {

@@ -1,3 +1,4 @@
+import type { Phenomenon } from './phenomena';
 export interface EventChoice {
   id: string;
   name: string;
@@ -10,6 +11,8 @@ export interface EventChoice {
   relic?: 'any' | 'rare';
   power?: string;
   mutation?: string;
+  phenomenon?: Phenomenon;
+  combat?: 'elite' | 'challenge';
 }
 export const encounters: { id: string; name: string; text: string; choices: EventChoice[] }[] = [
   {
@@ -110,7 +113,92 @@ export const encounters: { id: string; name: string; text: string; choices: Even
         power: 'planet',
       },
       { id: 'drain', name: 'Drain the reserve', description: 'Gain 25 shards.', currency: 25 },
+      {
+        id: 'retune',
+        name: 'Release the counterweight',
+        description: 'Gravity rotates continuously for the rest of this run. Gain 40 shards.',
+        phenomenon: 'rotating',
+        currency: 40,
+      },
       { id: 'leave', name: 'Let it keep dreaming', description: 'Leave the orbit intact.' },
+    ],
+  },
+  {
+    id: 'scientist',
+    name: 'The mass laboratory',
+    text: 'A scientist has survived by making herself too light for the broken floor. She offers to rewrite your core density. This replaces your current mutation.',
+    choices: [
+      {
+        id: 'dense',
+        name: 'Condense the core',
+        description:
+          'Pay 20 shards. Triple your mass and reduce movement acceleration by 20% for this run.',
+        currencyCost: 20,
+        mutation: 'dense',
+      },
+      {
+        id: 'light',
+        name: 'Hollow the core',
+        description:
+          'Pay 20 shards. Halve your mass and gain 30% movement acceleration for this run.',
+        currencyCost: 20,
+        mutation: 'light',
+      },
+      { id: 'leave', name: 'Keep your own weight', description: 'Continue unchanged.' },
+    ],
+  },
+  {
+    id: 'horizon',
+    name: 'The hungry horizon',
+    text: 'A pinprick of darkness asks for matter. Feed it, and its gravity will follow you. This replaces your current mutation.',
+    choices: [
+      {
+        id: 'feed',
+        name: 'Feed the horizon',
+        description:
+          'Pay 35 shards. Become a recurring gravity source with 20 less maximum energy for this run.',
+        currencyCost: 35,
+        mutation: 'personal',
+      },
+      { id: 'leave', name: 'Seal the aperture', description: 'Continue unchanged.' },
+    ],
+  },
+  {
+    id: 'planetfall',
+    name: 'A planet in pieces',
+    text: 'Rare matter glitters in the wreckage of a tiny colony. Its guardians are still protecting the fragments.',
+    choices: [
+      {
+        id: 'explore',
+        name: 'Enter the wreckage',
+        description: 'Fight an elite chamber. Victory awards a rare relic and 30 extra shards.',
+        combat: 'elite',
+        relic: 'rare',
+        currency: 30,
+      },
+      {
+        id: 'salvage',
+        name: 'Gather the loose dust',
+        description: 'Gain 10 shards without entering the wreckage.',
+        currency: 10,
+      },
+      { id: 'leave', name: 'Let the fragments drift', description: 'Continue onward.' },
+    ],
+  },
+  {
+    id: 'arena',
+    name: 'The unlicensed arena',
+    text: 'An audience of survey drones waits behind reinforced glass. The ring offers knowledge to any core that survives its trial.',
+    choices: [
+      {
+        id: 'fight',
+        name: 'Accept the trial',
+        description: 'Fight a challenge chamber. Victory awards a relic and 80 extra XP.',
+        combat: 'challenge',
+        relic: 'any',
+        xp: 80,
+      },
+      { id: 'leave', name: 'Decline the trial', description: 'Leave without fighting.' },
     ],
   },
 ];

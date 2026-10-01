@@ -70,3 +70,5 @@ Endless pressure is authored in `src/data/endless.json`. Chamber count determine
 - Physics reproducibility is suitable for local tests, not cross-platform lockstep determinism.
 
 The benchmark isolates simulation cost on the host CPU. It does not establish phone GPU/frame-time performance. See the milestone review for measured results.
+
+Run event definitions may set a persistent run phenomenon or begin an elite/challenge chamber. Combat reuses ordinary room construction and rule configuration while retaining the original event node in the route. Its reward is held only in memory until victory; defeat drops it. Room-boundary recovery returns to the preceding event decision. Successful rewards and the visited node are then checkpointed together. Expedition and build snapshots clone their nested values so later live mutations cannot contaminate an earlier checkpoint. Event authoring validation checks choice identities, bounded numeric costs/rewards, power/mutation/rule references and combat types. Replay revision r6 separates recordings made before these event and core-collision changes.

@@ -9,7 +9,7 @@ import { classById } from '../content/classes';
 import { record, finite, strings } from '../core/save';
 import type { AbilitySnapshot } from '../gameplay/abilities';
 import type { Profile } from './profile';
-import { encounters } from '../content/events';
+import { encounters, type EventChoice } from '../content/events';
 import { Random } from '../core/random';
 import { modes, rotatingChallenge, type RunMode } from '../content/modes';
 import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
@@ -56,6 +56,7 @@ export class Expedition {
   won = false;
   message = '';
   shop: ShopItem[] = [];
+  private eventReward?: EventChoice;
   constructor(readonly game: Game) {
     game.events.on('collected', (event) => {
       if (this.phase !== 'room') return;
@@ -124,6 +125,7 @@ export class Expedition {
       this.metrics.redirected = (this.metrics.redirected ?? 0) + game.stats.redirectedKills;
       this.metrics.zeroSeconds = (this.metrics.zeroSeconds ?? 0) + game.stats.zeroSeconds;
       if (!event.won) {
+        this.eventReward = undefined;
         this.phase = 'summary';
         this.message = 'The core fell silent. Your discoveries remain.';
         this.won = false;
@@ -132,6 +134,11 @@ export class Expedition {
         return;
       }
       this.completeRoom();
+      if (this.eventReward) {
+        const reward = this.eventReward;
+        this.eventReward = undefined;
+        this.grantEventReward(reward);
+      }
     });
   }
   get active(): boolean {
@@ -159,6 +166,7 @@ export class Expedition {
     options: RunOptions = {},
   ): void {
     if (this.active && this.phase !== 'summary') this.abandon();
+    this.eventReward = undefined;
     this.mode = modes.some((mode) => mode.id === options.mode) ? options.mode! : 'standard';
     if (this.mode === 'endless' && !profile?.skills.includes('endless')) this.mode = 'standard';
     this.contract = contracts.some((contract) => contract.id === options.contract)
@@ -224,6 +232,10 @@ export class Expedition {
     if (this.phase !== 'map' || this.build.pending > 0) return false;
     const node = this.available.find((node) => node.id === id);
     if (!node) return false;
+    this.eventReward = undefined;
+    return this.loadNode(node);
+  }
+  private loadNode(node: MapNode, roomType = node.type): boolean {
     const health = this.game.player.health;
     const powers = this.game.abilities.snapshot();
     this.current = node;
@@ -233,7 +245,7 @@ export class Expedition {
     const room = buildRoom(
       `${this.seed}:${this.depth}`,
       node.id,
-      node.type,
+      roomType,
       this.biome,
       this.rooms + this.difficulty,
     );
@@ -307,7 +319,7 @@ export class Expedition {
       endlessStage,
     );
     for (const id of this.game.rules.activePhenomena) this.discoveries.add(`phenomenon:${id}`);
-    if (['combat', 'elite', 'challenge', 'boss', 'puzzle', 'secret'].includes(node.type)) {
+    if (['combat', 'elite', 'challenge', 'boss', 'puzzle', 'secret'].includes(roomType)) {
       this.phase = 'room';
       this.message =
         node.type === 'puzzle'
@@ -362,6 +374,15 @@ export class Expedition {
     if (!effect || !this.canResolveEvent(choice)) return false;
     this.game.player.health -= effect.healthCost ?? 0;
     this.build.currency -= effect.currencyCost ?? 0;
+    if (effect.combat) {
+      this.eventReward = effect;
+      return this.loadNode(this.current!, effect.combat);
+    }
+    this.grantEventReward(effect);
+    this.completeRoom(false);
+    return true;
+  }
+  private grantEventReward(effect: EventChoice): void {
     this.game.player.health = Math.min(
       this.game.maxHealth,
       this.game.player.health + (effect.heal ?? 0),
@@ -370,11 +391,13 @@ export class Expedition {
     this.build.gainXP(effect.xp ?? 0);
     if (effect.power) this.game.abilities.learn(effect.power);
     if (effect.mutation) this.build.mutation = effect.mutation;
+    if (effect.phenomenon) {
+      this.phenomenon = effect.phenomenon;
+      this.discoveries.add(`phenomenon:${effect.phenomenon}`);
+    }
     this.build.apply();
     this.message = effect.description;
     if (effect.relic) this.grantRelic(effect.relic === 'rare');
-    this.completeRoom(false);
-    return true;
   }
   canResolveEvent(id: string): boolean {
     const choice = encounters
@@ -382,6 +405,9 @@ export class Expedition {
       ?.choices.find((choice) => choice.id === id);
     return Boolean(
       choice &&
+        this.phase === 'event' &&
+        this.current &&
+        !this.current.visited &&
         this.game.player.health > (choice.healthCost ?? 0) &&
         this.build.currency >= (choice.currencyCost ?? 0),
     );
@@ -459,7 +485,7 @@ export class Expedition {
   }
   snapshot(): unknown {
     if (this.phase === 'inactive' || this.phase === 'room') return null;
-    return {
+    return structuredClone({
       id: this.id,
       discoveries: [...this.discoveries],
       mastery: this.mastery,
@@ -488,7 +514,7 @@ export class Expedition {
       build: this.build.snapshot(),
       powers: this.game.abilities.snapshot(),
       health: this.game.player.health,
-    };
+    });
   }
   restore(value: unknown): boolean {
     try {
@@ -548,6 +574,7 @@ export class Expedition {
         shop.push({ id: item.id, price: finite(item.price, 0, 1000), sold: item.sold === true });
       }
       this.game.reset(false);
+      this.eventReward = undefined;
       this.discoveries = new Set(discoveries);
       this.mastery = mastery;
       this.metrics = metrics;

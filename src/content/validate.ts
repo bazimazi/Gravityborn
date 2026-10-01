@@ -449,8 +449,31 @@ export function validateContent(): ContentIssue[] {
       'Unknown synergy power or tag.',
     );
   }
-  for (const item of encounters)
+  for (const item of encounters) {
+    issues.push(...identities(item.choices, `encounters.${item.id}`));
+    check(
+      item.choices.length >= 2 && item.choices.length <= 5,
+      `encounters.${item.id}`,
+      'Events need two to five choices.',
+    );
     for (const choice of item.choices) {
+      const path = `encounters.${item.id}.${choice.id}`;
+      for (const field of ['healthCost', 'currencyCost', 'heal', 'currency', 'xp'] as const)
+        check(
+          choice[field] === undefined || isNumber(choice[field]!, 0, 1000),
+          `${path}.${field}`,
+          'Event costs and rewards must be finite and nonnegative.',
+        );
+      check(
+        !choice.phenomenon || phenomena.some((item) => item.id === choice.phenomenon),
+        path,
+        'Unknown run gravity rule.',
+      );
+      check(
+        !choice.combat || ['elite', 'challenge'].includes(choice.combat),
+        path,
+        'Unknown event combat type.',
+      );
       check(
         !choice.power || powerIds.has(choice.power),
         `encounters.${item.id}.${choice.id}`,
@@ -462,6 +485,7 @@ export function validateContent(): ContentIssue[] {
         'Unknown mutation reward.',
       );
     }
+  }
   for (const item of challenges) {
     check(
       !item.equipment || itemIds.has(item.equipment),
