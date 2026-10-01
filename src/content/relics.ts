@@ -10,6 +10,138 @@ export interface RelicDefinition {
 }
 export const relics: RelicDefinition[] = [
   {
+    id: 'redshift',
+    name: 'Redshift Lens',
+    rarity: 'rare',
+    tags: ['Impact', 'Velocity'],
+    description:
+      'While moving at speed 6 or faster, collision damage increases by 60%. Keep your core in motion.',
+    modifiers: [
+      {
+        stat: 'impactDamage',
+        operation: 'multiply',
+        value: 1.6,
+        conditions: [{ stat: 'speed', comparison: 'gte', value: 6 }],
+      },
+    ],
+  },
+  {
+    id: 'last_light',
+    name: 'Last Light',
+    rarity: 'rare',
+    tags: ['Defense', 'Gravity'],
+    description:
+      'Below 35% integrity, hostile kills repair 10 integrity, at most once every two seconds.',
+    triggers: [
+      {
+        trigger: 'OnKill',
+        effect: 'heal',
+        value: 10,
+        cooldown: 2,
+        conditions: [{ stat: 'healthRatio', comparison: 'lt', value: 0.35 }],
+      },
+    ],
+  },
+  {
+    id: 'quiet_orbit',
+    name: 'Quiet Orbit',
+    rarity: 'common',
+    tags: ['Orbit', 'Defense'],
+    description:
+      'With no hostiles within 240 units, regenerate four extra energy per second. Create space to recharge.',
+    modifiers: [
+      {
+        stat: 'energyRegen',
+        operation: 'add',
+        value: 4,
+        conditions: [{ stat: 'nearbyEnemies', comparison: 'eq', value: 0 }],
+      },
+    ],
+  },
+  {
+    id: 'crowd_pressure',
+    name: 'Crowd Pressure',
+    rarity: 'rare',
+    tags: ['Gravity', 'Compression'],
+    description: 'With at least three hostiles within 240 units, gravity powers reach 35% farther.',
+    modifiers: [
+      {
+        stat: 'radius',
+        operation: 'multiply',
+        value: 1.35,
+        tags: ['Gravity'],
+        conditions: [{ stat: 'nearbyEnemies', comparison: 'gte', value: 3 }],
+      },
+    ],
+  },
+  {
+    id: 'full_spectrum',
+    name: 'Full Spectrum',
+    rarity: 'rare',
+    tags: ['Gravity', 'Mass'],
+    description:
+      'Powers cast at 80% energy or more gain 40% strength. Effects use energy before the cast is paid.',
+    modifiers: [
+      {
+        stat: 'strength',
+        operation: 'multiply',
+        value: 1.4,
+        conditions: [{ stat: 'energyRatio', comparison: 'gte', value: 0.8 }],
+      },
+    ],
+  },
+  {
+    id: 'reserve_cell',
+    name: 'Reserve Cell',
+    rarity: 'common',
+    tags: ['Gravity', 'Defense'],
+    description:
+      'Gravity changes restore 18 energy while below 25% energy, once every three seconds.',
+    triggers: [
+      {
+        trigger: 'OnGravityChange',
+        effect: 'energy',
+        value: 18,
+        cooldown: 3,
+        conditions: [{ stat: 'energyRatio', comparison: 'lt', value: 0.25 }],
+      },
+    ],
+  },
+  {
+    id: 'still_point',
+    name: 'Still Point',
+    rarity: 'rare',
+    tags: ['Compression', 'Gravity'],
+    description:
+      'Compression powers cost 40% less energy while your speed is below 1. Timing a stationary cast matters.',
+    modifiers: [
+      {
+        stat: 'energyCost',
+        operation: 'multiply',
+        value: 0.6,
+        tags: ['Compression'],
+        conditions: [{ stat: 'speed', comparison: 'lt', value: 1 }],
+      },
+    ],
+  },
+  {
+    id: 'charged_escape',
+    name: 'Charged Escape',
+    rarity: 'legendary',
+    tags: ['Movement', 'Mass'],
+    description:
+      'At 50 stored charge or more, movement powers recharge 50% sooner. Stored Burst spends this advantage.',
+    modifiers: [
+      {
+        stat: 'cooldown',
+        operation: 'multiply',
+        value: 0.5,
+        tags: ['Movement'],
+        conditions: [{ stat: 'stored', comparison: 'gte', value: 50 }],
+      },
+    ],
+  },
+  {
     id: 'heavy_heart',
     name: 'Heavy Heart',
     description:

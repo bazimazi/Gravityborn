@@ -83,6 +83,7 @@
     "maxArcs": 24
   },
   "abilities": {
+    "conditionRadius": 240,
     "levelStrength": 0.25,
     "burstStoredRatio": 0.12,
     "impulseFalloffRadius": 1.3,

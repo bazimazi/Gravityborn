@@ -5,7 +5,7 @@ import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import balance from '../data/balance.json';
 import type { GravityField, GravitySystem } from '../physics/gravity';
 import type { Entity, PhysicsWorld } from '../physics/world';
-import { ModifierSet } from '../progression/modifiers';
+import { ModifierSet, type ModifierContext } from '../progression/modifiers';
 
 export interface AbilityHost {
   world: PhysicsWorld;
@@ -45,7 +45,7 @@ export interface AbilitySnapshot {
 }
 
 export class AbilitySystem {
-  readonly modifiers = new ModifierSet();
+  readonly modifiers = new ModifierSet(() => this.context());
   readonly levels = new Map<string, number>([['pulse', 1]]);
   readonly cooldowns = new Map<string, number>();
   energy = 100;
@@ -57,6 +57,28 @@ export class AbilitySystem {
   private rotation?: { original: Vec2; start: number; duration: number; chain: number };
 
   constructor(private readonly host: AbilityHost) {}
+  context(): ModifierContext {
+    const { player, world } = this.host;
+    // Resource ceilings are unconditional: no recursive or self-changing thresholds.
+    const maxHealth = this.modifiers.evaluate('maxHealth', player.definition.health, [], {});
+    const maxEnergy = this.modifiers.evaluate('maxEnergy', 100, [], {});
+    let nearbyEnemies = 0;
+    const radius = balance.abilities.conditionRadius;
+    for (const entity of world.entities.values())
+      if (
+        entity.alive &&
+        entity.definition.faction === 'enemy' &&
+        length(subtract(entity.body.position, player.body.position)) <= radius
+      )
+        nearbyEnemies++;
+    return {
+      healthRatio: Math.max(0, Math.min(1, player.health / maxHealth)),
+      energyRatio: Math.max(0, Math.min(1, this.energy / maxEnergy)),
+      speed: length(Matter.Body.getVelocity(player.body)),
+      nearbyEnemies,
+      stored: this.stored,
+    };
+  }
   get maxEnergy(): number {
     return this.modifiers.evaluate('maxEnergy', 100);
   }
@@ -85,9 +107,10 @@ export class AbilitySystem {
       !Number.isFinite(target.x + target.y)
     )
       return false;
+    const context = this.context();
     const cost = Math.max(
       0,
-      this.modifiers.evaluate('energyCost', definition.energy, definition.tags),
+      this.modifiers.evaluate('energyCost', definition.energy, definition.tags, context),
     );
     const tuning = balance.abilities;
     const parameters = definition.parameters ?? {};
@@ -110,13 +133,20 @@ export class AbilitySystem {
       'radius',
       definition.radius * Math.sqrt(factor),
       definition.tags,
+      context,
     );
     const strength = this.modifiers.evaluate(
       'strength',
       definition.strength * factor,
       definition.tags,
+      context,
     );
-    const duration = this.modifiers.evaluate('duration', definition.duration, definition.tags);
+    const duration = this.modifiers.evaluate(
+      'duration',
+      definition.duration,
+      definition.tags,
+      context,
+    );
     const chain = this.host.createCause(id);
     const targets = this.near(point, radius, parameters.affects);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
@@ -342,7 +372,10 @@ export class AbilitySystem {
     if (!repeated)
       this.cooldowns.set(
         id,
-        Math.max(0.25, this.modifiers.evaluate('cooldown', definition.cooldown, definition.tags)),
+        Math.max(
+          0.25,
+          this.modifiers.evaluate('cooldown', definition.cooldown, definition.tags, context),
+        ),
       );
     this.host.events.emit('abilityUsed', {
       id,

@@ -796,17 +796,18 @@
     {
       "section": 63,
       "title": "Modifier Framework",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
+        "src/progression/modifiers.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
+        "src/gameplay/abilities.ts",
+        "src/content/relics.ts",
+        "src/presentation/status.ts",
+        "tests/modifiers.test.ts",
         "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/browser/game.spec.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Add, multiply, priority override, tagged event/periodic triggers and conjunctive context conditions are implemented. Eight conditional relics and HUD feedback exercise the framework. Human balance remains a separate gate."
     },
     {
       "section": 64,

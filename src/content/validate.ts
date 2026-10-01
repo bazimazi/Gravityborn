@@ -10,7 +10,12 @@ import { biomes } from './rooms';
 import { regionGuardians, bossDefinitions } from './bosses';
 import { planets, story, secretLore } from './story';
 import limits from '../data/stat-limits.json';
-import type { Modifier, TriggerRule } from '../progression/modifiers';
+import {
+  conditionStats,
+  type Modifier,
+  type TriggerRule,
+  type ModifierCondition,
+} from '../progression/modifiers';
 import { enemyVariants } from './variants';
 import { eliteModifiers } from './enemies';
 
@@ -198,7 +203,33 @@ export function validateContent(): ContentIssue[] {
     values: readonly Omit<Modifier, 'id'>[] = [],
     triggers: readonly Omit<TriggerRule, 'id'>[] = [],
   ): void => {
+    const conditions = (values: readonly ModifierCondition[] | undefined): void => {
+      if (!values) return;
+      check(values.length > 0 && values.length <= 8, path, 'Use one to eight conditions.');
+      for (const condition of values) {
+        check(conditionStats.includes(condition.stat), path, 'Unknown condition context.');
+        check(
+          ['lt', 'lte', 'gt', 'gte', 'eq'].includes(condition.comparison),
+          path,
+          'Unknown condition comparison.',
+        );
+        check(
+          isNumber(condition.value, 0, condition.stat.endsWith('Ratio') ? 1 : 1000),
+          path,
+          'Invalid condition threshold.',
+        );
+      }
+    };
     for (const value of values) {
+      conditions(value.conditions);
+      check(
+        !value.conditions ||
+          !['maxHealth', 'maxEnergy', 'mass', 'gravityResponse', 'randomGravity'].includes(
+            value.stat,
+          ),
+        path,
+        'Resource ceilings and persistent body properties must be unconditional.',
+      );
       check(
         value.stat in limits || value.stat === 'randomGravity',
         path,
@@ -212,6 +243,7 @@ export function validateContent(): ContentIssue[] {
       );
     }
     for (const rule of triggers) {
+      conditions(rule.conditions);
       check(
         [
           'heal',

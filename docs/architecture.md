@@ -20,6 +20,8 @@ The field evaluator supports constant/linear/inverse-square falloff and radial/v
 
 `Expedition` owns seeded route transitions, encounters, rewards and run metrics. `RunBuild` owns XP choices, equipped powers, primary-well evolution, relics, equipment, mutations and derived modifiers. `Profile` retains discoveries, research, equipment, classes, challenges and mastery. Breaking a physical rift seal reveals a hidden map route; clearing its optional elite encounter awards rare loot and regional lore. `Tutorial` runs seven manually completed training chambers without altering expedition progression.
 
+`ModifierSet` composes additive, multiplicative and priority override values, tag filters and cooldown-limited event/periodic triggers. Both values and triggers accept conjunctive conditions on health/energy ratios, core speed, stored charge and hostile proximity (240 world units). Missing or nonfinite context fails closed. Unsatisfied conditions do not consume trigger cooldowns. Casts snapshot their conditions before paying energy. Resource ceilings and persistent body properties stay unconditional to avoid recursive thresholds or stale physics properties; the authoring validator enforces this. Conditional relics expose their current conditions in the effect strip alongside shield time and stored charge.
+
 ## Presentation and input
 
 `Renderer`, `Feedback`, and `GameAudio` consume simulation state or typed events. They never determine damage. The Canvas renderer uses distinct silhouettes and symbols, a capped pixel ratio, short trails, and bounded pools. Audio is synthesized after a user gesture and voice-limited. The browser loop uses an accumulator, a fixed physics step, and a maximum catch-up interval.

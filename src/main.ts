@@ -41,6 +41,7 @@ import { relics } from './content/relics';
 import { newDiagnostics, recordDiagnostic } from './core/diagnostics';
 import { arenaGesture } from './presentation/gestures';
 import { biomes } from './content/rooms';
+import { statusBadges } from './presentation/status';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -794,6 +795,19 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  const badges = statusBadges(game);
+  const statusEffects = element('#status-effects');
+  statusEffects.style.visibility =
+    badges.length === 0 || (run.active && run.phase !== 'room') ? 'hidden' : 'visible';
+  statusEffects.replaceChildren(
+    ...badges.map((badge) => {
+      const item = document.createElement('span');
+      item.textContent = badge.label;
+      item.title = badge.description;
+      item.setAttribute('aria-label', `${badge.label}. ${badge.description}`);
+      return item;
+    }),
+  );
   element('#room-name').textContent = tutorial.active
     ? tutorial.lesson.name.toUpperCase()
     : run.active
