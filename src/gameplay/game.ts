@@ -6,6 +6,8 @@ import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import { GravitySystem } from '../physics/gravity';
 import { PhysicsWorld, type CollisionFact, type Entity, type EntityKind } from '../physics/world';
 import { ChainTracker } from './chains';
+import { AbilitySystem } from './abilities';
+import { EnemySystem } from './enemies';
 
 export type GameState = 'ready' | 'playing' | 'paused' | 'won' | 'lost';
 export interface RunStats {
@@ -26,6 +28,8 @@ export class Game {
   gravity!: GravitySystem;
   world!: PhysicsWorld;
   player!: Entity;
+  abilities!: AbilitySystem;
+  enemies!: EnemySystem;
   state: GameState = 'ready';
   time = 0;
   wellCooldown = 0;
@@ -57,6 +61,26 @@ export class Game {
         if (entity.kind === 'player') this.player = entity;
       }
     } else this.player = this.world.spawn('player', { x: 310, y: 470 })!;
+    this.abilities = new AbilitySystem(this);
+    this.enemies = new EnemySystem(this);
+  }
+
+  castAbility(id: string, position: Vec2): boolean {
+    return this.state === 'playing' && this.abilities.cast(id, position);
+  }
+  createCause(): number {
+    return this.chains.start(this.time);
+  }
+  markCause(entity: Entity, id: number, depth = 0): void {
+    this.attribute(entity, { id, depth });
+  }
+  applyDamage(entity: Entity, amount: number, cause: number): void {
+    this.damage(entity, amount, { id: cause, depth: 1 });
+  }
+  detonate(entity: Entity): void {
+    if (!entity.alive) return;
+    entity.health = 1;
+    this.damage(entity, 1, { id: entity.chainId, depth: entity.chainDepth + 1 });
   }
 
   start(): void {
@@ -104,8 +128,11 @@ export class Game {
       x: Math.max(65, Math.min(arena.width - 65, position.x)),
       y: Math.max(65, Math.min(arena.height - 65, position.y)),
     };
-    if (this.gravity.fields.size >= balance.gravity.maxWells)
-      this.gravity.removeField(this.gravity.fields.keys().next().value!);
+    const wells = [...this.gravity.fields.values()].filter(
+      (field) => field.source === 'player-well',
+    );
+    if (wells.length >= balance.gravity.maxWells) this.gravity.removeField(wells[0].id);
+    if (this.gravity.fields.size >= balance.physics.maxFields) return false;
     const chain = this.chains.start(this.time);
     const fieldId = this.gravity.addField({
       source: 'player-well',
@@ -134,13 +161,17 @@ export class Game {
     if (this.state !== 'playing') return;
     const dt = balance.physics.stepMs / 1000;
     this.time += dt;
+    this.abilities.tick(dt);
     this.wellCooldown = Math.max(0, this.wellCooldown - dt);
     this.gravity.tick(dt);
     for (const id of this.wellChains.keys())
       if (!this.gravity.fields.has(id)) this.wellChains.delete(id);
     this.chains.tick(this.time);
     const movement = length(this.move) > 1 ? normalize(this.move) : this.move;
-    this.world.accelerate(this.player, scale(movement, balance.player.acceleration));
+    this.world.accelerate(
+      this.player,
+      scale(movement, this.abilities.modifiers.evaluate('movement', balance.player.acceleration)),
+    );
     for (const entity of [...this.world.entities.values()]) {
       entity.life += dt;
       entity.invulnerability = Math.max(0, entity.invulnerability - dt);
@@ -170,6 +201,7 @@ export class Game {
   }
 
   private updateEnemy(entity: Entity, dt: number): void {
+    if (this.enemies.update(entity)) return;
     const delta = subtract(this.player.body.position, entity.body.position);
     const distance = length(delta);
     const toward = normalize(delta);
@@ -299,7 +331,9 @@ export class Game {
     entity.health = 0;
     if (entity.kind === 'player') return;
     this.world.remove(entity);
-    if (entity.kind === 'barrel') this.explosions.push({ entity, cause });
+    this.enemies.onDeath(entity);
+    if (entity.kind === 'barrel' || entity.kind === 'bomber' || entity.elite === 'unstable')
+      this.explosions.push({ entity, cause });
     const chainLength = this.chains.extend(cause.id, `kill:${entity.id}`, cause.depth, this.time);
     if (entity.definition.faction === 'enemy') {
       this.stats.kills++;

@@ -8,6 +8,8 @@ import { Feedback } from './presentation/feedback';
 import { GameAudio } from './presentation/audio';
 import { Renderer } from './presentation/renderer';
 import { shell } from './presentation/shell';
+import { abilities, abilityById } from './content/abilities';
+import { enemyDefinitions, eliteModifiers, type EliteModifier } from './content/enemies';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -20,6 +22,37 @@ try {
 }
 if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) settings.reducedMotion = true;
 const game = new Game();
+element('#spawn-kind').insertAdjacentHTML(
+  'beforeend',
+  Object.entries(enemyDefinitions)
+    .map(([id, definition]) => `<option value="${id}">${definition.name}</option>`)
+    .join(''),
+);
+element('.debug-grid').insertAdjacentHTML(
+  'beforeend',
+  `<label>Elite modifier <select id="elite-modifier"><option value="">None</option>${eliteModifiers.map((id) => `<option>${id}</option>`).join('')}</select></label>`,
+);
+element('#controls').insertAdjacentHTML(
+  'afterend',
+  `<div class="ability-bar"><label for="ability-select">Core power</label><select id="ability-select">${abilities.map((ability) => `<option value="${ability.id}">${ability.name}</option>`).join('')}</select><button id="ability-cast" class="text-button">Cast · Q</button><span id="energy-value" class="mono"></span><p id="ability-description"></p></div>`,
+);
+element<HTMLSelectElement>('#ability-select').onchange = () => {
+  const id = element<HTMLSelectElement>('#ability-select').value;
+  if (!game.abilities.levels.has(id)) game.abilities.learn(id);
+  element('#ability-description').textContent = abilityById.get(id)!.description;
+};
+element('#ability-description').textContent = abilities[0].description;
+function castPower(): void {
+  const id = element<HTMLSelectElement>('#ability-select').value;
+  if (!game.abilities.levels.has(id)) game.abilities.learn(id);
+  const target = renderer.aim ?? {
+    x: game.player.body.position.x + 160,
+    y: game.player.body.position.y,
+  };
+  if (game.castAbility(id, target)) void audio.unlock();
+  else if (game.state === 'playing') toast('Power needs energy, cooldown, or a valid target.');
+}
+element('#ability-cast').onclick = castPower;
 const feedback = new Feedback(game.events);
 const audio = new GameAudio(game.events, settings);
 const canvas = element<HTMLCanvasElement>('#game');
@@ -200,6 +233,11 @@ window.addEventListener('keydown', (event) => {
     return;
   }
   if (game.state !== 'playing') return;
+  if (event.code === 'KeyQ' && !event.repeat) {
+    event.preventDefault();
+    castPower();
+    return;
+  }
   if (
     [
       'ArrowUp',
@@ -265,11 +303,15 @@ for (const [selector, key] of [
   };
 }
 applySettings();
-element('#spawn').onclick = () =>
-  game.world.spawn(element<HTMLSelectElement>('#spawn-kind').value as EntityKind, {
+element('#spawn').onclick = () => {
+  const entity = game.world.spawn(element<HTMLSelectElement>('#spawn-kind').value as EntityKind, {
     x: 700,
     y: 370,
   });
+  const modifier = element<HTMLSelectElement>('#elite-modifier').value as EliteModifier;
+  if (entity && modifier && entity.definition.faction === 'enemy')
+    game.enemies.setElite(entity, modifier);
+};
 element('#debug-heal').onclick = () => {
   game.player.health = game.player.definition.health;
 };
@@ -326,6 +368,12 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  const selectedPower = element<HTMLSelectElement>('#ability-select').value;
+  const cooldown = game.abilities.cooldowns.get(selectedPower) ?? 0;
+  element('#energy-value').textContent =
+    `${Math.floor(game.abilities.energy)} / ${game.abilities.maxEnergy} ENERGY`;
+  element('#ability-cast').textContent = cooldown > 0 ? `${cooldown.toFixed(1)}s` : 'Cast · Q';
+  element<HTMLButtonElement>('#ability-cast').disabled = game.state !== 'playing' || cooldown > 0;
   const health = Math.ceil(game.player.health);
   element('#health-value').textContent = `${health} / 100`;
   element('#health-fill').style.width = `${health}%`;

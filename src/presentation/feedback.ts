@@ -52,6 +52,10 @@ export class Feedback {
     events.on('wellCreated', (event) => {
       this.ring(event.position, 70, '#b5a0ff');
     });
+    events.on('abilityUsed', (event) => {
+      this.ring(event.position, 160, '#80e6d1');
+      this.burst(event.position, '#b5a0ff', 12, 110);
+    });
     events.on('killed', (event) => {
       this.burst(event.position, event.kind === 'barrel' ? '#ffb978' : '#f9adc0', 18, 110);
       if (event.chainLength > 1)

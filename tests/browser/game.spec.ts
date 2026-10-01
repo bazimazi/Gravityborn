@@ -14,6 +14,17 @@ interface Snapshot {
 const snapshot = (page: Page): Promise<Snapshot> =>
   page.evaluate(() => (window as unknown as { __gravityborn: () => Snapshot }).__gravityborn());
 
+test('selects and casts a physical power with visible energy and cooldown', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: /Enter the chamber/ }).click();
+  await page.locator('#ability-select').selectOption('zero');
+  await page.locator('#ability-cast').click();
+  await expect(page.locator('#ability-cast')).toBeDisabled();
+  await expect(page.locator('#ability-description')).toContainText('Existing momentum');
+  expect((await snapshot(page)).fields).toBeGreaterThan(0);
+  await expect(page.locator('#energy-value')).not.toHaveText('100 / 100 ENERGY');
+});
+
 test('phone landscape keeps gameplay and touch controls within the viewport', async ({
   page,
   isMobile,

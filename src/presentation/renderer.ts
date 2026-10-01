@@ -307,6 +307,18 @@ export class Renderer {
         ctx.strokeRect(-12, -12, 24, 24);
         ctx.fillStyle = color;
         ctx.fillRect(-5, -5, 10, 10);
+      } else if (entity.kind in enemyGlyphs) {
+        ctx.fillStyle = color;
+        ctx.font = 'bold 20px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(enemyGlyphs[entity.kind as SpecialEnemy], 0, 0);
+        if ((entity.telegraph ?? 0) > 0) {
+          ctx.globalAlpha = entity.telegraph!;
+          this.circle(0, 0, radius + 7);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
       } else if (entity.kind === 'barrel') {
         ctx.fillStyle = `${color}45`;
         ctx.fillRect(-12, -16, 24, 6);
@@ -330,6 +342,16 @@ export class Renderer {
       }
     }
     ctx.restore();
+    if (entity.elite) {
+      ctx.strokeStyle = '#ffe08c';
+      ctx.lineWidth = 2;
+      this.circle(x, y, radius + 5);
+      ctx.stroke();
+      ctx.fillStyle = '#ffe08c';
+      ctx.font = '10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(entity.elite.toUpperCase(), x, y - radius - 16);
+    }
     if (
       entity.definition.faction === 'enemy' &&
       entity.kind !== 'projectile' &&
@@ -379,3 +401,4 @@ export class Renderer {
     this.context.stroke();
   }
 }
+import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';

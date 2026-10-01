@@ -1,0 +1,88 @@
+import Matter from 'matter-js';
+import { describe, expect, it } from 'vitest';
+import { Game } from '../src/gameplay/game';
+import { abilities } from '../src/content/abilities';
+import { ModifierSet } from '../src/progression/modifiers';
+
+describe('physical powers', () => {
+  for (const definition of abilities)
+    it(`${definition.name} casts, spends energy, and remains finite`, () => {
+      const game = new Game(false);
+      game.world.spawn('heavy', { x: 400, y: 450 });
+      game.world.spawn('crate', { x: 460, y: 450 });
+      game.world.spawn('projectile', { x: 440, y: 400 });
+      game.abilities.learn(definition.id);
+      game.start();
+      expect(game.castAbility(definition.id, { x: 410, y: 450 })).toBe(true);
+      expect(game.abilities.energy).toBe(100 - definition.energy);
+      expect(game.castAbility(definition.id, { x: 410, y: 450 })).toBe(false);
+      for (let i = 0; i < 180; i++) game.step();
+      for (const entity of game.world.entities.values()) {
+        expect(Number.isFinite(entity.body.position.x + entity.body.position.y)).toBe(true);
+        expect(Number.isFinite(entity.body.velocity.x + entity.body.velocity.y)).toBe(true);
+      }
+      game.world.dispose();
+    });
+  it('restores locked masses and grants resistance to repeated locks', () => {
+    const game = new Game(false);
+    const target = game.world.spawn('heavy', { x: 500, y: 350 })!;
+    const mass = target.body.mass;
+    game.abilities.learn('lock');
+    game.start();
+    game.castAbility('lock', target.body.position);
+    expect(target.body.isStatic).toBe(true);
+    game.time = 2;
+    game.abilities.tick(2);
+    expect(target.body.isStatic).toBe(false);
+    expect(target.body.mass).toBe(mass);
+    game.abilities.cooldowns.clear();
+    game.castAbility('lock', target.body.position);
+    expect(target.body.isStatic).toBe(false);
+  });
+  it('transfers actual velocity between bodies and records one cause', () => {
+    const game = new Game(false);
+    const a = game.world.spawn('crate', { x: 500, y: 350 })!;
+    const b = game.world.spawn('rock', { x: 570, y: 350 })!;
+    Matter.Body.setVelocity(a.body, { x: 8, y: -2 });
+    Matter.Body.setVelocity(b.body, { x: -1, y: 3 });
+    game.abilities.learn('transfer');
+    game.start();
+    game.castAbility('transfer', a.body.position);
+    expect(Matter.Body.getVelocity(b.body)).toEqual({ x: 8, y: -2 });
+    expect(Matter.Body.getVelocity(a.body)).toEqual({ x: -1, y: 3 });
+    expect(a.chainId).toBe(b.chainId);
+  });
+  it('suppresses all field acceleration in zero G while preserving momentum', () => {
+    const game = new Game(false);
+    game.abilities.learn('zero');
+    game.start();
+    game.castAbility('zero', { x: 500, y: 350 });
+    expect(game.gravity.sample({ x: 520, y: 360 })).toEqual({ x: 0, y: 0 });
+    expect(game.gravity.sample({ x: 1000, y: 360 }).y).toBeGreaterThan(0);
+  });
+  it('unlocks evolution only after mastering its parent', () => {
+    const game = new Game(false);
+    expect(game.abilities.learn('pulse')).toBe('pulse');
+    expect(game.abilities.learn('pulse')).toBe('pulse');
+    expect(game.abilities.learn('pulse')).toBe('nova');
+    expect(game.abilities.learn('pulse')).toBeNull();
+  });
+});
+
+it('composes tagged modifiers and rate limits triggers independently', () => {
+  const modifiers = new ModifierSet();
+  modifiers.add({ id: 'a', stat: 'strength', operation: 'add', value: 2 });
+  modifiers.add({ id: 'b', stat: 'strength', operation: 'multiply', value: 3, tags: ['Orbit'] });
+  expect(modifiers.evaluate('strength', 4, ['Orbit'])).toBe(18);
+  expect(modifiers.evaluate('strength', 4, ['Impact'])).toBe(6);
+  modifiers.rules.set('heal', {
+    id: 'heal',
+    trigger: 'OnKill',
+    effect: 'heal',
+    value: 2,
+    cooldown: 1,
+  });
+  expect(modifiers.fire('OnKill', 0)).toHaveLength(1);
+  expect(modifiers.fire('OnKill', 0.5)).toHaveLength(0);
+  expect(modifiers.fire('OnKill', 1)).toHaveLength(1);
+});

@@ -1,0 +1,899 @@
+{
+  "updated": "2026-10-01",
+  "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
+  "requirements": [
+    {
+      "section": 1,
+      "title": "Product Vision",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 2,
+      "title": "Design Pillars",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 3,
+      "title": "Core Gameplay Loop",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 4,
+      "title": "Player Controller",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 5,
+      "title": "Primary Controls",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 6,
+      "title": "Gravity System Architecture",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 7,
+      "title": "Gravity Modes",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 8,
+      "title": "Advanced Gravity Abilities",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 9,
+      "title": "Physics Interaction System",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 10,
+      "title": "Combat Philosophy",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 11,
+      "title": "Damage Types",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 12,
+      "title": "Physics-Based Damage",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 13,
+      "title": "Enemy Design",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 14,
+      "title": "Enemy Archetypes",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 15,
+      "title": "Elite Enemies",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 16,
+      "title": "Boss Philosophy",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 17,
+      "title": "Arena Design",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 18,
+      "title": "Arena Types",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 19,
+      "title": "Procedural Level Generation",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 20,
+      "title": "Exploration",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 21,
+      "title": "Run Structure",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 22,
+      "title": "Run Progression",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 23,
+      "title": "Build System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 24,
+      "title": "Ability Evolution",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 25,
+      "title": "Ability Synergies",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 26,
+      "title": "Relic System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 27,
+      "title": "Equipment",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 28,
+      "title": "Character Classes",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 29,
+      "title": "Permanent Progression",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 30,
+      "title": "Meta Progression Trees",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 31,
+      "title": "Mutation System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 32,
+      "title": "Planet System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 33,
+      "title": "Gravitational Phenomena",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 34,
+      "title": "Environmental Objects",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 35,
+      "title": "Physics Materials",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 36,
+      "title": "Resource Collection",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 37,
+      "title": "Shops",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 38,
+      "title": "Risk / Reward",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 39,
+      "title": "Challenge System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 40,
+      "title": "Mastery System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 41,
+      "title": "Endless Mode",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 42,
+      "title": "Infinite Build Scaling",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 43,
+      "title": "Difficulty System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 44,
+      "title": "Camera",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 45,
+      "title": "Visual Direction",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 46,
+      "title": "Gravity Visual Language",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 47,
+      "title": "Animation",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 48,
+      "title": "Juice System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 49,
+      "title": "Chain Reaction System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 50,
+      "title": "\"Impossible Kill\" Moments",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 51,
+      "title": "Run Events",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 52,
+      "title": "Narrative",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 53,
+      "title": "Story Structure",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 54,
+      "title": "Codex",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 55,
+      "title": "Collection",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 56,
+      "title": "Daily / Rotating Content",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 57,
+      "title": "Leaderboards",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 58,
+      "title": "Social Features",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 59,
+      "title": "Ghost System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 60,
+      "title": "Seeded Runs",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 61,
+      "title": "Procedural Content Architecture",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 62,
+      "title": "Tag System",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 63,
+      "title": "Modifier Framework",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 64,
+      "title": "Event Bus",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 65,
+      "title": "Physics Architecture",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 66,
+      "title": "Performance Requirements",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 67,
+      "title": "Physics Optimization",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 68,
+      "title": "Physics Stability",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 69,
+      "title": "Save System",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 70,
+      "title": "Offline-First",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 71,
+      "title": "Mobile UX",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 72,
+      "title": "Combat HUD",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 73,
+      "title": "Gravity Direction Indicator",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 74,
+      "title": "Upgrade UI",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 75,
+      "title": "First-Time User Experience",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 76,
+      "title": "Tutorial Philosophy",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 77,
+      "title": "Audio Design",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 78,
+      "title": "Music",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 79,
+      "title": "Accessibility",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 80,
+      "title": "Monetization",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 81,
+      "title": "Content Roadmap",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 82,
+      "title": "Alpha",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 83,
+      "title": "Beta",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 84,
+      "title": "Launch Version",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 85,
+      "title": "Post-Launch Content Architecture",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 86,
+      "title": "Example Expansion",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 87,
+      "title": "Analytics",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 88,
+      "title": "Balance Philosophy",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 89,
+      "title": "Build Diversity",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 90,
+      "title": "Anti-Degenerate Design",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 91,
+      "title": "Debug Tools",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 92,
+      "title": "Physics Visualization Mode",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 93,
+      "title": "Testing Strategy",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 94,
+      "title": "Performance Testing",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 95,
+      "title": "Device Testing",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 96,
+      "title": "Save Compatibility",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 97,
+      "title": "Architecture",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 98,
+      "title": "Data-Driven Content",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 99,
+      "title": "Content Authoring Workflow",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 100,
+      "title": "Recommended Development Order",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 101,
+      "title": "Vertical Slice Requirement",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 102,
+      "title": "Core Fun Test",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 103,
+      "title": "First Playable Prototype",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 104,
+      "title": "Second Prototype",
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/gameplay/abilities.ts",
+        "src/gameplay/enemies.ts",
+        "tests/abilities.test.ts",
+        "tests/enemies.test.ts"
+      ],
+      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+    },
+    {
+      "section": 105,
+      "title": "Third Prototype",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 106,
+      "title": "AI Agent Rules",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 107,
+      "title": "AI Agent Development Loop",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 108,
+      "title": "Review Loop",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 109,
+      "title": "Ten-Round Quality Review",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 110,
+      "title": "Definition of Done",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 111,
+      "title": "Most Important Design Principle",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 112,
+      "title": "Final Target Experience",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    },
+    {
+      "section": 113,
+      "title": "Ultimate Success Criteria",
+      "status": "pending",
+      "evidence": [],
+      "remaining": "Implement and verify against the specification."
+    }
+  ]
+}

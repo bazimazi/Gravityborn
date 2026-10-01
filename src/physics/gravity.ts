@@ -5,7 +5,7 @@ import balance from '../data/balance.json';
 export interface GravityField {
   id: number;
   source: string;
-  mode: 'directional' | 'radial' | 'vortex';
+  mode: 'directional' | 'radial' | 'vortex' | 'zero';
   direction: Vec2;
   position: Vec2;
   strength: number;
@@ -63,6 +63,13 @@ export class GravitySystem {
     this.dirty = true;
   }
 
+  moveField(id: number, position: Vec2): void {
+    const field = this.fields.get(id);
+    if (!field || !Number.isFinite(position.x + position.y)) return;
+    field.position = { ...position };
+    this.dirty = true;
+  }
+
   tick(dt: number): void {
     for (const field of this.fields.values()) {
       field.remaining -= dt;
@@ -78,6 +85,7 @@ export class GravitySystem {
       this.dirty = false;
     }
     const result = scale(this.direction, this.strength);
+    let attenuation = 1;
     const nearby = this.index.at(position);
     if (nearby)
       for (const field of nearby) {
@@ -92,10 +100,14 @@ export class GravitySystem {
             : field.falloff === 'inverseSquare'
               ? 1 / (1 + (distance / (field.radius * 0.2)) ** 2)
               : 1;
-        result.x += direction.x * field.strength * falloff;
-        result.y += direction.y * field.strength * falloff;
+        if (field.mode === 'zero')
+          attenuation *= 1 - Math.min(1, Math.abs(field.strength) * falloff);
+        else {
+          result.x += direction.x * field.strength * falloff;
+          result.y += direction.y * field.strength * falloff;
+        }
       }
-    return clampVector(scale(result, response), this.maxAcceleration);
+    return clampVector(scale(result, response * attenuation), this.maxAcceleration);
   }
 
   clear(): void {

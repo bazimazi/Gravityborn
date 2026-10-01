@@ -1244,3 +1244,29 @@ dialog::backdrop {
     transition: none !important;
   }
 }
+:root .ability-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #101921;
+  border: 1px solid #293943;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+.ability-bar select {
+  color: #edf4fa;
+  background: #16232d;
+  border: 1px solid #47616a;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 44px;
+  max-width: 100%;
+}
+.ability-bar p {
+  width: 100%;
+  color: #aabac4;
+  font-size: 13px;
+  margin: 0;
+}

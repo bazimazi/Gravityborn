@@ -1,5 +1,5 @@
 import Matter from 'matter-js';
-import definitions from '../data/entities.json';
+import { entityDefinitions as definitions, type EliteModifier } from '../content/enemies';
 import balance from '../data/balance.json';
 import { clampVector, type Vec2 } from '../core/vector';
 import { GravitySystem } from './gravity';
@@ -23,6 +23,9 @@ export interface Entity {
   chainExpires: number;
   redirected: boolean;
   ownerId: number | null;
+  gravityScale: number;
+  elite?: EliteModifier;
+  telegraph?: number;
 }
 export interface CollisionFact {
   a: Entity | undefined;
@@ -110,6 +113,7 @@ export class PhysicsWorld {
       chainExpires: 0,
       redirected: false,
       ownerId: null,
+      gravityScale: 1,
     });
     this.entities.set(entity.id, entity);
     this.safePositions.set(entity.id, { ...position });
@@ -128,6 +132,7 @@ export class PhysicsWorld {
   }
 
   accelerate(entity: Entity, acceleration: Vec2): void {
+    if (entity.body.isStatic) return;
     const bounded = clampVector(acceleration, balance.physics.maxAcceleration);
     Body.applyForce(entity.body, entity.body.position, {
       x: bounded.x * entity.body.mass,
@@ -136,6 +141,7 @@ export class PhysicsWorld {
   }
 
   impulse(entity: Entity, velocityChange: Vec2): void {
+    if (entity.body.isStatic) return;
     const bounded = clampVector(velocityChange, balance.physics.maxImpulse);
     Body.setVelocity(
       entity.body,
@@ -150,6 +156,7 @@ export class PhysicsWorld {
     this.collisions.length = 0;
     for (const entity of this.entities.values()) {
       this.repairIfInvalid(entity);
+      if (entity.body.isStatic) continue;
       const velocity = Body.getVelocity(entity.body);
       if (
         Math.hypot(velocity.x, velocity.y) > balance.physics.maxVelocity ||
@@ -158,7 +165,10 @@ export class PhysicsWorld {
         Body.setVelocity(entity.body, clampVector(velocity, balance.physics.maxVelocity));
       this.accelerate(
         entity,
-        this.gravity.sample(entity.body.position, entity.definition.gravityResponse),
+        this.gravity.sample(
+          entity.body.position,
+          entity.definition.gravityResponse * entity.gravityScale,
+        ),
       );
       const acceleration = clampVector(
         { x: entity.body.force.x / entity.body.mass, y: entity.body.force.y / entity.body.mass },
@@ -209,6 +219,7 @@ export class PhysicsWorld {
       frictionAir: definition.frictionAir,
       friction: 0.05,
       label: kind,
+      collisionFilter: { category: 2 },
     };
     const body =
       definition.shape === 'rectangle' && 'width' in definition

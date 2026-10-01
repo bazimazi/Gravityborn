@@ -8,6 +8,7 @@ export interface GameEvents {
   damaged: { position: Vec2; amount: number; player: boolean };
   killed: { position: Vec2; kind: string; chainId: number | null; chainLength: number };
   ended: { won: boolean };
+  abilityUsed: { id: string; tags: string[]; position: Vec2; level: number };
 }
 
 /** Simulation emits facts. Presentation subscribes without owning gameplay. */
