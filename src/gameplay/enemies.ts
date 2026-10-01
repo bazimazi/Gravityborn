@@ -1,4 +1,4 @@
-import Matter from 'matter-js';
+﻿import Matter from 'matter-js';
 import { enemyDefinitions, type EliteModifier } from '../content/enemies';
 import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import type { AbilityHost } from './abilities';
@@ -16,6 +16,7 @@ interface EnemyState {
   initialized: boolean;
   carrier?: Entity;
   target?: Entity;
+  targetGeneration?: number;
   lastDirection: Vec2;
 }
 
@@ -56,7 +57,12 @@ export class EnemySystem {
     const distance = length(delta);
     const ready = this.host.time >= state.next;
     entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / tuning.telegraph);
-    if (entity.kind === 'railgunner' && entity.telegraph > 0 && !ready && !entity.attackAim)
+    if (
+      ['railgunner', 'lancer'].includes(entity.kind) &&
+      entity.telegraph > 0 &&
+      !ready &&
+      !entity.attackAim
+    )
       entity.attackAim = { ...this.host.player.body.position };
     const field = (
       mode: GravityField['mode'],
@@ -64,12 +70,15 @@ export class EnemySystem {
       radius: number,
       duration = 1,
       slot = 'aura',
+      affects?: string[],
     ): void => {
       const fieldId = state!.fields.get(slot);
       if (fieldId && this.host.gravity.fields.has(fieldId)) {
         const existing = this.host.gravity.fields.get(fieldId)!;
         this.host.gravity.moveField(existing.id, entity.body.position);
         existing.remaining = duration;
+        existing.strength = strength;
+        existing.direction = { ...toward };
         return;
       }
       if (this.host.gravity.fields.size >= balance.physics.maxFields - 2) return;
@@ -84,6 +93,7 @@ export class EnemySystem {
           radius,
           falloff: 'linear',
           remaining: duration,
+          affects,
         }),
       );
     };
@@ -129,6 +139,104 @@ export class EnemySystem {
     }
     if (entity.kind === 'null_shepherd')
       field('zero', tuning.nullShepherd.strength, tuning.nullShepherd.radius, 1, 'damping');
+    if (entity.kind === 'flux_mite')
+      entity.gravityFactors.set('flux', Math.floor(entity.life / tuning.fluxPeriod) % 2 ? -1 : 1);
+    if (entity.kind === 'magnetic_sentinel')
+      field(
+        'radial',
+        tuning.magneticSentinel.strength *
+          (Math.floor(entity.life / tuning.magneticSentinel.period) % 2 ? -1 : 1),
+        tuning.magneticSentinel.radius,
+        1,
+        'magnetic',
+        ['metal'],
+      );
+    if (entity.kind === 'lancer' && ready) {
+      if (!entity.attackAim) state.next = this.host.time + tuning.telegraph;
+      else {
+        this.host.world.impulse(
+          entity,
+          scale(normalize(subtract(entity.attackAim, entity.body.position)), tuning.lancer.impulse),
+        );
+        this.host.markCause(entity, this.host.createCause('enemy'));
+        entity.attackAim = undefined;
+        state.next = this.host.time + tuning.lancer.cooldown;
+      }
+    }
+    if (entity.kind === 'momentum_broker') {
+      if (entity.telegraph > 0 && !ready && !state.target) {
+        state.target = [...this.host.world.entities.values()]
+          .filter(
+            (candidate) =>
+              candidate.alive &&
+              !candidate.body.isStatic &&
+              candidate.definition.faction === 'neutral' &&
+              !['xp', 'shard'].includes(candidate.kind) &&
+              length(subtract(candidate.body.position, entity.body.position)) <
+                tuning.momentumBroker.radius,
+          )
+          .sort(
+            (a, b) =>
+              length(subtract(a.body.position, entity.body.position)) -
+              length(subtract(b.body.position, entity.body.position)),
+          )[0];
+        state.targetGeneration = state.target?.generation;
+      }
+      const target = state.target;
+      const valid =
+        target?.alive &&
+        target.generation === state.targetGeneration &&
+        !target.body.isStatic &&
+        !entity.body.isStatic &&
+        length(subtract(target.body.position, entity.body.position)) < tuning.momentumBroker.radius;
+      entity.attackAim = valid ? { ...target.body.position } : undefined;
+      if (ready) {
+        if (valid) {
+          const velocity = { ...entity.body.velocity };
+          Matter.Sleeping.set(entity.body, false);
+          Matter.Sleeping.set(target.body, false);
+          Matter.Body.setVelocity(entity.body, target.body.velocity);
+          Matter.Body.setVelocity(target.body, velocity);
+          const chain = this.host.createCause('enemy');
+          this.host.markCause(entity, chain);
+          this.host.markCause(target, chain);
+        }
+        state.target = undefined;
+        state.targetGeneration = undefined;
+        entity.attackAim = undefined;
+        state.next = this.host.time + tuning.momentumBroker.cooldown;
+      }
+    }
+    if (entity.kind === 'cratewright' && ready) {
+      const plates = [...this.host.world.entities.values()].filter(
+        (candidate) =>
+          candidate.alive && candidate.kind === 'metal_plate' && candidate.ownerId === entity.id,
+      );
+      const position = {
+        x: entity.body.position.x + toward.x * tuning.cratewright.offset,
+        y: entity.body.position.y + toward.y * tuning.cratewright.offset,
+      };
+      if (
+        plates.length < tuning.cratewright.limit &&
+        position.x > 65 &&
+        position.y > 65 &&
+        position.x < this.host.room.width - 65 &&
+        position.y < this.host.room.height - 65 &&
+        this.host.world.circleClear(position, 42) &&
+        [...this.host.world.entities.values()].every(
+          (candidate) =>
+            !candidate.alive ||
+            length(subtract(candidate.body.position, position)) > 42 + candidate.definition.radius,
+        )
+      ) {
+        const plate = this.host.world.spawn('metal_plate', position);
+        if (plate) {
+          plate.ownerId = entity.id;
+          Matter.Body.setAngle(plate.body, Math.atan2(toward.y, toward.x) + Math.PI / 2);
+        }
+      }
+      state.next = this.host.time + tuning.cratewright.cooldown;
+    }
     if (entity.kind === 'railgunner') {
       if (distance < tuning.railgunner.range)
         this.host.world.accelerate(entity, scale(toward, -2 * tuning.acceleration));
@@ -317,6 +425,26 @@ export class EnemySystem {
   }
 
   onDeath(entity: Entity): void {
+    if (entity.kind === 'splitter') {
+      const brood = [...this.host.world.entities.values()].filter(
+        (candidate) => candidate.alive && candidate.kind === 'swarm',
+      ).length;
+      for (let i = 0; i < Math.min(tuning.splitter.count, tuning.summoner.limit - brood); i++) {
+        const position = {
+          x: Math.max(
+            65,
+            Math.min(
+              this.host.room.width - 65,
+              entity.body.position.x + (i ? 1 : -1) * tuning.splitter.offset,
+            ),
+          ),
+          y: Math.max(65, Math.min(this.host.room.height - 65, entity.body.position.y)),
+        };
+        if (!this.host.world.circleClear(position, 11)) continue;
+        const child = this.host.world.spawn('swarm', position);
+        if (child) child.invulnerability = balance.enemies.spawnProtection;
+      }
+    }
     for (const source of this.host.gravity.fields.values())
       if (source.source === `enemy:${entity.id}`) this.host.gravity.removeField(source.id);
     const state = this.states.get(entity.id);

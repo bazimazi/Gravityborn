@@ -41,6 +41,12 @@ export const eliteCompatibility: Record<VariantKind, readonly EliteModifier[]> =
   railgunner: ['heavy', 'inverted', 'orbital'],
   null_shepherd: ['heavy', 'inverted', 'reflector'],
   salvager: ['heavy', 'inverted', 'orbital'],
+  lancer: ['heavy', 'inverted', 'unstable'],
+  flux_mite: ['heavy', 'orbital', 'reflector'],
+  splitter: ['heavy', 'inverted', 'orbital'],
+  magnetic_sentinel: ['heavy', 'inverted', 'orbital'],
+  momentum_broker: ['heavy', 'inverted', 'reflector'],
+  cratewright: ['heavy', 'inverted', 'vampire'],
 };
 const descriptions: Record<EliteModifier, string> = {
   heavy: 'Five times the mass changes how impacts and impulses move this enemy.',

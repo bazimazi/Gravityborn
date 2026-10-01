@@ -746,7 +746,10 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText('FRACTURED SEAL', x, y - radius - 14);
     }
-    if ([...entity.gravityFactors.keys()].some((key) => key.startsWith('response:'))) {
+    if (
+      entity.kind === 'flux_mite' ||
+      [...entity.gravityFactors.keys()].some((key) => key.startsWith('response:'))
+    ) {
       const response = entity.gravityScale * entity.definition.gravityResponse;
       ctx.strokeStyle = this.settings.highContrast
         ? '#ffffff'

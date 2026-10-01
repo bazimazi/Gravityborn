@@ -30,6 +30,12 @@ export const enemyDefinitions = {
   railgunner: enemy('Rail Warden', 4, 90, 23, '#f5c283', ['Projectile', 'Control']),
   null_shepherd: enemy('Null Shepherd', 5, 85, 24, '#bcbcf4', ['Void', 'Support'], 0.3),
   salvager: enemy('Salvager', 3, 95, 22, '#e4ba85', ['Mass', 'Support']),
+  lancer: enemy('Momentum Lancer', 3, 70, 20, '#f29aaa', ['Velocity', 'Impact']),
+  flux_mite: enemy('Flux Mite', 0.7, 35, 14, '#d4b6ff', ['Gravity', 'Chaos']),
+  splitter: enemy('Brood Husk', 4, 80, 25, '#b4cf91', ['Mass', 'Support']),
+  magnetic_sentinel: enemy('Magnetic Sentinel', 6, 95, 25, '#e1acc6', ['Gravity', 'Metal']),
+  momentum_broker: enemy('Momentum Broker', 3, 80, 22, '#90d6ee', ['Velocity', 'Control']),
+  cratewright: enemy('Barricade Weaver', 5, 110, 25, '#d7bc91', ['Machine', 'Defense']),
 } as const;
 export type SpecialEnemy = keyof typeof enemyDefinitions;
 export const eliteModifiers = [
@@ -60,6 +66,12 @@ export const enemyGlyphs: Record<SpecialEnemy, string> = {
   railgunner: 'R',
   null_shepherd: 'N',
   salvager: 'C',
+  lancer: '»',
+  flux_mite: '±',
+  splitter: 'B',
+  magnetic_sentinel: 'M',
+  momentum_broker: '⇄',
+  cratewright: 'W',
 };
 export const enemyDescriptions: Partial<
   Record<SpecialEnemy | 'chaser' | 'shooter' | 'heavy', string>
@@ -88,6 +100,18 @@ export const enemyDescriptions: Partial<
     'Carries a gravity-damping aura that protects nearby matter from force manipulation. Destroy it to restore full gravity.',
   salvager:
     'Consumes nearby destructible props and machines to repair itself. Deny its scrap supply; explosive scrap can backfire.',
+  lancer:
+    'Locks your position before launching its own body. Sidestep the warning line and let its momentum carry it into matter.',
+  flux_mite:
+    'Alternates its gravity response between normal and inverted while remaining solid. Time a flip for its current polarity.',
+  splitter:
+    'Releases two swarm motes when broken, if space allows. Save a repulsion pulse for the brood.',
+  magnetic_sentinel:
+    'Alternates attraction and repulsion of metal. Stone ammunition ignores its magnetic aura.',
+  momentum_broker:
+    'Marks nearby loose matter, then swaps velocity with it. Remove the marked prop or move beyond its reach before the exchange.',
+  cratewright:
+    'Builds up to three movable metal barricades in open space. Turn its own plates into ammunition.',
 };
 export const entityDefinitions = {
   ...base,

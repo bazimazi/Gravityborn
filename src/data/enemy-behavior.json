@@ -1,6 +1,12 @@
 {
   "heavyMultiplier": 5,
   "initialDelay": 1.2,
+  "lancer": { "impulse": 13, "cooldown": 3.2 },
+  "fluxPeriod": 1.5,
+  "splitter": { "count": 2, "offset": 38 },
+  "magneticSentinel": { "strength": 0.006, "radius": 250, "period": 3 },
+  "momentumBroker": { "radius": 240, "cooldown": 4 },
+  "cratewright": { "limit": 3, "offset": 110, "cooldown": 5 },
   "railgunner": { "range": 320, "ammoRadius": 240, "impulse": 16, "cooldown": 3.5 },
   "nullShepherd": { "radius": 200, "strength": 1 },
   "salvager": { "radius": 120, "damage": 85, "repair": 18, "cooldown": 2.5 },
