@@ -212,6 +212,9 @@ export class Game {
   castAbility(id: string, position: Vec2): boolean {
     return this.state === 'playing' && this.abilities.cast(id, position);
   }
+  get directionLocked(): boolean {
+    return this.rules.directionLocked;
+  }
   createCause(source = 'environment'): number {
     return this.chains.start(this.time, source);
   }
@@ -672,7 +675,7 @@ export class Game {
         this.time - target.lastImpact < balance.combat.impactCooldown
       )
         continue;
-      const mass = attacker && attacker.kind !== 'player' ? attacker.body.mass : target.body.mass;
+      const mass = attacker && !attacker.body.isStatic ? attacker.body.mass : target.body.mass;
       const damage = Math.min(
         balance.combat.maxDamage,
         mass *

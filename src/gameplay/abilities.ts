@@ -12,6 +12,7 @@ export interface AbilityHost {
   gravity: GravitySystem;
   player: Entity;
   time: number;
+  readonly directionLocked: boolean;
   events: EventBus;
   createCause(source?: string): number;
   markCause(entity: Entity, id: number, depth?: number): void;
@@ -113,6 +114,7 @@ export class AbilitySystem {
     if (
       !definition ||
       !level ||
+      (this.host.directionLocked && ['reverse', 'rotate'].includes(definition.effect)) ||
       (!repeated && (this.cooldowns.get(id) ?? 0) > 0) ||
       !Number.isFinite(target.x + target.y)
     )

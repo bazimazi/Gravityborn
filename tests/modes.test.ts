@@ -39,6 +39,36 @@ function progress(run: Expedition): void {
       run.game.step();
   }
 }
+it('Anchored Charter rejects global-direction powers without spending resources or starting chains', () => {
+  const game = new Game(false);
+  game.world.spawn('heavy', { x: 900, y: 350 });
+  game.rules.configure('anchored', '', 'locked', 0);
+  game.start();
+  let casts = 0;
+  let chains = 0;
+  game.events.on('abilityUsed', () => casts++);
+  const originalCause = game.createCause.bind(game);
+  game.createCause = (source) => {
+    chains++;
+    return originalCause(source);
+  };
+  for (const id of ['reverse', 'rotate']) {
+    game.abilities.learn(id);
+    expect(game.castAbility(id, { x: 600, y: 350 })).toBe(false);
+    expect(game.abilities.cast(id, { x: 600, y: 350 }, true)).toBe(false);
+    expect(game.abilities.cooldowns.has(id)).toBe(false);
+  }
+  expect(game.abilities.energy).toBe(100);
+  expect(casts).toBe(0);
+  expect(chains).toBe(0);
+  expect(game.createWell({ x: 600, y: 350 })).toBe(true);
+  game.rules.configure('free', '', 'none', 0);
+  expect(game.castAbility('rotate', { x: 600, y: 350 })).toBe(true);
+  game.step();
+  game.step();
+  expect(game.gravity.direction.x).not.toBe(0);
+  game.world.dispose();
+});
 for (const [mode, count] of [
   ['quick', 7],
   ['boss_rush', 10],

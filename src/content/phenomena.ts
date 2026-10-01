@@ -51,7 +51,8 @@ export const contracts = [
   {
     id: 'locked',
     name: 'Anchored Charter',
-    description: 'Manual gravity direction controls are disabled. +100% room currency.',
+    description:
+      'Gravity direction controls, Reversal and Rotation powers are disabled. +100% room currency.',
     reward: 2,
   },
   {

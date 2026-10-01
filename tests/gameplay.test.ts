@@ -5,6 +5,29 @@ import { ChainTracker } from '../src/gameplay/chains';
 import balance from '../src/data/balance.json';
 
 describe('gravity combat', () => {
+  it('scales a core collision with the core mass instead of the victim mass', () => {
+    const strike = (mass: number): number => {
+      const game = new Game(false);
+      const target = game.world.spawn('heavy', { x: 640, y: 350 })!;
+      target.health = 1000;
+      target.maxHealth = 1000;
+      Matter.Body.setPosition(game.player.body, { x: 590, y: 350 });
+      Matter.Body.setMass(game.player.body, mass);
+      game.player.invulnerability = 10;
+      game.gravity.strength = 0;
+      game.start();
+      game.markCause(game.player, game.createCause('slingshot'));
+      Matter.Body.setVelocity(game.player.body, { x: 9, y: 0 });
+      for (let step = 0; step < 20 && target.health === 1000; step++) game.step();
+      const damage = 1000 - target.health;
+      game.world.dispose();
+      return damage;
+    };
+    const light = strike(1);
+    const heavy = strike(3);
+    expect(light).toBeGreaterThan(0);
+    expect(heavy / light).toBeCloseTo(3, 1);
+  });
   it('kills enemies through wall impacts after a gravity flip without an attack', () => {
     const game = new Game(false);
     const enemy = game.world.spawn('chaser', { x: 1100, y: 360 })!;
