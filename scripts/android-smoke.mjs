@@ -3,6 +3,8 @@ import { writeFile } from 'node:fs/promises';
 const devices = await android.devices();
 const device = devices.find((device) => device.serial() === 'emulator-5556');
 if (!device) throw new Error('Expected isolated emulator-5556. No physical devices will be used.');
+await device.shell('input keyevent 224');
+await device.shell('wm dismiss-keyguard');
 const webview = await device.webView({ pkg: 'com.bazimazi.gravityborn' });
 const page = await webview.page();
 const errors = [];
@@ -11,6 +13,22 @@ await expect(page.getByRole('button', { name: /Enter the chamber/ })).toBeVisibl
 await page.getByRole('button', { name: 'Settings', exact: true }).click();
 await page.getByLabel('Reduced flashing').check();
 await page.getByRole('button', { name: 'Close settings' }).click();
+await page.getByRole('button', { name: 'Progression hub' }).click();
+await page.locator('#run-archive summary').click();
+await page.locator('#ghost-enabled').uncheck();
+await page.getByRole('button', { name: 'Export save', exact: true }).click();
+await expect
+  .poll(async () => (await device.shell('dumpsys activity activities')).toString())
+  .toContain('ChooserActivity');
+const exported = JSON.parse(
+  (
+    await device.shell('run-as com.bazimazi.gravityborn cat cache/gravityborn-save.json')
+  ).toString(),
+);
+if (exported.version !== 2 || !exported.payload.profile)
+  throw new Error('Native JSON export was not written');
+await device.shell('input keyevent 4');
+await page.getByRole('button', { name: 'Close progression' }).click();
 await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
 await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
 await page.locator('[data-room]:enabled').click();
@@ -18,7 +36,7 @@ await page.getByRole('button', { name: 'Gravity left', exact: true }).click();
 await expect(page.locator('#gravity-name')).toHaveText('LEFT');
 await expect(page.locator('#timer')).not.toHaveText('00:00');
 await page.getByRole('button', { name: 'Pause game', exact: true }).click();
-await page.screenshot({ path: 'artifacts/android-native.png' });
+await device.screenshot({ path: 'artifacts/android-native.png' });
 await device.shell('am force-stop com.bazimazi.gravityborn');
 await device.shell('am start -n com.bazimazi.gravityborn/.MainActivity');
 const resumed = await (await device.webView({ pkg: 'com.bazimazi.gravityborn' })).page();
@@ -26,6 +44,8 @@ await resumed.getByRole('button', { name: 'Settings', exact: true }).click();
 await expect(resumed.getByLabel('Reduced flashing')).toBeChecked();
 await resumed.getByRole('button', { name: 'Close settings' }).click();
 await resumed.getByRole('button', { name: 'Progression hub' }).click();
+await resumed.locator('#run-archive summary').click();
+await expect(resumed.locator('#ghost-enabled')).not.toBeChecked();
 await expect(resumed.locator('[data-run-action="resume"]')).toBeEnabled();
 await resumed.locator('[data-run-action="resume"]').click();
 await expect(resumed.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
@@ -44,6 +64,9 @@ await writeFile(
         'process termination',
         'native settings persistence',
         'route checkpoint recovery',
+        'native JSON file export',
+        'OS share chooser and cancellation',
+        'native archive setting persistence',
       ],
     },
     null,

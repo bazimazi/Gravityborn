@@ -46,6 +46,7 @@ import { cosmeticById } from './content/cosmetics';
 import { challenges } from './content/challenges';
 import { RunArchive } from './progression/archive';
 import { archiveView } from './presentation/archive';
+import { exportJson } from './core/export';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -245,6 +246,11 @@ function renderProfile(): void {
     toast('Shared run imported. Its rules and build are ready to inspect.');
   };
 }
+function downloadJson(filename: string, data: string): void {
+  void exportJson(filename, data).catch(() =>
+    toast('The export could not be opened. Please try again.'),
+  );
+}
 element('#profile-open').onclick = () => {
   renderProfile();
   openDialog('#profile-dialog');
@@ -381,14 +387,7 @@ document.addEventListener('click', (event) => {
       archiveSelection = '';
       renderProfile();
     } else if (report && button.dataset.runAction === 'archive-export') {
-      const url = URL.createObjectURL(
-        new Blob([archive.export(report.id)!], { type: 'application/json' }),
-      );
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'gravityborn-run.json';
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      downloadJson('gravityborn-run.json', archive.export(report.id)!);
     } else if (report && button.dataset.runAction === 'archive-prepare') {
       const recipe = report.recipe;
       const rotating = recipe.mode === 'daily' || recipe.mode === 'weekly';
@@ -424,36 +423,19 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (button.dataset.runAction === 'export') {
-    const blob = new Blob([saveStore.export({ profile, checkpoint })], {
-      type: 'application/json',
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'gravityborn-save.json';
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadJson('gravityborn-save.json', saveStore.export({ profile, checkpoint }));
     return;
   }
   if (button.dataset.runAction?.startsWith('diagnostics-')) {
     if (button.dataset.runAction === 'diagnostics-export') {
-      const url = URL.createObjectURL(
-        new Blob(
-          [
-            JSON.stringify(
-              { version: 1, game: 'Gravityborn', diagnostics: profile.diagnostics },
-              null,
-              2,
-            ),
-          ],
-          { type: 'application/json' },
+      downloadJson(
+        'gravityborn-diagnostics.json',
+        JSON.stringify(
+          { version: 1, game: 'Gravityborn', diagnostics: profile.diagnostics },
+          null,
+          2,
         ),
       );
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'gravityborn-diagnostics.json';
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } else if (button.dataset.runAction === 'diagnostics-toggle')
       profile.diagnostics.enabled = !profile.diagnostics.enabled;
     else if (button.dataset.runAction === 'diagnostics-clear')
