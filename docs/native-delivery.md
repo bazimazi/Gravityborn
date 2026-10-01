@@ -1,4 +1,4 @@
-# Offline and native delivery
+﻿# Offline and native delivery
 
 The web production build precaches its own HTML, code, styles, icons, and manifest. It has no runtime CDN or account dependency. Updates wait for existing tabs to close so a running expedition keeps one asset version. Development mode deliberately does not install a service worker. Deploy `dist/` at the origin root over HTTPS; localhost supports local verification.
 
@@ -18,10 +18,11 @@ The CLI's Xcode helper uses UUID's compatible CommonJS `v4` API. A scoped overri
 
 ## Remaining release verification
 
-Verified locally on 2026-10-02: `assembleDebug` succeeded with JDK 21 and Android SDK 36, producing a 9,695,103-byte debug APK. An isolated API 36 Pixel 7 emulator installed and launched the APK, played with gravity inputs, paused, survived forced process termination, restored native settings/archive preferences, and recovered the route checkpoint. Native save export produced valid JSON and opened the OS chooser; cancellation returned to play. `scripts/android-smoke.mjs` records these checks and refuses to target physical devices. This validates content through `16a3c57` plus native file exports, not subsequent combat edits or physical hardware performance. APK SHA-256: `28ee141773d161e378b4f96af4e49b310e62fffb8d6b0054d00c238bef6588d2`.
+Verified locally on 2026-10-02: `assembleDebug` succeeded with JDK 21 and Android SDK 36, producing a 9,695,103-byte debug APK. An isolated API 36 Pixel 7 emulator installed and launched the APK, played with gravity inputs, paused, survived forced process termination, restored native settings/archive preferences, and recovered the route checkpoint. Native save export produced valid JSON and opened the OS chooser; cancellation returned to play. `scripts/android-smoke.mjs` records these checks and refuses to target physical devices. This validates replay revision r14 with 50 powers, 50 relics, ten classes, physical tethers, difficulty traps and native file exports. It does not validate physical hardware performance. APK SHA-256: `043ce896c810a1c6f03a7a9fc0c11f5561311a460b542f06e595b3052f25cc28`.
 
 The emulator required a cold boot (`-no-snapshot`) with `-gpu host` for usable visual captures. A restored snapshot under SwiftShader passed interaction checks but captured a black frame; changing that snapshot to ANGLE failed to boot. The cold-boot run passed the complete smoke script and produced a reviewed pause-screen capture. Emulator frame rates are not device performance evidence.
 
 Generated projects and passing browser tests do not establish native performance, safe-area behavior, OS lifecycle reliability, native save durability, physical haptics, or store approval. Test an installed build on low/mid/high Android hardware and iPhone/iPad in both orientations, including background/foreground, process termination, audio interruption, airplane-mode launch, save migration, sustained thermal load, and 30/60 FPS. Signing, store accounts, and distribution are separate from local development and have not been performed.
 
 Implementation follows the official [Capacitor installation workflow](https://capacitorjs.com/docs/getting-started), [environment requirements](https://capacitorjs.com/docs/getting-started/environment-setup), and [Preferences persistence/privacy guidance](https://capacitorjs.com/docs/apis/preferences).
+

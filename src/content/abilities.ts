@@ -1,4 +1,5 @@
 import { advancedAbilities } from './advanced-abilities';
+import { specialistAbilities } from './specialist-abilities';
 
 export type EffectKind =
   | 'response'
@@ -44,6 +45,7 @@ export interface AbilityDefinition {
     falloff?: 'constant' | 'linear' | 'inverseSquare';
     travelSpeed?: number;
     tetherLength?: number;
+    selfOnly?: boolean;
   };
   feedback?: {
     color?: string;
@@ -424,6 +426,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'binary',
+    evolution: 'solar_system',
     parameters: { planetCount: 2 },
     rarity: 'legendary',
     name: 'Binary System',
@@ -440,6 +443,7 @@ export const abilities: AbilityDefinition[] = [
     maxLevel: 3,
   },
   ...advancedAbilities,
+  ...specialistAbilities,
 ];
 
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));

@@ -7,6 +7,7 @@ interface Chain {
   effects: Set<string>;
   source: string;
   created: number;
+  tags: readonly string[];
 }
 export class ChainTracker {
   private nextId = 1;
@@ -15,7 +16,7 @@ export class ChainTracker {
   current = 0;
   constructor(private readonly events?: EventBus) {}
 
-  start(time: number, source = 'environment'): number {
+  start(time: number, source = 'environment', tags: readonly string[] = []): number {
     const id = this.nextId++;
     this.chains.set(id, {
       id,
@@ -23,6 +24,7 @@ export class ChainTracker {
       effects: new Set(),
       source,
       created: time,
+      tags: [...tags],
     });
     this.events?.emit('chainStarted', { id, source });
     return id;
@@ -62,6 +64,9 @@ export class ChainTracker {
   }
   source(id: number | null): string {
     return id === null ? 'environment' : (this.chains.get(id)?.source ?? 'environment');
+  }
+  tags(id: number | null): readonly string[] {
+    return id === null ? [] : (this.chains.get(id)?.tags ?? []);
   }
   touch(id: number, time: number): void {
     const chain = this.chains.get(id);

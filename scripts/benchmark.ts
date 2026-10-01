@@ -91,6 +91,10 @@ for (let index = 0; index < balance.physics.maxFields; index++)
     true,
   );
 saturated.start();
+saturated.abilities.learn('constellation');
+for (let index = 0; index < 4; index++)
+  if (!saturated.abilities.cast('constellation', { x: 600, y: 400 }, true))
+    throw new Error('Could not populate tether stress case');
 const fullTimings: number[] = [];
 for (let step = 0; step < 480; step++) {
   const start = performance.now();
@@ -103,6 +107,7 @@ console.log(
     stage: 'full-gameplay-field-attribution',
     bodies: saturated.world.entities.size,
     fields: saturated.gravity.fields.size,
+    tethers: saturated.abilities.tethers.length,
     p95Ms: +fullTimings[Math.floor(fullTimings.length * 0.95)].toFixed(3),
     budgetMs: +balance.physics.stepMs.toFixed(3),
   }),

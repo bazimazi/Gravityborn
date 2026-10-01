@@ -1,4 +1,4 @@
-import Matter from 'matter-js';
+﻿import Matter from 'matter-js';
 import arena from '../data/arena.json';
 import balance from '../data/balance.json';
 import { EventBus } from '../core/events';
@@ -69,7 +69,7 @@ export class Game {
   move: Vec2 = { x: 0, y: 0 };
   stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
   private readonly explosions: { entity: Entity; cause: Cause }[] = [];
-  private readonly wellChains = new Map<number, number>();
+  private readonly fieldChains = new Map<number, number>();
   private readonly launched = new Map<number, number>();
   private nextWellCompression = 0;
   private readonly echoes: { id: string; position: Vec2; time: number }[] = [];
@@ -144,8 +144,11 @@ export class Game {
         this.gravity.fields.size < 48 &&
         (rule.effect !== 'horizon' || this.player.health < this.maxHealth * 0.35)
       ) {
-        const cause = this.createCause('relic');
-        this.gravity.addField({
+        const cause = this.createCause('relic', [
+          'Gravity',
+          ...(rule.effect === 'orbit' ? ['Orbit'] : []),
+        ]);
+        const fieldId = this.gravity.addField({
           source: 'relic',
           mode:
             rule.effect === 'orbit'
@@ -160,10 +163,18 @@ export class Game {
           falloff: 'linear',
           remaining: rule.effect === 'afterimage' ? 3 : 1.1,
         });
+        this.fieldChains.set(fieldId, cause);
         for (const entity of this.world.entities.values())
           if (
             entity.kind !== 'player' &&
-            length(subtract(entity.body.position, this.player.body.position)) < 170
+            !entity.body.isStatic &&
+            this.gravity
+              .influencingFields(
+                entity.body.position,
+                entity.definition.gravityResponse * entity.gravityScale,
+                [entity.definition.material, ...entity.definition.tags],
+              )
+              .has(fieldId)
           ) {
             this.markCause(entity, cause);
             if (entity.kind === 'projectile') entity.redirected = true;
@@ -187,7 +198,7 @@ export class Game {
     );
     this.chains.clear();
     this.explosions.length = 0;
-    this.wellChains.clear();
+    this.fieldChains.clear();
     this.launched.clear();
     this.time = 0;
     this.lastDamage = 'Unknown';
@@ -224,8 +235,11 @@ export class Game {
   get difficulty(): number {
     return this.rules.difficulty;
   }
-  createCause(source = 'environment'): number {
-    return this.chains.start(this.time, source);
+  createCause(
+    source = 'environment',
+    tags: readonly string[] = abilityById.get(source)?.tags ?? [],
+  ): number {
+    return this.chains.start(this.time, source, tags);
   }
   markCause(entity: Entity, id: number, depth = 0): void {
     this.attribute(entity, { id, depth });
@@ -361,7 +375,7 @@ export class Game {
         falloff: 'linear',
         remaining: modifiers.evaluate('duration', balance.gravity.wellDuration, tags),
       });
-      this.wellChains.set(fieldId, chain);
+      this.fieldChains.set(fieldId, chain);
       for (const entity of this.world.entities.values())
         if (
           !entity.body.isStatic &&
@@ -408,9 +422,9 @@ export class Game {
     const compression = this.abilities.modifiers.evaluate('wellCompression', 0);
     if (compression > 0 && this.time >= this.nextWellCompression) {
       this.nextWellCompression = this.time + balance.gravity.wellCompressionInterval;
-      for (const [id, chain] of this.wellChains) {
+      for (const [id, chain] of this.fieldChains) {
         const field = this.gravity.fields.get(id);
-        if (!field) continue;
+        if (!field || field.source !== 'player-well') continue;
         for (const entity of [...this.world.entities.values()])
           if (
             entity.definition.faction === 'enemy' &&
@@ -427,8 +441,8 @@ export class Game {
       this.stats.zeroSeconds += dt;
     this.wellCooldown = Math.max(0, this.wellCooldown - dt);
     this.gravity.tick(dt);
-    for (const id of this.wellChains.keys())
-      if (!this.gravity.fields.has(id)) this.wellChains.delete(id);
+    for (const id of this.fieldChains.keys())
+      if (!this.gravity.fields.has(id)) this.fieldChains.delete(id);
     this.chains.tick(this.time);
     for (const id of this.launched.keys())
       if (!this.world.entities.has(id)) this.launched.delete(id);
@@ -462,7 +476,7 @@ export class Game {
       }
       for (const field of this.gravity.fields.values()) {
         if (
-          field.source === 'player-well' &&
+          this.fieldChains.has(field.id) &&
           !entity.body.isStatic &&
           entity.definition.gravityResponse * entity.gravityScale !== 0 &&
           length(subtract(entity.body.position, field.position)) < field.radius &&
@@ -476,7 +490,7 @@ export class Game {
         ) {
           if (entity.kind === 'projectile') entity.redirected = true;
           if (entity.chainId === null)
-            this.attribute(entity, { id: this.wellChains.get(field.id) ?? null, depth: 0 });
+            this.attribute(entity, { id: this.fieldChains.get(field.id) ?? null, depth: 0 });
         }
       }
       if (entity.kind === 'projectile') {
@@ -708,7 +722,7 @@ export class Game {
       target.lastImpact = this.time;
       const source = this.chains.source(cause.id);
       const tags = ['Impact', 'Velocity'];
-      const sourceTags = abilityById.get(source)?.tags ?? [];
+      const sourceTags = [...this.chains.tags(cause.id), ...(abilityById.get(source)?.tags ?? [])];
       if (sourceTags.includes('Orbit') || sourceTags.includes('Orbital'))
         tags.push('Orbital', 'Orbit');
       if (sourceTags.includes('Void')) tags.push('Void');

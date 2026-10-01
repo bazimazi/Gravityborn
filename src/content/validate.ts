@@ -230,6 +230,12 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (p?.selfOnly !== undefined)
+      check(
+        typeof p.selfOnly === 'boolean' && item.effect === 'response' && item.target === 'player',
+        'parameters.selfOnly',
+        'Self-only effects must be player-targeted response powers.',
+      );
     if (p?.travelSpeed !== undefined)
       check(
         item.effect === 'field' && isNumber(p.travelSpeed, 1, 800),

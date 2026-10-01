@@ -189,7 +189,11 @@ export class AbilitySystem {
     );
     const targets = this.near(point, radius, parameters.affects);
     const responseTargets =
-      definition.effect === 'response' ? targets.filter((entity) => !entity.body.isStatic) : [];
+      definition.effect === 'response'
+        ? (parameters.selfOnly ? [this.host.player] : targets).filter(
+            (entity) => !entity.body.isStatic,
+          )
+        : [];
     if (definition.effect === 'response' && !responseTargets.length) return false;
     const tetherTargets =
       definition.effect === 'tether'
