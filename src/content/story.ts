@@ -63,6 +63,40 @@ export const story = [
     memory: 'Memory 08: You are not the last Gravityborn. You are the first one who can leave.',
   },
 ] as const;
+export const secretLore = [
+  {
+    name: 'The maintenance passage',
+    text: 'Behind the foundry seal, a worker left a calibration mark: every locked door has a direction in which it is already open.',
+  },
+  {
+    name: 'The first resonance',
+    text: 'A crystal preserves an argument between two architects. One wanted a perfect center. The other wanted every traveler to carry one.',
+  },
+  {
+    name: 'Weight of the survivors',
+    text: 'The dead planet’s vault lists no kings or weapons. Its last inventory counts shelters, gardens, and the mass required to keep them together.',
+  },
+  {
+    name: 'An unsent course',
+    text: 'The station kept an evacuation route hidden from its own guardian. It leads toward the broken worlds, where the missing passengers chose to rebuild.',
+  },
+  {
+    name: 'A horizon with a hinge',
+    text: 'Inside the singularity, the sealed archive has two exits occupying the same point. The old intelligence calls this its first act of mercy.',
+  },
+  {
+    name: 'Experiment zero',
+    text: 'Your earliest recording contains no orders. A researcher asks what you want to hold, then waits while you learn to answer.',
+  },
+  {
+    name: 'The gardener’s orbit',
+    text: 'The drifting islands are connected by seeds. Each carries enough gravity to find another patch of earth, and enough freedom to leave it.',
+  },
+  {
+    name: 'The unfinished map',
+    text: 'The vault contains a map with its final boundary erased. The Gravityborn who drew it expected a future traveler to choose what came next.',
+  },
+] as const;
 export const planets = biomes.map((biome, index) => ({
   id: `planet:${index}`,
   name: [

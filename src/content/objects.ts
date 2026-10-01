@@ -23,6 +23,7 @@ function object(
   };
 }
 export const objectDefinitions = {
+  rift_seal: object('Rift Seal', 'gravity', 24, 42, '#d9c3ff', ['Gravity', 'Environmental'], 0),
   crystal: object(
     'Gravity Crystal',
     'crystal',

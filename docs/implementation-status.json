@@ -240,17 +240,16 @@
     {
       "section": 20,
       "title": "Exploration",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
+        "src/content/rooms.ts",
+        "src/content/story.ts",
         "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
+        "src/presentation/expedition.ts",
+        "tests/exploration.test.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Hidden vault routes are revealed through destructible physical seals; optional elite encounters award rare relics and eight authored lore entries. Automated discovery, checkpoint, reward and route reachability checks pass. Human discoverability and reward tuning remain open."
     },
     {
       "section": 21,

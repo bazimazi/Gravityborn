@@ -24,7 +24,7 @@ it('generates stable branching routes with a reachable boss and mandatory shop r
   }
 });
 it('authored compositions keep every entity clear of walls at spawn', () => {
-  const types: RoomType[] = ['combat', 'elite', 'challenge', 'puzzle', 'shop', 'boss'];
+  const types: RoomType[] = ['combat', 'elite', 'challenge', 'puzzle', 'shop', 'boss', 'secret'];
   for (let seed = 0; seed < 64; seed++) {
     const room = buildRoom(String(seed), 'test', types[seed % types.length], seed % biomes.length);
     const game = new Game(false);

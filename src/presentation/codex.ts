@@ -4,7 +4,7 @@ import { bossDefinitions, bossDescriptions, type BossKind } from '../content/bos
 import { relics } from '../content/relics';
 import { equipment } from '../content/equipment';
 import { phenomena } from '../content/phenomena';
-import { planets, story } from '../content/story';
+import { planets, story, secretLore } from '../content/story';
 import { challenges } from '../content/challenges';
 import { challengeProgress } from '../progression/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
@@ -100,6 +100,14 @@ export function codexView(profile: Profile): string {
         name: `Act ${chapter.act} · ${chapter.title}`,
         text: `${chapter.intro} ${chapter.memory}`,
         known: known(`lore:${index}`),
+      })),
+    },
+    {
+      name: 'Hidden Archives',
+      entries: secretLore.map((entry, index) => ({
+        ...entry,
+        id: `lore:secret:${index}`,
+        known: known(`lore:secret:${index}`),
       })),
     },
     {

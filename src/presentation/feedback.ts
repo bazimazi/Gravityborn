@@ -75,6 +75,8 @@ export class Feedback {
       this.burst(event.position, '#b5a0ff', 12, 110);
     });
     events.on('killed', (event) => {
+      if (event.kind === 'rift_seal')
+        this.label(event.position, 'HIDDEN ROUTE REVEALED', '#d9c3ff');
       this.burst(event.position, event.kind === 'barrel' ? '#ffb978' : '#f9adc0', 18, 110);
       if (event.chainLength > 1)
         this.label(event.position, `${event.chainLength}× CHAIN`, '#c9baff');

@@ -477,6 +477,7 @@ export class Renderer {
               ice: '❄',
               void_matter: 'V',
               magnet: 'M',
+              rift_seal: '⋈',
             } as Record<string, string>
           )[entity.kind] ?? '•',
           0,
@@ -525,6 +526,12 @@ export class Renderer {
       }
     }
     ctx.restore();
+    if (entity.kind === 'rift_seal') {
+      ctx.fillStyle = '#d9c3ff';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('FRACTURED SEAL', x, y - radius - 14);
+    }
     if (game.materials.isBurning(entity)) {
       ctx.strokeStyle = '#ffb978';
       ctx.lineWidth = 2;

@@ -30,7 +30,7 @@ export function expeditionView(run: Expedition): string {
       { length: Math.max(...run.map.map((node) => node.row)) + 1 },
       (_, row) =>
         `<div class="map-row"><span class="mono">${row + 1}</span>${run.map
-          .filter((node) => node.row === row)
+          .filter((node) => node.row === row && run.isRevealed(node))
           .map(
             (node) =>
               `<button data-room="${node.id}" class="map-node ${node.visited ? 'visited' : ''}" ${run.available.some((candidate) => candidate.id === node.id) ? '' : 'disabled'}>${node.visited ? '✓ ' : ''}${node.type.toUpperCase()}</button>`,

@@ -242,6 +242,7 @@ export class PhysicsWorld {
             )
           : Bodies.circle(position.x, position.y, definition.radius, options);
     Body.setMass(body, definition.mass);
+    if (kind === 'rift_seal') Body.setStatic(body, true);
     if (kind === 'player') Body.setInertia(body, Infinity);
     return body;
   }

@@ -227,6 +227,26 @@ export function buildRoom(
   ];
   room.spawns.push({ kind: props[biome], x: 1050, y: 100 });
   room.spawns.push({ kind: biome % 2 ? 'ice' : 'energy_cell', x: 150, y: 650 });
+  if (['combat', 'elite', 'challenge'].includes(type))
+    room.spawns.push({ kind: 'rift_seal', x: 1080, y: 200 });
+  if (type === 'secret') {
+    room.name = `${region.name} · Forgotten Gravity Vault`;
+    room.walls = structuredClone(bounds);
+    room.spawns.push(
+      { kind: 'singularity', x: 900, y: 400, elite: 'heavy' },
+      { kind: 'orbiter', x: 800, y: 600, elite: 'inverted' },
+    );
+    room.fields.push({
+      source: 'environment',
+      mode: 'vortex',
+      position: { x: 650, y: 400 },
+      direction: { x: 0, y: 1 },
+      strength: 0.003,
+      radius: 300,
+      falloff: 'linear',
+      remaining: 36000,
+    });
+  }
   if (type === 'boss') {
     room.spawns.push({
       kind: regionGuardians[biome],

@@ -15,7 +15,7 @@ import { modes, rotatingChallenge, type RunMode } from '../content/modes';
 import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
 import { bossDefinitions, type BossKind } from '../content/bosses';
 import { freshMastery, readMastery, type MasteryProgress } from './mastery';
-import { story } from '../content/story';
+import { story, secretLore } from '../content/story';
 import { abilityById } from '../content/abilities';
 import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
 export interface RunOptions {
@@ -73,6 +73,10 @@ export class Expedition {
         (this.mastery.flip ??= freshMastery()).casts++;
     });
     game.events.on('killed', (event) => {
+      if (this.phase === 'room' && event.kind === 'rift_seal' && !this.discoveries.has(this.secretKey)) {
+        this.discoveries.add(this.secretKey);
+        this.metrics.secretsRevealed = (this.metrics.secretsRevealed ?? 0) + 1;
+      }
       if (this.phase !== 'room' || entityDefinitions[event.kind as EntityKind]?.faction !== 'enemy')
         return;
       this.kills++;
@@ -115,8 +119,16 @@ export class Expedition {
   get available(): MapNode[] {
     return this.map.filter(
       (node) =>
-        !node.visited && (this.current ? this.current.next.includes(node.id) : node.row === 0),
+        !node.visited &&
+        this.isRevealed(node) &&
+        (this.current ? this.current.next.includes(node.id) : node.row === 0),
     );
+  }
+  private get secretKey(): string {
+    return `secret:${this.biome}:${this.depth}`;
+  }
+  isRevealed(node: MapNode): boolean {
+    return node.type !== 'secret' || node.visited || this.discoveries.has(this.secretKey);
   }
   start(
     seed: string,
@@ -248,12 +260,14 @@ export class Expedition {
       Math.min(12, this.difficulty + this.depth),
     );
     if (phenomenon) this.discoveries.add(`phenomenon:${phenomenon}`);
-    if (['combat', 'elite', 'challenge', 'boss', 'puzzle'].includes(node.type)) {
+    if (['combat', 'elite', 'challenge', 'boss', 'puzzle', 'secret'].includes(node.type)) {
       this.phase = 'room';
       this.message =
         node.type === 'puzzle'
           ? 'Move a heavy object onto the mass switch, then reach the exit.'
-          : 'Clear the chamber with gravity.';
+          : node.type === 'secret'
+            ? 'Defeat the vault keepers to recover a rare relic and a hidden memory.'
+            : 'Clear the chamber with gravity.';
       this.game.start();
     } else if (node.type === 'shop') {
       this.phase = 'shop';
@@ -529,8 +543,13 @@ export class Expedition {
     this.build.gainXP(this.current.type === 'boss' ? 100 : 30);
     if (combat) {
       this.message = `Chamber cleared. +${currency} matter shards.`;
-      if (['elite', 'boss', 'puzzle', 'challenge'].includes(this.current.type))
-        this.grantRelic(this.current.type === 'boss');
+      if (['elite', 'boss', 'puzzle', 'challenge', 'secret'].includes(this.current.type))
+        this.grantRelic(['boss', 'secret'].includes(this.current.type));
+      if (this.current.type === 'secret') {
+        this.discoveries.add(`lore:secret:${this.biome}`);
+        this.metrics.vaultsCleared = (this.metrics.vaultsCleared ?? 0) + 1;
+        this.message += ` ${secretLore[this.biome].text}`;
+      }
       if (this.current.type === 'boss') this.message += ` ${story[this.biome].memory}`;
     }
     this.phase = 'reward';
