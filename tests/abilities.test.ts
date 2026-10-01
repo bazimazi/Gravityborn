@@ -80,6 +80,35 @@ describe('physical powers', () => {
     expect(Matter.Body.getVelocity(a.body)).toEqual({ x: -1, y: 3 });
     expect(a.chainId).toBe(b.chainId);
   });
+  it('targeted powers attribute only bodies they actually manipulate', () => {
+    const game = new Game(false);
+    const target = game.world.spawn('crate', { x: 500, y: 470 })!;
+    const partner = game.world.spawn('rock', { x: 550, y: 470 })!;
+    const bystander = game.world.spawn('crate', { x: 590, y: 550 })!;
+    game.abilities.learn('transfer');
+    game.start();
+    game.castAbility('transfer', target.body.position);
+    expect(target.chainId).not.toBeNull();
+    expect(partner.chainId).toBe(target.chainId);
+    expect(bystander.chainId).toBeNull();
+    const other = new Game(false);
+    const onRay = other.world.spawn('crate', { x: 600, y: 470 })!;
+    const offRay = other.world.spawn('crate', { x: 700, y: 570 })!;
+    other.abilities.learn('beam');
+    other.start();
+    other.castAbility('beam', { x: 1000, y: 470 });
+    expect(onRay.chainId).not.toBeNull();
+    expect(offRay.chainId).toBeNull();
+  });
+  it('slingshot attributes the moving core rather than untouched nearby bodies', () => {
+    const game = new Game(false);
+    const nearby = game.world.spawn('crate', { x: 360, y: 470 })!;
+    game.abilities.learn('slingshot');
+    game.start();
+    game.castAbility('slingshot', { x: 600, y: 470 });
+    expect(game.chains.source(game.player.chainId)).toBe('slingshot');
+    expect(nearby.chainId).toBeNull();
+  });
   it('suppresses all field acceleration in zero G while preserving momentum', () => {
     const game = new Game(false);
     game.abilities.learn('zero');

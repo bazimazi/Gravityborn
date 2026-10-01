@@ -184,6 +184,7 @@ export class AbilitySystem {
     if (definition.effect === 'transfer' && transferable.length < 2) return false;
     const chain = this.host.createCause(id);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
+      if (entity.body.isStatic) return;
       this.host.markCause(entity, chain);
       if (entity.kind === 'projectile') entity.redirected = true;
       this.host.world.impulse(entity, scale(direction, power / Math.sqrt(entity.body.mass)));
@@ -271,6 +272,7 @@ export class AbilitySystem {
         }
         break;
       case 'dash': {
+        this.host.markCause(this.host.player, chain);
         const sourceBonus = [...this.host.gravity.fields.values()].some(
           (source) => length(subtract(source.position, this.host.player.body.position)) < radius,
         )
@@ -427,7 +429,6 @@ export class AbilitySystem {
           }
         break;
     }
-    for (const entity of targets) this.host.markCause(entity, chain);
     if (!repeated) this.energy -= cost;
     if (!repeated)
       this.cooldowns.set(
