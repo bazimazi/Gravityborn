@@ -766,6 +766,15 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText(response === 0 ? 'PHASED' : `G ${response.toFixed(1)}×`, x, y + radius + 16);
     }
+    if (entity.massFactors.size && !entity.body.isStatic) {
+      ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#f0cf93';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x - radius - 5, y - radius - 5, (radius + 5) * 2, (radius + 5) * 2);
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`M ${entity.body.mass.toFixed(1)}`, x, y - radius - 12);
+    }
     if (game.materials.isBurning(entity)) {
       ctx.strokeStyle = '#ffb978';
       ctx.lineWidth = 2;

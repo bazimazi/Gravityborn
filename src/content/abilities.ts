@@ -1,7 +1,12 @@
 import { advancedAbilities } from './advanced-abilities';
 import { specialistAbilities } from './specialist-abilities';
+import { kineticAbilities } from './kinetic-abilities';
 
 export type EffectKind =
+  | 'mass'
+  | 'orbit_impulse'
+  | 'vector_turn'
+  | 'steer'
   | 'response'
   | 'tether'
   | 'field'
@@ -444,6 +449,7 @@ export const abilities: AbilityDefinition[] = [
   },
   ...advancedAbilities,
   ...specialistAbilities,
+  ...kineticAbilities,
 ];
 
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));

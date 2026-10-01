@@ -29,6 +29,9 @@ export interface Entity {
   gravityScale: number;
   gravityBase: number;
   gravityFactors: Map<string, number>;
+  massBase: number;
+  massFactors: Map<string, number>;
+  massPending: boolean;
   elite?: EliteModifier;
   telegraph?: number;
   attackAim?: Vec2;
@@ -192,6 +195,9 @@ export class PhysicsWorld {
       redirected: false,
       ownerId: null,
       gravityFactors: new Map<string, number>(),
+      massBase: definition.mass,
+      massFactors: new Map<string, number>(),
+      massPending: false,
       gravityScale: 1,
       elite: undefined,
       telegraph: undefined,
@@ -222,6 +228,26 @@ export class PhysicsWorld {
       x: bounded.x * entity.body.mass,
       y: bounded.y * entity.body.mass,
     });
+  }
+
+  setMass(entity: Entity, mass: number): void {
+    if (!Number.isFinite(mass) || mass <= 0) return;
+    entity.massBase = mass;
+    this.refreshMass(entity);
+  }
+
+  refreshMass(entity: Entity): void {
+    // Static locks keep Matter's original mass; recompute when they become dynamic again.
+    entity.massPending = entity.body.isStatic;
+    if (entity.massPending) return;
+    let mass = entity.massBase;
+    for (const factor of entity.massFactors.values()) mass *= factor;
+    mass = Math.max(0.01, Math.min(500, mass));
+    if (entity.body.mass !== mass) {
+      Body.setMass(entity.body, mass);
+      if (entity.kind === 'player') Body.setInertia(entity.body, Infinity);
+      Sleeping.set(entity.body, false);
+    }
   }
 
   impulse(entity: Entity, velocityChange: Vec2): void {
@@ -261,6 +287,7 @@ export class PhysicsWorld {
     for (const entity of this.entities.values()) {
       this.repairIfInvalid(entity);
       if (entity.body.isStatic) continue;
+      if (entity.massPending) this.refreshMass(entity);
       const velocity = Body.getVelocity(entity.body);
       if (
         Math.hypot(velocity.x, velocity.y) > balance.physics.maxVelocity ||

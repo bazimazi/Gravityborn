@@ -282,8 +282,8 @@ export class RunBuild {
         }),
       );
     }
-    Matter.Body.setMass(
-      this.game.player.body,
+    this.game.world.setMass(
+      this.game.player,
       Math.max(0.1, modifiers.evaluate('mass', this.game.player.definition.mass)),
     );
     Matter.Body.setInertia(this.game.player.body, Infinity);

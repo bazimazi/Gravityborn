@@ -29,7 +29,7 @@ export class EnemySystem {
     if (entity.elite) return;
     entity.elite = modifier;
     if (modifier === 'heavy')
-      Matter.Body.setMass(entity.body, entity.body.mass * tuning.heavyMultiplier);
+      this.host.world.setMass(entity, entity.massBase * tuning.heavyMultiplier);
     if (modifier === 'inverted') entity.gravityScale = -1;
     this.host.events.emit('eliteSpawned', {
       entityId: entity.id,

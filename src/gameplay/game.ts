@@ -2,7 +2,7 @@
 import arena from '../data/arena.json';
 import balance from '../data/balance.json';
 import { EventBus } from '../core/events';
-import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
+import { clampVector, length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import { GravitySystem } from '../physics/gravity';
 import { PhysicsWorld, type CollisionFact, type Entity, type EntityKind } from '../physics/world';
 import { ChainTracker } from './chains';
@@ -118,6 +118,44 @@ export class Game {
     ability?: { id: string; position: Vec2 },
   ): void {
     for (const rule of this.abilities.modifiers.fire(trigger, this.time, tags)) {
+      if (['brake', 'orbitPulse', 'returnShots'].includes(rule.effect)) {
+        let cause: number | undefined;
+        for (const entity of this.world.entities.values()) {
+          if (
+            entity === this.player ||
+            !entity.alive ||
+            entity.body.isStatic ||
+            ['xp', 'shard'].includes(entity.kind) ||
+            (rule.effect === 'returnShots' && entity.kind !== 'projectile')
+          )
+            continue;
+          const delta = subtract(entity.body.position, this.player.body.position);
+          if (length(delta) > balance.abilities.conditionRadius) continue;
+          const before = Matter.Body.getVelocity(entity.body);
+          if (rule.effect === 'orbitPulse') {
+            const radial = normalize(delta);
+            this.world.impulse(
+              entity,
+              scale({ x: -radial.y, y: radial.x }, rule.value / Math.sqrt(entity.body.mass)),
+            );
+          } else {
+            const after = clampVector(scale(before, rule.value), balance.physics.maxVelocity);
+            Matter.Body.setVelocity(entity.body, after);
+            if (length(subtract(after, before)) >= 1e-8) Matter.Sleeping.set(entity.body, false);
+          }
+          if (length(subtract(Matter.Body.getVelocity(entity.body), before)) < 1e-8) continue;
+          cause ??= this.createCause('relic', [
+            'Velocity',
+            ...(rule.effect === 'orbitPulse'
+              ? ['Orbit']
+              : rule.effect === 'returnShots'
+                ? ['Projectile']
+                : ['Control']),
+          ]);
+          this.markCause(entity, cause);
+          if (entity.kind === 'projectile') entity.redirected = true;
+        }
+      }
       if (rule.effect === 'heal')
         this.player.health = Math.min(this.maxHealth, this.player.health + rule.value);
       if (rule.effect === 'energy')
@@ -727,6 +765,7 @@ export class Game {
       if (sourceTags.includes('Orbit') || sourceTags.includes('Orbital'))
         tags.push('Orbital', 'Orbit');
       if (sourceTags.includes('Void')) tags.push('Void');
+      if (sourceTags.includes('Mass')) tags.push('Mass');
       this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
     }

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-for (const power of ['black_hole', 'beacon', 'constellation', 'polarity'])
+for (const power of ['black_hole', 'beacon', 'constellation', 'polarity', 'densify'])
   test(`${power} renders and remains usable with visual accessibility settings`, async ({
     page,
   }, testInfo) => {

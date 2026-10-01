@@ -40,7 +40,7 @@ interface Status {
   entity: Entity;
   generation: number;
   until: number;
-  kind: 'lock' | 'theft' | 'transfer' | 'response';
+  kind: 'lock' | 'theft' | 'transfer' | 'response' | 'mass';
   factor?: string;
 }
 export interface AbilitySnapshot {
@@ -131,6 +131,11 @@ export class AbilitySystem {
     )
       return false;
     const context = this.context();
+    if (
+      definition.effect === 'steer' &&
+      length(subtract(target, this.host.player.body.position)) < 1e-8
+    )
+      return false;
     const cost = Math.max(
       0,
       this.modifiers.evaluate('energyCost', definition.energy, definition.tags, context),
@@ -177,7 +182,11 @@ export class AbilitySystem {
     );
     const strength = this.modifiers.evaluate(
       'strength',
-      definition.strength * factor,
+      definition.effect === 'vector_turn'
+        ? definition.strength
+        : definition.effect === 'mass' && definition.strength < 1
+          ? definition.strength / factor
+          : definition.strength * factor,
       definition.tags,
       context,
     );
@@ -188,13 +197,12 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
-    const responseTargets =
-      definition.effect === 'response'
-        ? (parameters.selfOnly ? [this.host.player] : targets).filter(
-            (entity) => !entity.body.isStatic,
-          )
-        : [];
-    if (definition.effect === 'response' && !responseTargets.length) return false;
+    const responseTargets = ['response', 'mass'].includes(definition.effect)
+      ? (parameters.selfOnly ? [this.host.player] : targets).filter(
+          (entity) => !entity.body.isStatic,
+        )
+      : [];
+    if (['response', 'mass'].includes(definition.effect) && !responseTargets.length) return false;
     const tetherTargets =
       definition.effect === 'tether'
         ? targets
@@ -301,6 +309,59 @@ export class AbilitySystem {
       return fieldId;
     };
     switch (definition.effect) {
+      case 'mass': {
+        const key = `mass:${id}`;
+        for (const entity of responseTargets) {
+          const previous = this.statuses.find(
+            (status) =>
+              status.entity === entity &&
+              status.generation === entity.generation &&
+              status.factor === key,
+          );
+          if (previous) previous.until = this.host.time + duration;
+          else
+            this.statuses.push({
+              entity,
+              generation: entity.generation,
+              until: this.host.time + duration,
+              kind: 'mass',
+              factor: key,
+            });
+          const before = entity.body.mass;
+          entity.massFactors.set(key, Math.max(0.01, Math.min(8, strength)));
+          this.host.world.refreshMass(entity);
+          if (Math.abs(before - entity.body.mass) >= 1e-8) this.host.markCause(entity, chain);
+        }
+        break;
+      }
+      case 'orbit_impulse':
+        for (const entity of targets) {
+          const radial = normalize(subtract(entity.body.position, point));
+          impulse(entity, { x: -radial.y, y: radial.x }, strength, parameters.momentumScale);
+        }
+        break;
+      case 'vector_turn':
+      case 'steer':
+        for (const entity of targets) {
+          if (entity.body.isStatic) continue;
+          const before = Matter.Body.getVelocity(entity.body);
+          const direction =
+            definition.effect === 'steer'
+              ? normalize(subtract(target, this.host.player.body.position))
+              : undefined;
+          const after = direction
+            ? scale(direction, length(before))
+            : {
+                x: before.x * Math.cos(strength) - before.y * Math.sin(strength),
+                y: before.x * Math.sin(strength) + before.y * Math.cos(strength),
+              };
+          if (length(subtract(after, before)) < 1e-8) continue;
+          Matter.Sleeping.set(entity.body, false);
+          Matter.Body.setVelocity(entity.body, after);
+          this.host.markCause(entity, chain);
+          if (entity.kind === 'projectile') entity.redirected = true;
+        }
+        break;
       case 'response': {
         const key = `response:${id}`;
         for (const entity of responseTargets) {
@@ -627,10 +688,14 @@ export class AbilitySystem {
       if (status.until > this.host.time && status.entity.alive) continue;
       if (status.kind === 'lock') {
         Matter.Body.setStatic(status.entity.body, false);
+        this.host.world.refreshMass(status.entity);
         this.resistance.set(status.entity.id, {
           until: this.host.time + balance.abilities.lockResistance,
           generation: status.generation,
         });
+      } else if (status.kind === 'mass') {
+        status.entity.massFactors.delete(status.factor!);
+        this.host.world.refreshMass(status.entity);
       } else status.entity.gravityFactors.delete(status.factor ?? 'theft');
       this.statuses.splice(index, 1);
     }

@@ -1,4 +1,3 @@
-import Matter from 'matter-js';
 import type { Game } from './game';
 import type { Expedition } from '../progression/expedition';
 import { RunBuild } from '../progression/build';
@@ -32,8 +31,8 @@ export class DebugSession {
         priority: 100,
       });
       if (stat === 'mass')
-        Matter.Body.setMass(
-          this.game.player.body,
+        this.game.world.setMass(
+          this.game.player,
           this.game.abilities.modifiers.evaluate('mass', this.game.player.definition.mass),
         );
       if (stat === 'maxHealth')

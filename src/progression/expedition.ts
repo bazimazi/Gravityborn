@@ -103,7 +103,7 @@ export class Expedition {
       if (event.damageTags.includes('Impact'))
         game.events.emit('diagnostic', { event: 'CollisionKills', subject: event.kind });
       if (event.boss) game.events.emit('diagnostic', { event: 'BossKills', subject: event.kind });
-      for (const tag of event.damageTags) {
+      for (const tag of new Set(event.damageTags)) {
         const metric = `${tag.toLowerCase()}Kills`;
         this.metrics[metric] = (this.metrics[metric] ?? 0) + 1;
       }
@@ -433,12 +433,7 @@ export class Expedition {
         this.won = true;
         for (const progress of Object.values(this.mastery))
           if (progress.kills >= Math.max(1, this.kills * 0.5)) progress.wins++;
-        if (
-          Object.entries(this.mastery)
-            .filter(([id]) => abilityById.get(id)?.tags.includes('Orbit'))
-            .reduce((sum, [, progress]) => sum + progress.kills, 0) >=
-          Math.max(1, this.kills * 0.75)
-        )
+        if ((this.metrics.orbitKills ?? 0) >= Math.max(1, this.kills * 0.75))
           this.metrics.orbitalWins = 1;
         this.phase = 'summary';
         this.message = 'The route is liberated. The expedition returns with new knowledge.';

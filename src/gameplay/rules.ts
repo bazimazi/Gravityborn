@@ -1,4 +1,3 @@
-import Matter from 'matter-js';
 import type { AbilityHost } from './abilities';
 import type { Contract, Phenomenon } from '../content/phenomena';
 import { Random } from '../core/random';
@@ -71,7 +70,7 @@ export class RuleSystem {
               ? tuning.heavyContractMass
               : 1);
           if (mass !== 1)
-            Matter.Body.setMass(entity.body, Math.min(tuning.maxMass, entity.body.mass * mass));
+            this.host.world.setMass(entity, Math.min(tuning.maxMass, entity.massBase * mass));
         }
         if (this.activePhenomena.includes('elastic')) entity.body.restitution = tuning.elasticity;
         if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile') {
@@ -96,7 +95,7 @@ export class RuleSystem {
         for (const [index, position] of tuning.planets.positions.entries()) {
           const entity = this.host.world.spawn('rock', position);
           if (!entity) continue;
-          Matter.Body.setMass(entity.body, tuning.planets.mass);
+          this.host.world.setMass(entity, tuning.planets.mass);
           entity.gravityScale = tuning.planets.response;
           this.host.world.impulse(entity, { x: (index % 2 ? -1 : 1) * tuning.planets.speed, y: 0 });
           const field = this.field(

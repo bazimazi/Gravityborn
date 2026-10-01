@@ -1,6 +1,7 @@
 import type { Modifier, TriggerRule } from '../progression/modifiers';
 import { advancedRelics } from './advanced-relics';
 import { specialistRelics } from './specialist-relics';
+import { kineticRelics } from './kinetic-relics';
 export interface RelicDefinition {
   id: string;
   name: string;
@@ -285,6 +286,7 @@ export const relics: RelicDefinition[] = [
   },
   ...advancedRelics,
   ...specialistRelics,
+  ...kineticRelics,
 ];
 export const relicById = new Map(relics.map((relic) => [relic.id, relic]));
 
@@ -298,6 +300,29 @@ export interface SynergyDefinition {
   triggers?: Omit<TriggerRule, 'id'>[];
 }
 export const synergies: SynergyDefinition[] = [
+  {
+    id: 'weighted_orbit',
+    name: 'Weighted Orbit',
+    description:
+      'Densify and Orbital Strike extend Mass effects by 50%. Keep heavy ammunition active through its orbital pass.',
+    requires: ['densify', 'orbital_strike'],
+    modifiers: [{ stat: 'duration', operation: 'multiply', value: 1.5, tags: ['Mass'] }],
+  },
+  {
+    id: 'ricochet_geometry',
+    name: 'Ricochet Geometry',
+    description:
+      'Quarter Turn and Gravity Beam reverse nearby shots on gravity changes, at most once every four seconds.',
+    requires: ['quarter_turn', 'beam'],
+    triggers: [{ trigger: 'OnGravityChange', effect: 'returnShots', value: -1, cooldown: 4 }],
+  },
+  {
+    id: 'light_filament',
+    name: 'Light Filament',
+    description: 'Featherweight and the Tether family reduce Control power energy costs by 20%.',
+    requires: ['featherweight', 'tether'],
+    modifiers: [{ stat: 'energyCost', operation: 'multiply', value: 0.8, tags: ['Control'] }],
+  },
   {
     id: 'tension_wave',
     name: 'Tension Wave',

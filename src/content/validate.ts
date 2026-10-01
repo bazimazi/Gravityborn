@@ -28,6 +28,10 @@ export interface ContentIssue {
   message: string;
 }
 const effects = [
+  'mass',
+  'orbit_impulse',
+  'vector_turn',
+  'steer',
   'response',
   'tether',
   'field',
@@ -208,6 +212,18 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
         'strength',
         'Response effects need a bounded factor, radius and duration.',
       );
+    if (item.effect === 'mass')
+      check(
+        isNumber(item.strength, 0.1, 8) && item.duration > 0 && item.radius > 0,
+        'strength',
+        'Mass effects need a positive bounded factor, radius and duration.',
+      );
+    if (item.effect === 'vector_turn')
+      check(
+        isNumber(item.strength, -Math.PI * 2, Math.PI * 2),
+        'strength',
+        'Velocity turn angle must be within one revolution.',
+      );
     if (item.effect === 'tether')
       check(
         isNumber(item.strength, 0.001, 0.1) &&
@@ -232,9 +248,11 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
     const p = item.parameters;
     if (p?.selfOnly !== undefined)
       check(
-        typeof p.selfOnly === 'boolean' && item.effect === 'response' && item.target === 'player',
+        typeof p.selfOnly === 'boolean' &&
+          ['response', 'mass'].includes(item.effect) &&
+          item.target === 'player',
         'parameters.selfOnly',
-        'Self-only effects must be player-targeted response powers.',
+        'Self-only effects must be player-targeted response or mass powers.',
       );
     if (p?.travelSpeed !== undefined)
       check(
@@ -410,6 +428,9 @@ export function validateContent(): ContentIssue[] {
           'personal',
           'afterimage',
           'horizon',
+          'brake',
+          'orbitPulse',
+          'returnShots',
         ].includes(rule.effect),
         path,
         `Unknown trigger effect ${rule.effect}.`,
@@ -419,6 +440,14 @@ export function validateContent(): ContentIssue[] {
         path,
         'Triggers require a finite value and positive cooldown.',
       );
+      if (['brake', 'returnShots'].includes(rule.effect))
+        check(
+          isNumber(rule.value, -2, 1),
+          path,
+          'Kinetic velocity multipliers must be within -2–1.',
+        );
+      if (rule.effect === 'orbitPulse')
+        check(isNumber(rule.value, -16, 16), path, 'Orbital impulses must be within -16–16.');
     }
   };
   for (const relic of relics) modifiers(`relics.${relic.id}`, relic.modifiers, relic.triggers);

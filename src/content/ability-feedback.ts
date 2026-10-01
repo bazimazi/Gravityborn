@@ -56,6 +56,7 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       };
       break;
     case 'response':
+    case 'mass':
       primary.waveform = 'sine';
       primary.duration = 0.35;
       secondary = { ...primary, start: primary.end, end: primary.start, gain: 0.045, delay: 0.08 };
@@ -73,6 +74,7 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       primary.duration = 0.12;
       break;
     case 'impulse':
+    case 'orbit_impulse':
     case 'burst':
       primary.start = ability.strength < 0 ? 65 : 180;
       primary.end = ability.strength < 0 ? 180 : 45;
@@ -84,6 +86,13 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       primary.waveform = 'square';
       primary.gain = 0.035;
       primary.duration = 0.08;
+      break;
+    case 'vector_turn':
+    case 'steer':
+      primary.start = 300;
+      primary.end = 620;
+      primary.duration = 0.16;
+      secondary = { ...primary, start: 620, end: 300, gain: 0.04, delay: 0.05 };
       break;
     case 'field':
       if (ability.mode === 'zero') {

@@ -274,7 +274,7 @@
         "scripts/expedition-playtest.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Multiwave encounters and all run modes are implemented. The latest twelve input-only quick seeds produced six wins, six defeats and no stalls; successful runs took 43–108 simulated seconds with instant bot decisions. Human pacing/balance validation remains open."
+      "remaining": "Multiwave encounters and all run modes are implemented. The latest twelve input-only quick seeds produced ten wins, two defeats and no stalls; successful runs took 40–131 simulated seconds with instant bot decisions. Human pacing/balance validation remains open."
     },
     {
       "section": 22,
@@ -301,7 +301,7 @@
         "src/progression/build.ts",
         "tests/synergies.test.ts"
       ],
-      "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Nine cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
+      "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Twelve cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
     },
     {
       "section": 24,
@@ -1092,7 +1092,7 @@
         "scripts/validate-content.ts",
         "tests/tactical-enemies.test.ts"
       ],
-      "remaining": "Current catalog: eight biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 50 powers, 50 relics, ten classes and 268 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
+      "remaining": "Current catalog: eight biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 60 powers, 60 relics, ten classes and 318 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
     },
     {
       "section": 83,
@@ -1105,7 +1105,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Ten classes, 100 combined powers/relics, eight regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
+      "remaining": "Ten classes, 120 combined powers/relics, eight regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
     },
     {
       "section": 84,
@@ -1116,7 +1116,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 50/50 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 60/60 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,
@@ -1144,7 +1144,7 @@
         "src/data/regions.json",
         "tests/deployment.test.ts"
       ],
-      "remaining": "The Planetfall example is not a shipped expansion pack. Existing planets, Binary System, slingshot, planetary regions/enemies and guardians provide its architectural basis; Planet Split, dedicated Orbital Strike, named expansion relics and a distinct planetary endless package are not claimed."
+      "remaining": "The Planetfall example is not a shipped expansion pack. Existing planets, Binary System, slingshot, Orbital Strike, Planetary Core, Stable Orbit, Moon Fragment and planetary regions/guardians provide its architectural basis. Planet Split and a dedicated planetary endless package remain unimplemented."
     },
     {
       "section": 87,
