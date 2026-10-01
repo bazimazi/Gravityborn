@@ -35,6 +35,9 @@ import { installAccessibility, joystickInput } from './presentation/accessibilit
 import { installPlatform } from './core/platform';
 import { openStorage } from './core/storage';
 import { Tutorial } from './gameplay/tutorial';
+import { DebugSession, type PlayerStat } from './gameplay/debug';
+import { bossDefinitions } from './content/bosses';
+import { relics } from './content/relics';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -77,13 +80,26 @@ element('#start').insertAdjacentHTML(
 );
 element('#spawn-kind').insertAdjacentHTML(
   'beforeend',
-  Object.entries({ ...enemyDefinitions, ...objectDefinitions })
+  Object.entries({ ...enemyDefinitions, ...objectDefinitions, ...bossDefinitions })
     .map(([id, definition]) => `<option value="${id}">${definition.name}</option>`)
     .join(''),
 );
 element('.debug-grid').insertAdjacentHTML(
   'beforeend',
   `<label>Elite modifier <select id="elite-modifier"><option value="">None</option>${eliteModifiers.map((id) => `<option>${id}</option>`).join('')}</select></label>`,
+);
+const inspector = new DebugSession(game, run);
+element('.debug-grid').insertAdjacentHTML(
+  'beforeend',
+  `
+  <label>Player stat <select id="debug-stat"><option value="health">Integrity</option><option value="maxHealth">Maximum integrity</option><option value="energy">Energy</option><option value="mass">Mass</option><option value="movement">Movement acceleration</option></select></label>
+  <label>Value <input id="debug-stat-value" type="number" value="100" step="any"></label><button id="debug-set-stat">Set player stat</button>
+  <label>Power <select id="debug-ability">${abilities.map((a) => `<option value="${a.id}">${a.name}</option>`).join('')}</select></label><button id="debug-give-ability">Give ability</button>
+  <label>Relic <select id="debug-relic">${relics.map((r) => `<option value="${r.id}">${r.name}</option>`).join('')}</select></label><button id="debug-give-relic">Give relic</button>
+  <label>Matter shards <input id="debug-currency" type="number" value="100" min="1" max="1000000"></label><button id="debug-give-currency">Give currency</button>
+  <button id="debug-kill">Kill current hostiles</button>
+  <label>Direction <select id="debug-direction"><option value="up">Up</option><option value="down">Down</option><option value="left">Left</option><option value="right">Right</option></select></label><button id="debug-flip">Change gravity</button>
+`,
 );
 element('#controls').insertAdjacentHTML(
   'afterend',
@@ -253,6 +269,7 @@ function refreshRun(): void {
     if (run.phase !== 'room') persist();
   }
   overlay.classList.add('run-overlay');
+  element('#toast').hidden = true;
   overlay.hidden = false;
 }
 
@@ -624,8 +641,34 @@ element('#spawn').onclick = () => {
     game.enemies.setElite(entity, modifier);
 };
 element('#debug-heal').onclick = () => {
-  game.player.health = game.player.definition.health;
+  game.player.health = game.maxHealth;
 };
+element('#debug-set-stat').onclick = () =>
+  inspector.setPlayer(
+    element<HTMLSelectElement>('#debug-stat').value as PlayerStat,
+    element<HTMLInputElement>('#debug-stat-value').valueAsNumber,
+  );
+element('#debug-give-ability').onclick = () =>
+  inspector.giveAbility(element<HTMLSelectElement>('#debug-ability').value);
+element('#debug-give-relic').onclick = () =>
+  inspector.giveRelic(element<HTMLSelectElement>('#debug-relic').value);
+element('#debug-give-currency').onclick = () =>
+  inspector.giveCurrency(element<HTMLInputElement>('#debug-currency').valueAsNumber);
+element('#debug-kill').onclick = () => inspector.killEnemies();
+element('#debug-flip').onclick = () => {
+  if (game.state !== 'paused') return;
+  game.resume();
+  game.flip(directions[element<HTMLSelectElement>('#debug-direction').value]);
+  game.pause();
+};
+element('#debug-dialog').addEventListener(
+  'click',
+  (event) => {
+    const button = (event.target as HTMLElement).closest('button');
+    if (button?.id && button.id !== 'debug-reset') inspector.mark();
+  },
+  true,
+);
 element('#debug-reset').onclick = () => {
   restart();
   resumeAfterDialog = false;
@@ -651,6 +694,7 @@ element<HTMLInputElement>('#debug-overlay').onchange = (event) => {
 };
 element<HTMLInputElement>('#gravity-strength').value = String(game.gravity.strength);
 element<HTMLInputElement>('#gravity-strength').oninput = (event) => {
+  inspector.mark();
   game.gravity.strength = Number((event.target as HTMLInputElement).value);
 };
 

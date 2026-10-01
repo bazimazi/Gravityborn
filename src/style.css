@@ -330,6 +330,16 @@ kbd {
   background: #0b1929ed;
   font-size: calc(12px * var(--ui-scale, 1));
 }
+.upgrade-tags {
+  color: #ace7db;
+  font-size: calc(12px * var(--ui-scale, 1));
+}
+.debug-grid input[type='number'],
+.debug-grid select {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+}
 .tutorial-guide p {
   margin: 8px 0;
   line-height: 1.5;

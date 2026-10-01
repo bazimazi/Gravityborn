@@ -256,6 +256,16 @@ test('clears held input when focus is lost and supports inspector frame stepping
   expect((await snapshot(page)).time - before.time).toBeCloseTo(1 / 120, 6);
   await page.getByRole('button', { name: 'Spawn at center' }).click();
   expect((await snapshot(page)).bodies).toBe(before.bodies + 1);
+  await page.locator('#spawn-kind').selectOption('magnetar');
+  await page.getByRole('button', { name: 'Spawn at center' }).click();
+  expect((await snapshot(page)).bodies).toBe(before.bodies + 2);
+  await page.locator('#debug-stat').selectOption('maxHealth');
+  await page.locator('#debug-stat-value').fill('240');
+  await page.getByRole('button', { name: 'Set player stat', exact: true }).click();
+  await page.getByRole('button', { name: 'Restore health', exact: true }).click();
+  expect((await snapshot(page)).health).toBe(240);
+  await page.locator('#debug-ability').selectOption('rift');
+  await page.getByRole('button', { name: 'Give ability', exact: true }).click();
 });
 
 test('touch joystick supports simultaneous gravity input and cancellation', async ({

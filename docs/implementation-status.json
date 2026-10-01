@@ -920,17 +920,13 @@
     {
       "section": 74,
       "title": "Upgrade UI",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/presentation/expedition.ts",
+        "tests/debug.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Three-choice upgrade cards show rarity, current/next level, tags and evolved descriptions while physics pauses. Phone visual review completed."
     },
     {
       "section": 75,
@@ -1072,16 +1068,30 @@
     {
       "section": 91,
       "title": "Debug Tools",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/gameplay/debug.ts",
+        "src/main.ts",
+        "src/presentation/renderer.ts",
+        "src/physics/world.ts",
+        "tests/debug.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Inspector includes all requested grants, spawning, bounded player stats, frame stepping and visualization. Assisted runs are marked; browser interaction and unit checks pass."
     },
     {
       "section": 92,
       "title": "Physics Visualization Mode",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/gameplay/debug.ts",
+        "src/main.ts",
+        "src/presentation/renderer.ts",
+        "src/physics/world.ts",
+        "tests/debug.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Inspector includes all requested grants, spawning, bounded player stats, frame stepping and visualization. Assisted runs are marked; browser interaction and unit checks pass."
     },
     {
       "section": 93,

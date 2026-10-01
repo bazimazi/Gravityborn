@@ -34,6 +34,7 @@ export interface CollisionFact {
   b: Entity | undefined;
   position: Vec2;
   speed: number;
+  normal: Vec2;
 }
 
 export class PhysicsWorld {
@@ -65,7 +66,13 @@ export class PhysicsWorld {
         const normal = pair.collision.normal;
         const speed = Math.abs((av.x - bv.x) * normal.x + (av.y - bv.y) * normal.y);
         const point = pair.collision.supports[0] ?? (a ?? b)!.body.position;
-        this.collisions.push({ a, b, speed, position: { x: point.x, y: point.y } });
+        this.collisions.push({
+          a,
+          b,
+          speed,
+          position: { x: point.x, y: point.y },
+          normal: { x: normal.x, y: normal.y },
+        });
       }
     };
     Events.on(this.engine, 'collisionStart', recordCollisions);

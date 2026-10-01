@@ -100,7 +100,20 @@ export class RunBuild {
     }
   }
   offer(): UpgradeChoice[] {
-    if (this.choices.length) return this.choices;
+    if (this.choices.length) {
+      for (const choice of this.choices) {
+        if (choice.kind !== 'ability') continue;
+        const ability = abilityById.get(choice.target)!;
+        const level = this.game.abilities.levels.get(choice.target) ?? 0;
+        const evolved =
+          level >= ability.maxLevel ? abilityById.get(ability.evolution ?? '') : undefined;
+        choice.name = evolved
+          ? `Evolve: ${evolved.name}`
+          : `${ability.name}${level ? ` ${level + 1}` : ''}`;
+        choice.description = (evolved ?? ability).description;
+      }
+      return this.choices;
+    }
     const pool: UpgradeChoice[] = [];
     if (this.wellLevel < wellEvolutions.length) {
       const evolution = wellEvolutions[this.wellLevel];
@@ -129,7 +142,10 @@ export class RunBuild {
           level >= ability.maxLevel
             ? `Evolve: ${abilityById.get(ability.evolution!)!.name}`
             : `${ability.name}${level ? ` ${level + 1}` : ''}`,
-        description: ability.description,
+        description:
+          level >= ability.maxLevel
+            ? abilityById.get(ability.evolution!)!.description
+            : ability.description,
       });
     }
     for (const relic of relics)

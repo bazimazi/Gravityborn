@@ -5,6 +5,8 @@ import { encounters } from '../content/events';
 import { story } from '../content/story';
 import { canBuy, shopDescription } from '../progression/shop';
 import { wellEvolutions } from '../content/well';
+import { abilityById } from '../content/abilities';
+import type { UpgradeChoice } from '../progression/build';
 
 const escape = (text: string): string =>
   text.replace(
@@ -12,6 +14,32 @@ const escape = (text: string): string =>
     (character) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!,
   );
+export function upgradeMetadata(run: Expedition, choice: UpgradeChoice): string {
+  const ability = abilityById.get(choice.target);
+  const current =
+    choice.kind === 'well'
+      ? run.build.wellLevel
+      : choice.kind === 'ability'
+        ? (run.game.abilities.levels.get(choice.target) ?? 0)
+        : run.build.passives.filter((id) => id === choice.target).length;
+  const evolved =
+    ability && current >= ability.maxLevel ? abilityById.get(ability.evolution ?? '') : undefined;
+  const definition = evolved ?? ability;
+  const relic = choice.kind === 'relic' ? relicById.get(choice.target) : undefined;
+  const rarity =
+    relic?.rarity ?? definition?.rarity ?? (choice.kind === 'well' ? 'rare' : 'common');
+  const tags =
+    relic?.tags ??
+    definition?.tags ??
+    (choice.kind === 'well' ? ['Gravity', 'Control', 'Well'] : ['Core']);
+  const level =
+    choice.kind === 'relic'
+      ? 'NEW RELIC'
+      : evolved
+        ? `LEVEL ${current} · EVOLVES`
+        : `LEVEL ${current} → ${current + 1}`;
+  return `<small>${rarity.toUpperCase()} · ${level}</small><span class="upgrade-tags">${tags.map(escape).join(' · ')}</span>`;
+}
 export function expeditionView(run: Expedition): string {
   const stats = `<p class="run-stats mono">${escape(biomes[run.biome].name)} · LEVEL ${run.build.level} · ${run.build.currency} SHARDS · ${Math.ceil(run.game.player.health)} / ${run.game.maxHealth} INTEGRITY</p><p class="well-evolution">${wellEvolutions[run.build.wellLevel - 1].name}</p>`;
   let content = '';
@@ -20,7 +48,7 @@ export function expeditionView(run: Expedition): string {
       .offer()
       .map(
         (choice) =>
-          `<button class="run-card" data-upgrade="${choice.id}"><small>${choice.kind.toUpperCase()}</small><strong>${escape(choice.name)}</strong><span>${escape(choice.description)}</span></button>`,
+          `<button class="run-card" data-upgrade="${choice.id}"><small>${choice.kind.toUpperCase()}</small><strong>${escape(choice.name)}</strong><span>${escape(choice.description)}</span>${upgradeMetadata(run, choice)}</button>`,
       )
       .join(
         '',

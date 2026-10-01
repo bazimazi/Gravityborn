@@ -17,6 +17,12 @@ for (const [name, options] of [
   await page.locator('[data-room]:enabled').click();
   await page.getByRole('button', { name: 'Pause game', exact: true }).click();
   await page.screenshot({ path: `artifacts/${name}-run.png`, fullPage: true });
+  await page.keyboard.press('Backquote');
+  await page.screenshot({ path: `artifacts/${name}-inspector.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Kill current hostiles', exact: true }).click();
+  await page.getByRole('button', { name: 'Step physics frame', exact: true }).click();
+  await page.getByRole('button', { name: 'Close physics inspector', exact: true }).click();
+  await page.screenshot({ path: `artifacts/${name}-upgrades.png`, fullPage: true });
   await context.close();
 }
 await browser.close();

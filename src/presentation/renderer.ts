@@ -189,6 +189,25 @@ export class Renderer {
     }
     for (const id of this.trails.keys()) if (!game.world.entities.has(id)) this.trails.delete(id);
     for (const entity of game.world.entities.values()) this.drawEntity(entity, game, now);
+    if (this.debug) {
+      ctx.strokeStyle = '#ff8aa5';
+      ctx.lineWidth = 2;
+      for (const collision of game.world.collisions)
+        this.line(
+          collision.position.x,
+          collision.position.y,
+          collision.position.x + collision.normal.x * 35,
+          collision.position.y + collision.normal.y * 35,
+        );
+      ctx.fillStyle = '#e5eaf0';
+      ctx.font = '11px monospace';
+      for (const field of game.gravity.fields.values())
+        ctx.fillText(
+          `${field.source} · ${field.mode} · ${field.strength.toFixed(4)}`,
+          field.position.x,
+          field.position.y - 22,
+        );
+    }
     for (const arc of feedback.arcs) {
       ctx.strokeStyle = '#a8deff';
       ctx.lineWidth = this.settings.highContrast ? 3 : 2;
@@ -575,7 +594,8 @@ export class Renderer {
       this.line(x, y, x + entity.body.velocity.x * 7, y + entity.body.velocity.y * 7);
       const acceleration = game.gravity.sample(
         entity.body.position,
-        entity.definition.gravityResponse,
+        entity.definition.gravityResponse * entity.gravityScale,
+        [entity.definition.material, ...entity.definition.tags],
       );
       ctx.strokeStyle = '#b599ff';
       this.line(x, y, x + acceleration.x * 8000, y + acceleration.y * 8000);

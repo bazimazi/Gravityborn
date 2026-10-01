@@ -17,6 +17,7 @@ export interface AbilityDefinition {
   id: string;
   name: string;
   description: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
   tags: string[];
   effect: EffectKind;
   energy: number;
@@ -33,6 +34,7 @@ export interface AbilityDefinition {
 export const abilities: AbilityDefinition[] = [
   {
     id: 'pulse',
+    rarity: 'common',
     name: 'Gravity Pulse',
     description: 'Launch nearby matter away from your core. Heavy objects retain their momentum.',
     tags: ['Gravity', 'Impact', 'Control'],
@@ -48,6 +50,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'repulsor',
+    rarity: 'common',
     name: 'Repulsor',
     description: 'A repulsive field turns a chosen point into a temporary barrier.',
     tags: ['Gravity', 'Control', 'Defense'],
@@ -63,6 +66,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'lock',
+    rarity: 'common',
     name: 'Gravity Lock',
     description: 'Anchor nearby enemies and objects briefly. Released targets resist another lock.',
     tags: ['Control', 'Defense'],
@@ -77,6 +81,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'vacuum',
+    rarity: 'common',
     name: 'Gravity Vacuum',
     description: 'Carry an attraction field with your core, collecting matter as you move.',
     tags: ['Gravity', 'Control', 'Movement'],
@@ -92,6 +97,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'slingshot',
+    rarity: 'common',
     name: 'Gravity Slingshot',
     description: 'Borrow a nearby source’s pull to propel your core toward the target.',
     tags: ['Velocity', 'Movement', 'Impact'],
@@ -106,6 +112,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'theft',
+    rarity: 'rare',
     name: 'Gravity Theft',
     description: 'Drain a nearby enemy’s gravitational response and store force for a burst.',
     tags: ['Gravity', 'Control', 'Mass'],
@@ -120,6 +127,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'transfer',
+    rarity: 'rare',
     name: 'Gravity Transfer',
     description:
       'Swap momentum between the two nearest objects. A heavy target can inherit a projectile’s speed.',
@@ -135,6 +143,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'beam',
+    rarity: 'rare',
     name: 'Gravity Beam',
     description: 'Accelerate matter along a narrow line from your core to the target.',
     tags: ['Gravity', 'Projectile', 'Velocity'],
@@ -149,6 +158,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'collapse',
+    rarity: 'epic',
     name: 'Gravity Collapse',
     description: 'Compress matter around a point, then crush tightly grouped targets.',
     tags: ['Compression', 'Control', 'Gravity'],
@@ -164,6 +174,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'burst',
+    rarity: 'epic',
     name: 'Stored Burst',
     description: 'Release stolen and collision energy as a powerful outward impulse.',
     tags: ['Gravity', 'Impact', 'Mass'],
@@ -178,6 +189,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'planet',
+    rarity: 'rare',
     name: 'Micro Planet',
     description:
       'Create a moving gravitational body. Its pull and tangential field capture nearby matter.',
@@ -194,6 +206,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'black_hole',
+    rarity: 'epic',
     name: 'Black Hole',
     description:
       'A short, intense singularity draws everything inward and tears its crowded center.',
@@ -209,6 +222,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'rift',
+    rarity: 'epic',
     name: 'Gravity Rift',
     description: 'Impose a sideways vector field inside a localized region.',
     tags: ['Void', 'Gravity', 'Control'],
@@ -224,6 +238,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'vortex',
+    rarity: 'common',
     name: 'Gravity Vortex',
     description: 'Spin matter around the target, creating orbital collisions.',
     tags: ['Orbit', 'Gravity', 'Velocity'],
@@ -239,6 +254,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'zero',
+    rarity: 'common',
     name: 'Zero-G Chamber',
     description: 'Suppress gravity inside a bubble. Existing momentum survives.',
     tags: ['Void', 'Projectile', 'Control'],
@@ -254,6 +270,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'chain',
+    rarity: 'rare',
     name: 'Gravity Chain',
     description: 'Pass an impulse through up to five nearby targets, preserving its causal chain.',
     tags: ['Gravity', 'Control', 'Impact'],
@@ -268,6 +285,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'reverse',
+    rarity: 'rare',
     name: 'Inversion',
     description: 'Reverse global gravity and kick nearby matter in the new direction.',
     tags: ['Gravity', 'Control', 'Movement'],
@@ -282,6 +300,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'rotate',
+    rarity: 'rare',
     name: 'Rotational Field',
     description: 'Rotate global gravity through a full revolution, then restore its direction.',
     tags: ['Orbit', 'Gravity', 'Chaos'],
@@ -296,6 +315,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'reflect',
+    rarity: 'rare',
     name: 'Orbital Guard',
     description: 'Capture nearby hostile shots in a moving orbital field and redirect them.',
     tags: ['Projectile', 'Orbit', 'Defense'],
@@ -310,6 +330,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'nova',
+    rarity: 'legendary',
     name: 'Gravity Nova',
     description: 'An evolved pulse reverses inbound momentum before a wide, powerful launch.',
     tags: ['Gravity', 'Impact', 'Defense'],
@@ -324,6 +345,7 @@ export const abilities: AbilityDefinition[] = [
   },
   {
     id: 'binary',
+    rarity: 'legendary',
     name: 'Binary System',
     description: 'Two orbiting gravitational bodies trap and slingshot nearby matter.',
     tags: ['Orbit', 'Mass', 'Gravity'],
