@@ -30,6 +30,8 @@ The field evaluator supports constant/linear/inverse-square falloff and radial/v
 
 `ModifierSet` composes additive, multiplicative and priority override values, tag filters and cooldown-limited event/periodic triggers. Both values and triggers accept conjunctive conditions on health/energy ratios, core speed, stored charge and hostile proximity (240 world units). Missing or nonfinite context fails closed. Unsatisfied conditions do not consume trigger cooldowns. Casts snapshot their conditions before paying energy. Resource ceilings and persistent body properties stay unconditional to avoid recursive thresholds or stale physics properties; the authoring validator enforces this. Conditional relics expose their current conditions in the effect strip alongside shield time and stored charge.
 
+Completed challenges also unlock six optional core shells, eight titles and six short memories. Unlocks derive from validated challenge completion IDs; the profile stores only the selected shell/title, rejecting locked selections on load. Cosmetic data changes outlines, accents and color without affecting simulation, and high contrast overrides its color. The codex names these rewards and records recovered memories.
+
 ## Presentation and input
 
 `Renderer`, `Feedback`, and `GameAudio` consume simulation state or typed events. They never determine damage. The Canvas renderer uses distinct silhouettes and symbols, a capped pixel ratio, short trails, and bounded pools. Audio is synthesized after a user gesture and voice-limited. The browser loop uses an accumulator, a fixed physics step, and a maximum catch-up interval.

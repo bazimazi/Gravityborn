@@ -8,6 +8,8 @@ import { modes } from '../content/modes';
 import { contracts, difficulties } from '../content/phenomena';
 import { codexView } from './codex';
 import { diagnosticsView } from './diagnostics';
+import { coreCosmetics } from '../content/cosmetics';
+import { challenges } from '../content/challenges';
 
 export function profileView(profile: Profile, state: SaveState, checkpoint: boolean): string {
   const regionAllowed = (index: number): boolean =>
@@ -18,6 +20,15 @@ export function profileView(profile: Profile, state: SaveState, checkpoint: bool
   <p class="run-stats mono">${profile.shards} GRAVITY SHARDS · ${profile.research} RESEARCH · ${profile.runs} RUNS · ${profile.wins} WINS</p>
   <p class="dialog-copy">Discoveries and class mastery survive death. Expeditions save at room boundaries; reloading returns to the last saved route. Loadout changes apply to the next expedition.</p>
   ${checkpoint ? '<button class="primary-button" data-run-action="resume">Resume saved route</button>' : ''}
+  <details><summary>Core appearance & titles</summary><p class="dialog-copy">Earn shells, titles and memories by completing challenges. Appearance does not change physics or combat stats.</p>
+  <label class="setting-row">Core shell <select id="cosmetic-select">${coreCosmetics.map((item) => `<option value="${item.id}" ${profile.cosmetic === item.id ? 'selected' : ''} ${item.challenge && !profile.challenges.includes(item.challenge) ? 'disabled' : ''}>${item.name}${item.challenge && !profile.challenges.includes(item.challenge) ? ` · complete ${challenges.find((challenge) => challenge.id === item.challenge)!.name}` : ''}</option>`).join('')}</select></label>
+  <label class="setting-row">Title <select id="title-select"><option value="">Awakened</option>${challenges
+    .filter((item) => item.title)
+    .map(
+      (item) =>
+        `<option value="${item.id}" ${profile.title === item.id ? 'selected' : ''} ${profile.challenges.includes(item.id) ? '' : 'disabled'}>${item.title}${profile.challenges.includes(item.id) ? '' : ' · locked'}</option>`,
+    )
+    .join('')}</select></label></details>
   <label class="setting-row">Expedition seed <input id="run-seed" maxlength="64" placeholder="Random seed"></label>
   <label class="setting-row">Run mode <select id="run-mode">${modes.map((mode) => `<option value="${mode.id}" ${mode.id === 'standard' ? 'selected' : ''} ${mode.id === 'endless' && !profile.skills.includes('endless') ? 'disabled' : ''}>${mode.name}</option>`).join('')}</select></label>
   <label class="setting-row">Difficulty <select id="run-difficulty">${difficulties.map((name, index) => `<option value="${index}">${name}</option>`).join('')}</select></label>

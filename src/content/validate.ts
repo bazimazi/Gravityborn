@@ -19,6 +19,7 @@ import {
 import { enemyVariants } from './variants';
 import { eliteModifiers } from './enemies';
 import { phenomena } from './phenomena';
+import { coreCosmetics, challengeMemories } from './cosmetics';
 
 export interface ContentIssue {
   path: string;
@@ -188,6 +189,13 @@ export function validateContent(): ContentIssue[] {
     if (!valid) issues.push({ path, message });
   };
   const powerIds = new Set(abilities.map((item) => item.id));
+  issues.push(...identities(coreCosmetics, 'cosmetics'));
+  for (const reward of [...coreCosmetics, ...challengeMemories])
+    check(
+      !reward.challenge || challenges.some((challenge) => challenge.id === reward.challenge),
+      'challengeRewards',
+      'Unknown challenge reward requirement.',
+    );
   for (const variant of enemyVariants)
     check(
       variant.kind in entityDefinitions && eliteModifiers.includes(variant.elite),

@@ -532,11 +532,12 @@
       "status": "implemented",
       "evidence": [
         "src/content/challenges.ts",
+        "src/content/cosmetics.ts",
         "src/progression/challenges.ts",
         "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "123 challenges including per-power mastery milestones. Rewards, damage attribution, idempotency and large-collection migration tested. Balance remains."
+      "remaining": "128 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
     },
     {
       "section": 40,

@@ -10,8 +10,10 @@ import { enemyGlyphs, type SpecialEnemy } from '../content/enemies';
 import { bossDefinitions } from '../content/bosses';
 import { objectDefinitions } from '../content/objects';
 import { abilityFeedback } from '../content/ability-feedback';
+import { coreCosmetics } from '../content/cosmetics';
 
 export class Renderer {
+  cosmetic: (typeof coreCosmetics)[number] = coreCosmetics[0];
   private readonly context: CanvasRenderingContext2D;
   private width = 1;
   private height = 1;
@@ -419,7 +421,9 @@ export class Renderer {
           : entity.definition.faction === 'enemy'
             ? '#ffda66'
             : '#ffffff'
-        : entity.definition.color;
+        : entity.kind === 'player'
+          ? this.cosmetic.color
+          : entity.definition.color;
     if (entity.kind === 'projectile' || entity.kind === 'player' || entity.body.speed > 5) {
       const trail = this.trails.get(entity.id) ?? [];
       if (game.state === 'playing') {
@@ -471,6 +475,25 @@ export class Renderer {
       this.circle(x - radius * 0.17, y - radius * 0.17, radius * 0.32);
       ctx.fill();
       if (entity.kind === 'player') {
+        if (this.cosmetic.sides > 0) {
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (let i = 0; i <= this.cosmetic.sides; i++) {
+            const angle = (i * Math.PI * 2) / this.cosmetic.sides - Math.PI / 2;
+            const px = x + Math.cos(angle) * (radius + 8);
+            const py = y + Math.sin(angle) * (radius + 8);
+            if (i) ctx.lineTo(px, py);
+            else ctx.moveTo(px, py);
+          }
+          ctx.stroke();
+        }
+        for (let i = 0; i < this.cosmetic.satellites; i++) {
+          const angle = (i * Math.PI * 2) / this.cosmetic.satellites + now * 0.0007;
+          ctx.fillStyle = color;
+          this.circle(x + Math.cos(angle) * (radius + 12), y + Math.sin(angle) * (radius + 12), 3);
+          ctx.fill();
+        }
         const pulse =
           this.settings.reducedMotion || this.settings.reducedFlashing
             ? 0

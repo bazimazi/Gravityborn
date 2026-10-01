@@ -77,6 +77,22 @@ it('keeps the complete collection of power challenges through profile migration'
   profile.challenges = challenges.map((item) => item.id);
   expect(readProfile(profile).challenges).toEqual(profile.challenges);
 });
+it('earned appearance and titles persist while locked choices safely fall back', () => {
+  const profile = newProfile();
+  profile.shards = 42;
+  profile.cosmetic = 'cascade';
+  profile.title = 'chain_twenty';
+  const locked = readProfile(profile);
+  expect(locked.cosmetic).toBe('core');
+  expect(locked.title).toBe('');
+  expect(locked.shards).toBe(42);
+  profile.challenges.push('chain_twenty');
+  expect(readProfile(profile)).toEqual(profile);
+  const codex = codexView(profile);
+  expect(codex).toContain('Cascade Prism');
+  expect(codex).toContain('Cascadeborn');
+  expect(codex).toContain('The long consequence');
+});
 it('mastery milestones require actual combat achievements beyond cast count', () => {
   const progress = freshMastery();
   progress.casts = 10000;

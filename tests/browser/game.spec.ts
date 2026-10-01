@@ -15,6 +15,40 @@ interface Snapshot {
 const snapshot = (page: Page): Promise<Snapshot> =>
   page.evaluate(() => (window as unknown as { __gravityborn: () => Snapshot }).__gravityborn());
 
+test('earned core appearance and titles can be selected and survive reload', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/');
+  const profile = newProfile();
+  profile.challenges = ['chain_twenty'];
+  await page.evaluate(
+    (profile) => localStorage.setItem('gravityborn.save', JSON.stringify({ version: 1, profile })),
+    profile,
+  );
+  await page.reload();
+  await page.getByRole('button', { name: 'Progression hub' }).click();
+  await page.getByText('Core appearance & titles', { exact: true }).click();
+  await expect(page.locator('#cosmetic-select option[value="forge"]')).toHaveAttribute(
+    'disabled',
+    '',
+  );
+  await page.locator('#cosmetic-select').selectOption('cascade');
+  await page.locator('#title-select').selectOption('chain_twenty');
+  await page.getByRole('button', { name: 'Close progression' }).click();
+  await expect(page.locator('.brand-subtitle')).toHaveText('CASCADEBORN');
+  await page.reload();
+  await page.getByRole('button', { name: 'Progression hub' }).click();
+  await page.getByText('Core appearance & titles', { exact: true }).click();
+  await expect(page.locator('#cosmetic-select')).toHaveValue('cascade');
+  await expect(page.locator('#title-select')).toHaveValue('chain_twenty');
+  await page.getByRole('button', { name: 'Close progression' }).click();
+  await page.getByRole('button', { name: /Enter the chamber/ }).click();
+  await page.screenshot({
+    path: `artifacts/${testInfo.project.name}-cosmetic.png`,
+    fullPage: true,
+  });
+});
+
 test('observatory purchases equipment and research, then starts a contracted run', async ({
   page,
 }) => {

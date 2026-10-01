@@ -42,6 +42,8 @@ import { newDiagnostics, recordDiagnostic } from './core/diagnostics';
 import { arenaGesture } from './presentation/gestures';
 import { biomes } from './content/rooms';
 import { statusBadges } from './presentation/status';
+import { cosmeticById } from './content/cosmetics';
+import { challenges } from './content/challenges';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -238,7 +240,20 @@ document.addEventListener('change', (event) => {
       contracts.find((contract) => contract.id === select.value)?.description ?? '';
     return;
   }
-  if (select.dataset.equipSlot) {
+  if (select.id === 'cosmetic-select') {
+    const cosmetic = cosmeticById.get(select.value);
+    if (!cosmetic || (cosmetic.challenge && !profile.challenges.includes(cosmetic.challenge)))
+      return;
+    profile.cosmetic = cosmetic.id;
+  } else if (select.id === 'title-select') {
+    if (
+      select.value &&
+      (!profile.challenges.includes(select.value) ||
+        !challenges.some((item) => item.id === select.value && item.title))
+    )
+      return;
+    profile.title = select.value;
+  } else if (select.dataset.equipSlot) {
     const slot = select.dataset.equipSlot;
     if (select.value === '') delete profile.loadout[slot];
     else if (profile.equipment[select.value] && equipmentById.get(select.value)?.slot === slot)
@@ -251,6 +266,11 @@ document.addEventListener('change', (event) => {
   else return;
   saveStore.save({ profile, checkpoint });
   renderProfile();
+  if (select.id === 'cosmetic-select' || select.id === 'title-select') {
+    const replacement = element<HTMLSelectElement>(`#${select.id}`);
+    replacement.closest('details')!.open = true;
+    replacement.focus({ preventScroll: true });
+  }
 });
 
 function refreshRun(): void {
@@ -800,6 +820,10 @@ function showState(): void {
 }
 
 function updateHud(fps: number): void {
+  renderer.cosmetic = cosmeticById.get(profile.cosmetic)!;
+  element('.brand-subtitle').textContent = profile.title
+    ? challenges.find((item) => item.id === profile.title)!.title!.toUpperCase()
+    : 'A GRAVITY ROGUELITE';
   element('#run-progress').hidden = !run.active;
   if (run.active) {
     element('#level-value').textContent = `LEVEL ${run.build.level}`;

@@ -6,6 +6,7 @@ import { equipment } from '../content/equipment';
 import { phenomena } from '../content/phenomena';
 import { planets, story, secretLore } from '../content/story';
 import { challenges } from '../content/challenges';
+import { coreCosmetics, challengeMemories } from '../content/cosmetics';
 import { challengeProgress } from '../progression/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
 import type { Profile } from '../progression/profile';
@@ -123,11 +124,25 @@ export function codexView(profile: Profile): string {
       entries: challenges.map((challenge) => ({
         id: challenge.id,
         name: challenge.name,
-        text: `${challenge.description} Progress: ${Math.min(challenge.target, Math.floor(challengeProgress(profile, challenge)))} / ${challenge.target}. Reward: ${challenge.shards} shards and ${challenge.research} research.${profile.challenges.includes(challenge.id) ? ' Completed.' : ''}`,
+        text: `${challenge.description} Progress: ${Math.min(challenge.target, Math.floor(challengeProgress(profile, challenge)))} / ${challenge.target}. Reward: ${challenge.shards} shards and ${challenge.research} research.${challenge.title ? ` Title: ${challenge.title}.` : ''}${coreCosmetics
+          .filter((item) => item.challenge === challenge.id)
+          .map((item) => ` Shell: ${item.name}.`)
+          .join(
+            '',
+          )}${challengeMemories.some((item) => item.challenge === challenge.id) ? ' A recovered memory.' : ''}${profile.challenges.includes(challenge.id) ? ' Completed.' : ''}`,
         known: true,
       })),
     },
   ];
+  sections.push({
+    name: 'Challenge Memories',
+    entries: challengeMemories.map((memory) => ({
+      id: `memory:${memory.challenge}`,
+      name: memory.name,
+      text: memory.text,
+      known: profile.challenges.includes(memory.challenge),
+    })),
+  });
   const escape = (text: string): string =>
     text.replace(
       /[&<>"']/g,

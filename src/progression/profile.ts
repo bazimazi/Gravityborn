@@ -5,9 +5,12 @@ import { equipmentById, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
 import { readMastery, mergeMastery, type MasteryProgress } from './mastery';
 import { challenges } from '../content/challenges';
+import { cosmeticById } from '../content/cosmetics';
 import { challengeProgress } from './challenges';
 import { newDiagnostics, readDiagnostics, type LocalDiagnostics } from '../core/diagnostics';
 export interface Profile {
+  cosmetic: string;
+  title: string;
   diagnostics: LocalDiagnostics;
   tutorialCompleted: boolean;
   shards: number;
@@ -31,6 +34,8 @@ export interface Profile {
 }
 export function newProfile(): Profile {
   return {
+    cosmetic: 'core',
+    title: '',
     diagnostics: newDiagnostics(),
     tutorialCompleted: false,
     shards: 0,
@@ -72,6 +77,16 @@ export function readProfile(value: unknown): Profile {
     profile.challenges = strings(data.challenges ?? [], Math.max(1000, challenges.length)).filter(
       (id) => challenges.some((challenge) => challenge.id === id),
     );
+    const cosmetic =
+      typeof data.cosmetic === 'string' ? cosmeticById.get(data.cosmetic) : undefined;
+    if (cosmetic && (!cosmetic.challenge || profile.challenges.includes(cosmetic.challenge)))
+      profile.cosmetic = cosmetic.id;
+    if (
+      typeof data.title === 'string' &&
+      profile.challenges.includes(data.title) &&
+      challenges.some((item) => item.id === data.title && item.title)
+    )
+      profile.title = data.title;
     for (const [id, value] of Object.entries(record(data.metrics ?? {})))
       if (id.length < 50) profile.metrics[id] = finite(value, 0, 100000000);
     for (const [id, amount] of Object.entries(record(data.mastery ?? {})))

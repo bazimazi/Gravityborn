@@ -9,10 +9,12 @@ export interface ChallengeDefinition {
   research: number;
   equipment?: string;
   ability?: string;
+  title?: string;
 }
 export const challenges: ChallengeDefinition[] = [
   {
     id: 'first_hundred',
+    title: 'Forcewright',
     name: 'Matter Remembers',
     description: 'Defeat 100 enemies through physical impacts.',
     metric: 'impactKills',
@@ -22,6 +24,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'chain_twenty',
+    title: 'Cascadeborn',
     name: 'The Impossible Cascade',
     description: 'Create a causal chain with 20 distinct effects.',
     metric: 'chain',
@@ -32,6 +35,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'return_fire',
+    title: 'Paradox Courier',
     name: 'Return to Sender',
     description: 'Defeat 25 enemies with redirected projectiles.',
     metric: 'redirected',
@@ -41,6 +45,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'guardian',
+    title: 'Worldbreaker',
     name: 'Worldbreaker',
     description: 'Defeat five guardians.',
     metric: 'bosses',
@@ -50,6 +55,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'weightless',
+    title: 'Unbound',
     name: 'Between Falling',
     description: 'Spend five cumulative minutes inside zero gravity during completed rooms.',
     metric: 'zeroSeconds',
@@ -59,6 +65,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'elite_hunter',
+    title: 'Rule Breaker',
     name: 'Rule Breaker',
     description: 'Defeat ten elites.',
     metric: 'elites',
@@ -68,6 +75,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'well_guardian',
+    title: 'Centerkeeper',
     name: 'A Center of Your Own',
     description: 'Defeat a guardian with a chain originating from a gravity well.',
     metric: 'wellBosses',
@@ -78,6 +86,7 @@ export const challenges: ChallengeDefinition[] = [
   },
   {
     id: 'orbital_victory',
+    title: 'Little Cosmos',
     name: 'Small Solar System',
     description: 'Win an expedition with at least 75% of your kills attributed to orbital powers.',
     metric: 'orbitalWins',
