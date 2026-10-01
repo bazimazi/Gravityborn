@@ -496,9 +496,12 @@
     {
       "section": 37,
       "title": "Shops",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/progression/shop.ts",
+        "tests/shop.test.ts"
+      ],
+      "remaining": "Seven purchase categories implemented with build-aware stock, costs, replacement semantics, single purchases, and saved inventories. Economy balance remains under playtest."
     },
     {
       "section": 38,
@@ -863,22 +866,27 @@
         "src/gameplay/abilities.ts",
         "src/gameplay/enemies.ts",
         "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/enemies.test.ts",
+        "src/core/storage.ts",
+        "tests/storage.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Web saves and native Preferences adapter implemented and tested; native process-death/device durability validation remains external."
     },
     {
       "section": 70,
       "title": "Offline-First",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/gameplay/game.ts",
         "src/gameplay/abilities.ts",
         "src/gameplay/enemies.ts",
         "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/enemies.test.ts",
+        "scripts/offline-build.mjs",
+        "src/core/platform.ts",
+        "tests/offline/offline.spec.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Production cold-start, saved-route restoration, and play tested offline. Native device airplane-mode validation remains external."
     },
     {
       "section": 71,
@@ -949,23 +957,35 @@
     {
       "section": 77,
       "title": "Audio Design",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/presentation/audio.ts",
+        "src/presentation/feedback.ts"
+      ],
+      "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues implemented. Listening tests and expanded power-specific timbres remain."
     },
     {
       "section": 78,
       "title": "Music",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/presentation/audio.ts",
+        "src/main.ts"
+      ],
+      "remaining": "Seven adaptive music arrangements with anomaly modulation and separate volume implemented. Device listening/mix validation remains external."
     },
     {
       "section": 79,
       "title": "Accessibility",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/presentation/accessibility.ts",
+        "src/core/settings.ts",
+        "src/style.css",
+        "tests/settings.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Text scaling, symbol indicators, high contrast, reduced motion/flashing, joystick sizing/deadzone, separate audio sliders, handedness, haptics and frame cap implemented. Physical device accessibility evaluation remains external."
     },
     {
       "section": 80,
@@ -1075,9 +1095,14 @@
     {
       "section": 95,
       "title": "Device Testing",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "capacitor.config.ts",
+        "android/",
+        "ios/",
+        "docs/native-delivery.md"
+      ],
+      "remaining": "Native projects generated and synchronized; physical-device matrix not completed. Android build validation in progress; iOS build requires macOS/Xcode."
     },
     {
       "section": 96,

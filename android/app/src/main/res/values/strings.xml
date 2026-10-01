@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Gravityborn</string>
+    <string name="title_activity_main">Gravityborn</string>
+    <string name="package_name">com.bazimazi.gravityborn</string>
+    <string name="custom_url_scheme">com.bazimazi.gravityborn</string>
+</resources>

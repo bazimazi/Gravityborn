@@ -1,11 +1,37 @@
 import type { EventBus } from '../core/events';
 import type { Settings } from '../core/settings';
 
+export type MusicState =
+  | 'off'
+  | 'exploration'
+  | 'combat'
+  | 'danger'
+  | 'elite'
+  | 'boss'
+  | 'critical'
+  | 'victory';
+const arrangements: Record<
+  Exclude<MusicState, 'off'>,
+  { beat: number; notes: number[]; bass: number; gain: number }
+> = {
+  exploration: { beat: 0.8, notes: [62, 69, 65, 72, 69, 65, 74, 69], bass: 38, gain: 0.06 },
+  combat: { beat: 0.4, notes: [62, 65, 69, 74, 69, 65, 72, 69], bass: 38, gain: 0.08 },
+  danger: { beat: 0.3, notes: [62, 63, 69, 70, 65, 63, 69, 74], bass: 38, gain: 0.085 },
+  elite: { beat: 0.35, notes: [60, 67, 63, 70, 72, 67, 63, 67], bass: 36, gain: 0.08 },
+  boss: { beat: 0.28, notes: [50, 57, 62, 63, 69, 63, 62, 57], bass: 26, gain: 0.085 },
+  critical: { beat: 0.5, notes: [62, 0, 63, 0, 62, 0, 57, 0], bass: 38, gain: 0.065 },
+  victory: { beat: 0.55, notes: [62, 66, 69, 74, 78, 74, 69, 66], bass: 38, gain: 0.08 },
+};
+
 /** Local synthesized sounds: no downloads, licenses, or network at runtime. */
 export class GameAudio {
   private context: AudioContext | undefined;
   private voices = 0;
   private lastImpact = 0;
+  private musicState: MusicState = 'off';
+  private nextBeat = 0;
+  private beat = 0;
+  private readonly musicVoices = new Set<OscillatorNode>();
   constructor(
     events: EventBus,
     private readonly settings: Settings,
@@ -40,17 +66,71 @@ export class GameAudio {
     }
   }
 
+  cue(kind: 'level' | 'relic' | 'boss'): void {
+    const notes = { level: [440, 880], relic: [520, 1040], boss: [100, 40] }[kind];
+    this.tone(notes[0], notes[1], 0.5, 'triangle', 0.12);
+  }
+
+  soundtrack(state: MusicState, anomaly = false): void {
+    if (state !== this.musicState) {
+      this.musicState = state;
+      this.beat = 0;
+      this.nextBeat = 0;
+    }
+    if (state === 'off' || this.settings.musicVolume === 0) {
+      for (const voice of this.musicVoices) {
+        try {
+          voice.stop();
+        } catch {
+          /* Already ended. */
+        }
+      }
+      this.musicVoices.clear();
+      return;
+    }
+    if (
+      !this.context ||
+      this.context.state !== 'running' ||
+      this.context.currentTime < this.nextBeat
+    )
+      return;
+    const arrangement = arrangements[state];
+    const note = arrangement.notes[this.beat % arrangement.notes.length];
+    const frequency = (pitch: number) => 440 * 2 ** ((pitch - 69 + (anomaly ? -1 : 0)) / 12);
+    if (note)
+      this.tone(
+        frequency(note),
+        frequency(note + (anomaly ? 0.3 : 0)),
+        arrangement.beat * 1.6,
+        'sine',
+        arrangement.gain,
+        true,
+      );
+    if (this.beat % 4 === 0)
+      this.tone(
+        frequency(arrangement.bass),
+        frequency(arrangement.bass),
+        arrangement.beat * 3.5,
+        'triangle',
+        arrangement.gain * 0.8,
+        true,
+      );
+    this.beat++;
+    this.nextBeat = this.context.currentTime + arrangement.beat;
+  }
+
   private tone(
     start: number,
     end: number,
     duration: number,
     type: OscillatorType,
     gain: number,
+    music = false,
   ): void {
     if (
       !this.context ||
       this.context.state !== 'running' ||
-      this.settings.volume <= 0 ||
+      (music ? this.settings.musicVolume : this.settings.volume) <= 0 ||
       this.voices >= 12
     )
       return;
@@ -61,14 +141,19 @@ export class GameAudio {
     oscillator.frequency.setValueAtTime(start, context.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(end, context.currentTime + duration);
     envelope.gain.setValueAtTime(0, context.currentTime);
-    envelope.gain.linearRampToValueAtTime(gain * this.settings.volume, context.currentTime + 0.008);
+    envelope.gain.linearRampToValueAtTime(
+      gain * (music ? this.settings.musicVolume : this.settings.volume),
+      context.currentTime + (music ? 0.04 : 0.008),
+    );
     envelope.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + duration);
     oscillator.connect(envelope).connect(context.destination);
     this.voices++;
+    if (music) this.musicVoices.add(oscillator);
     oscillator.onended = () => {
       oscillator.disconnect();
       envelope.disconnect();
       this.voices--;
+      this.musicVoices.delete(oscillator);
     };
     oscillator.start();
     oscillator.stop(context.currentTime + duration);

@@ -3,6 +3,7 @@ import { biomes } from '../content/rooms';
 import { relicById } from '../content/relics';
 import { encounters } from '../content/events';
 import { story } from '../content/story';
+import { canBuy, shopDescription } from '../progression/shop';
 
 const escape = (text: string): string =>
   text.replace(
@@ -38,8 +39,8 @@ export function expeditionView(run: Expedition): string {
   else if (run.phase === 'shop')
     content = `<h2>The salvage trader</h2><p>${escape(run.message)}</p><div class="run-choices">${run.shop
       .map((item) => {
-        const relic = relicById.get(item.id)!;
-        return `<button class="run-card" data-buy="${item.id}" ${item.sold || run.build.currency < item.price ? 'disabled' : ''}><small>${item.sold ? 'OWNED' : `${item.price} SHARDS`}</small><strong>${escape(relic.name)}</strong><span>${escape(relic.description)}</span></button>`;
+        const description = shopDescription(item.id)!;
+        return `<button class="run-card" data-buy="${item.id}" ${canBuy(run.build, item) ? '' : 'disabled'}><small>${item.sold ? 'PURCHASED' : `${item.price} SHARDS`}</small><strong>${escape(description.name)}</strong><span>${escape(description.description)}</span></button>`;
       })
       .join(
         '',

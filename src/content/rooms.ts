@@ -265,13 +265,11 @@ export function buildRoom(
     room.waves = [];
     for (let wave = 0; wave < (type === 'challenge' ? 5 : 3); wave++)
       room.waves.push(
-        layout.enemies
-          .slice(0, Math.min(6, count + Math.floor(wave / 2)))
-          .map((point, index) => ({
-            ...point,
-            kind: random.pick(region.enemies) as EntityKind,
-            elite: type === 'elite' && index === 0 && wave === 2 ? 'inverted' : undefined,
-          })),
+        layout.enemies.slice(0, Math.min(6, count + Math.floor(wave / 2))).map((point, index) => ({
+          ...point,
+          kind: random.pick(region.enemies) as EntityKind,
+          elite: type === 'elite' && index === 0 && wave === 2 ? 'inverted' : undefined,
+        })),
       );
   }
   if (biome === 1 || biome === 2 || biome === 4 || biome === 5)

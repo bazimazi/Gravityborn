@@ -178,18 +178,41 @@ test('settings persist and closing a modal resumes only an active game', async (
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Reduced motion').check();
   await page.getByLabel('Left-handed controls').check();
+  await page.getByLabel('Reduced flashing').check();
+  await page.getByLabel('High contrast indicators').check();
+  await page.getByLabel('Text size', { exact: true }).fill('1.4');
+  await page.getByLabel('Joystick size', { exact: true }).fill('1.3');
+  await page.getByLabel('Frame rate', { exact: true }).selectOption('30');
   await page.getByRole('button', { name: 'Close settings' }).click();
   expect((await snapshot(page)).state).toBe('ready');
   await page.reload();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByLabel('Reduced motion')).toBeChecked();
   await expect(page.getByLabel('Left-handed controls')).toBeChecked();
+  await expect(page.getByLabel('Reduced flashing')).toBeChecked();
+  await expect(page.getByLabel('Text size', { exact: true })).toHaveValue('1.4');
+  await expect(page.getByLabel('Frame rate', { exact: true })).toHaveValue('30');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: /Enter the chamber/ }).click();
   await page.getByRole('button', { name: 'How to play' }).click();
   expect((await snapshot(page)).state).toBe('paused');
   await page.getByRole('button', { name: 'Close instructions' }).click();
   await expect.poll(async () => (await snapshot(page)).state).toBe('playing');
+});
+
+test('largest text and joystick remain usable on a 320 pixel viewport', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByLabel('Text size', { exact: true }).fill('1.4');
+  await page.getByLabel('Joystick size', { exact: true }).fill('1.3');
+  await expect(page.getByLabel('Frame rate', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Close settings' }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: /Enter the chamber/ }).click();
+  await page.getByRole('button', { name: 'Gravity right', exact: true }).click();
+  await expect(page.locator('#gravity-name')).toHaveText('RIGHT');
 });
 
 test('clears held input when focus is lost and supports inspector frame stepping', async ({

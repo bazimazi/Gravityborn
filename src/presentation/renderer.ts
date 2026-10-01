@@ -42,6 +42,7 @@ export class Renderer {
   }
 
   draw(game: Game, feedback: Feedback, now: number): void {
+    if (this.settings.reducedMotion || this.settings.reducedFlashing) now = 0;
     const bounds = this.canvas.getBoundingClientRect();
     this.width = bounds.width;
     this.height = bounds.height;
@@ -138,17 +139,32 @@ export class Renderer {
       ctx.strokeStyle = '#d3b9ff';
       ctx.lineWidth = 2;
       ctx.stroke();
+      ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(
+        field.mode === 'zero'
+          ? '0'
+          : field.mode === 'vortex'
+            ? '↻'
+            : field.strength < 0
+              ? '−'
+              : '+',
+        0,
+        0,
+      );
       ctx.restore();
     }
     for (const id of this.trails.keys()) if (!game.world.entities.has(id)) this.trails.delete(id);
     for (const entity of game.world.entities.values()) this.drawEntity(entity, game, now);
-    for (const particle of feedback.particles) {
+    for (const particle of this.settings.reducedFlashing ? [] : feedback.particles) {
       ctx.globalAlpha = particle.life / particle.maxLife;
       ctx.fillStyle = particle.color;
       ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
     }
     for (const ring of feedback.rings) {
-      ctx.globalAlpha = ring.life / ring.maxLife;
+      ctx.globalAlpha = (ring.life / ring.maxLife) * (this.settings.reducedFlashing ? 0.25 : 1);
       ctx.strokeStyle = ring.color;
       ctx.lineWidth = 2;
       this.circle(ring.position.x, ring.position.y, ring.radius * (1 - ring.life / ring.maxLife));
@@ -300,7 +316,15 @@ export class Renderer {
     const ctx = this.context;
     const { x, y } = entity.body.position;
     const radius = entity.definition.radius;
-    const color = entity.redirected ? '#adf4ec' : entity.definition.color;
+    const color = entity.redirected
+      ? '#adf4ec'
+      : this.settings.highContrast
+        ? entity.kind === 'player'
+          ? '#80ffff'
+          : entity.definition.faction === 'enemy'
+            ? '#ffda66'
+            : '#ffffff'
+        : entity.definition.color;
     if (entity.kind === 'projectile' || entity.kind === 'player' || entity.body.speed > 5) {
       const trail = this.trails.get(entity.id) ?? [];
       if (game.state === 'playing') {

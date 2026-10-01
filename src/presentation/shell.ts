@@ -1,8 +1,8 @@
 export const shell = `
 <div class="app-shell">
   <header class="masthead">
-    <div class="brand"><img src="/favicon.svg" alt=""><div><div class="brand-name">GRAVITYBORN</div><div class="brand-subtitle">A PHYSICS SANDBOX</div></div></div>
-    <div class="header-right"><span class="build-tag mono"><span class="live-dot"></span>PROTOTYPE 0.2</span><button class="icon-button" id="help" aria-label="How to play" title="How to play">?</button><button class="icon-button" id="settings" aria-label="Settings" title="Settings">⚙</button><button class="icon-button" id="pause" aria-label="Pause game" title="Pause · Esc" disabled>Ⅱ</button></div>
+    <div class="brand"><img src="/favicon.svg" alt=""><div><div class="brand-name">GRAVITYBORN</div><div class="brand-subtitle">A GRAVITY ROGUELITE</div></div></div>
+    <div class="header-right"><span class="build-tag mono"><span class="live-dot"></span>ALPHA 0.4</span><button class="icon-button" id="help" aria-label="How to play" title="How to play">?</button><button class="icon-button" id="settings" aria-label="Settings" title="Settings">⚙</button><button class="icon-button" id="pause" aria-label="Pause game" title="Pause · Esc" disabled>Ⅱ</button></div>
   </header>
   <main class="workspace">
     <section class="game-column" aria-label="Gravity chamber">

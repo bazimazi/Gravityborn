@@ -31,13 +31,17 @@ import { equipmentById } from './content/equipment';
 import { modes, type RunMode } from './content/modes';
 import { contracts, phenomena, type Contract } from './content/phenomena';
 import { objectDefinitions } from './content/objects';
+import { installAccessibility, joystickInput } from './presentation/accessibility';
+import { installPlatform } from './core/platform';
+import { openStorage } from './core/storage';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
   document.querySelector<T>(selector)!;
+const storage = await openStorage();
 let settings: Settings;
 try {
-  settings = loadSettings(window.localStorage);
+  settings = loadSettings(storage);
 } catch {
   settings = { ...defaults };
 }
@@ -46,7 +50,7 @@ const game = new Game();
 const run = new Expedition(game);
 let saveStore: SaveStore;
 try {
-  saveStore = new SaveStore(window.localStorage);
+  saveStore = new SaveStore(storage);
 } catch {
   saveStore = new SaveStore({
     getItem: () => null,
@@ -131,6 +135,9 @@ function persist(): void {
     checkpoint = run.snapshot();
   }
   saveStore.save({ profile, checkpoint });
+  void storage.flush?.().then((ok) => {
+    if (!ok) toast('Save storage is unavailable. Export your progress before closing.');
+  });
 }
 function renderProfile(): void {
   const preserved = Object.fromEntries(
@@ -223,6 +230,7 @@ function refreshRun(): void {
   }
   const key = `${run.phase}:${run.biome}:${run.rooms}:${run.build.pending}:${run.build.currency}:${run.message}`;
   if (key !== runViewKey) {
+    if (run.build.pending > 0) audio.cue('level');
     runViewKey = key;
     clearInput();
     overlay.innerHTML = expeditionView(run);
@@ -308,14 +316,16 @@ document.addEventListener('click', (event) => {
     return;
   } else if (button.dataset.room) {
     if (run.enter(button.dataset.room)) {
+      if (run.current?.type === 'boss') audio.cue('boss');
       feedback.clear();
       renderer.clear();
       toast(run.message);
     }
   } else if (button.dataset.upgrade) run.build.choose(button.dataset.upgrade);
   else if (button.dataset.runAction === 'reroll') run.build.reroll();
-  else if (button.dataset.buy) run.buy(button.dataset.buy);
-  else if (button.dataset.event)
+  else if (button.dataset.buy) {
+    if (run.buy(button.dataset.buy)) audio.cue('relic');
+  } else if (button.dataset.event)
     run.resolveEvent(button.dataset.event as 'risk' | 'repair' | 'leave');
   else if (button.dataset.runAction === 'advance') run.advance();
   else if (button.dataset.runAction === 'leave-shop') run.leaveShop();
@@ -441,8 +451,7 @@ function updateJoystick(event: PointerEvent): void {
   const radius = bounds.width * 0.32;
   const x = (event.clientX - bounds.left - bounds.width / 2) / radius;
   const y = (event.clientY - bounds.top - bounds.height / 2) / radius;
-  const magnitude = Math.max(1, Math.hypot(x, y));
-  joystick = { x: x / magnitude, y: y / magnitude };
+  joystick = joystickInput(x, y, settings.joystickDeadzone);
   element('#joystick-knob').style.transform =
     `translate(${joystick.x * radius}px,${joystick.y * radius}px)`;
 }
@@ -534,8 +543,12 @@ document.addEventListener('visibilitychange', () => {
 
 function applySettings(): void {
   element('#controls').classList.toggle('left-handed', settings.leftHanded);
+  document.documentElement.style.setProperty('--ui-scale', String(settings.uiScale));
+  document.documentElement.style.setProperty('--joystick-scale', String(settings.joystickScale));
+  document.documentElement.classList.toggle('high-contrast', settings.highContrast);
+  document.documentElement.classList.toggle('reduced-flashing', settings.reducedFlashing);
   try {
-    saveSettings(window.localStorage, settings);
+    saveSettings(storage, settings);
   } catch {
     /* Storage access itself may be blocked. */
   }
@@ -557,6 +570,7 @@ for (const [selector, key] of [
     applySettings();
   };
 }
+installAccessibility(settings, game.events, applySettings);
 applySettings();
 element('#spawn').onclick = () => {
   const entity = game.world.spawn(element<HTMLSelectElement>('#spawn-kind').value as EntityKind, {
@@ -712,10 +726,10 @@ let previous = performance.now();
 let accumulator = 0;
 let hudTime = 0;
 let fps = 60;
+let lastDraw = 0;
 function frame(now: number): void {
   const elapsed = Math.min(Math.max(now - previous, 0), balance.physics.maxFrameMs);
   previous = now;
-  fps = fps * 0.94 + (1000 / Math.max(elapsed, 1)) * 0.06;
   game.move = {
     x: Number(keys.has('KeyD')) - Number(keys.has('KeyA')) + joystick.x,
     y: Number(keys.has('KeyS')) - Number(keys.has('KeyW')) + joystick.y,
@@ -729,7 +743,11 @@ function frame(now: number): void {
     }
   } else accumulator = 0;
   feedback.update(elapsed / 1000);
-  renderer.draw(game, feedback, now);
+  if (now - lastDraw >= 1000 / settings.frameRate - 1) {
+    if (lastDraw) fps = fps * 0.94 + (1000 / Math.max(now - lastDraw, 1)) * 0.06;
+    renderer.draw(game, feedback, now);
+    lastDraw = now;
+  }
   if (game.state !== lastState) {
     lastState = game.state;
     if (game.state === 'won' || game.state === 'lost') clearInput();
@@ -737,6 +755,28 @@ function frame(now: number): void {
   }
   refreshRun();
   if (now - hudTime > 80) {
+    audio.soundtrack(
+      document.hidden ||
+        document.querySelector('dialog[open]') ||
+        (game.state === 'paused' && !upgradePaused)
+        ? 'off'
+        : game.state === 'playing'
+          ? game.player.health < game.maxHealth * 0.25
+            ? 'critical'
+            : game.bosses.active
+              ? 'boss'
+              : game.room.type === 'elite'
+                ? 'elite'
+                : game.enemyCount > 7
+                  ? 'danger'
+                  : 'combat'
+          : (run.active ? run.phase === 'summary' && run.won : game.state === 'won')
+            ? 'victory'
+            : run.active && run.phase !== 'summary'
+              ? 'exploration'
+              : 'off',
+      Boolean(game.rules.phenomenon),
+    );
     updateHud(fps);
     hudTime = now;
   }
@@ -745,6 +785,25 @@ function frame(now: number): void {
 }
 updateHud(60);
 requestAnimationFrame(frame);
+
+void installPlatform(
+  () => {
+    clearInput();
+    game.pause();
+    audio.soundtrack('off');
+    persist();
+  },
+  () => {
+    const dialog = document.querySelector<HTMLDialogElement>('dialog[open]');
+    if (dialog) dialog.close();
+    else if (game.state === 'playing') {
+      clearInput();
+      game.pause();
+    }
+  },
+).catch(() => {
+  /* A missing native plugin must not prevent play. */
+});
 
 // Read-only diagnostics for browser tests and local playtest reports.
 if (import.meta.env.DEV)

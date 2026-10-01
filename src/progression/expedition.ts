@@ -3,7 +3,7 @@ import { RunBuild } from './build';
 import { generateMap, type MapNode } from './map';
 import { buildRoom } from '../content/rooms';
 import { entityDefinitions } from '../content/enemies';
-import { relics, relicById } from '../content/relics';
+import { relics } from '../content/relics';
 import type { EntityKind } from '../physics/world';
 import { classById } from '../content/classes';
 import { record, finite, strings } from '../core/save';
@@ -16,6 +16,7 @@ import { contracts, phenomena, type Contract, type Phenomenon } from '../content
 import { bossDefinitions, type BossKind } from '../content/bosses';
 import { freshMastery, readMastery, type MasteryProgress } from './mastery';
 import { story } from '../content/story';
+import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -50,7 +51,7 @@ export class Expedition {
   elapsed = 0;
   won = false;
   message = '';
-  shop: { id: string; price: number; sold: boolean }[] = [];
+  shop: ShopItem[] = [];
   constructor(readonly game: Game) {
     game.events.on('collected', (event) => {
       if (this.phase !== 'room') return;
@@ -244,14 +245,7 @@ export class Expedition {
       this.game.start();
     } else if (node.type === 'shop') {
       this.phase = 'shop';
-      this.shop = this.build.random
-        .shuffle(relics.filter((relic) => !this.build.relics.includes(relic.id)))
-        .slice(0, 3)
-        .map((relic) => ({
-          id: relic.id,
-          price: relic.rarity === 'legendary' ? 100 : relic.rarity === 'rare' ? 65 : 40,
-          sold: false,
-        }));
+      this.shop = shopInventory(this.build);
       this.message = 'The salvage trader accepts matter shards.';
     } else if (node.type === 'event') {
       this.phase = 'event';
@@ -270,12 +264,9 @@ export class Expedition {
   }
   buy(id: string): boolean {
     const item = this.shop.find((item) => item.id === id);
-    if (this.phase !== 'shop' || !item || item.sold || this.build.currency < item.price)
-      return false;
-    if (!this.build.addRelic(id)) return false;
-    this.build.currency -= item.price;
-    item.sold = true;
-    this.message = `Acquired ${relicById.get(id)!.name}.`;
+    if (this.phase !== 'shop' || !item || !purchase(this.build, item)) return false;
+    this.discoveries.add(id.includes(':') ? id : `relic:${id}`);
+    this.message = `Acquired ${shopDescription(id)!.name}.`;
     return true;
   }
   resolveEvent(choice: string): boolean {
@@ -422,11 +413,16 @@ export class Expedition {
       const bestChain = finite(data.bestChain ?? 0, 0, 1000);
       const build = new RunBuild(this.game, data.seed, data.classId);
       build.restore(data.build);
-      const shop: { id: string; price: number; sold: boolean }[] = [];
-      if (!Array.isArray(data.shop) || data.shop.length > 3) return false;
+      const shop: ShopItem[] = [];
+      if (!Array.isArray(data.shop) || data.shop.length > 8) return false;
       for (const value of data.shop) {
         const item = record(value);
-        if (typeof item.id !== 'string' || !relicById.has(item.id)) return false;
+        if (
+          typeof item.id !== 'string' ||
+          !shopDescription(item.id) ||
+          shop.some((entry) => entry.id === item.id)
+        )
+          return false;
         shop.push({ id: item.id, price: finite(item.price, 0, 1000), sold: item.sold === true });
       }
       this.game.reset(false);
