@@ -110,6 +110,11 @@
     "energyRegen": 8
   },
   "presentation": {
+    "maxLenses": 6,
+    "maxFieldMotes": 64,
+    "maxLensDisplacement": 36,
+    "singularityThreshold": 0.01,
+    "lensGridStep": 30,
     "maxParticles": 200,
     "maxPixelRatio": 2,
     "shake": 5,

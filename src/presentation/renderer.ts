@@ -11,6 +11,7 @@ import { bossDefinitions } from '../content/bosses';
 import { objectDefinitions } from '../content/objects';
 import { abilityFeedback } from '../content/ability-feedback';
 import { coreCosmetics } from '../content/cosmetics';
+import { isSingularity, lensPoint, selectLenses } from './lensing';
 
 export class Renderer {
   cosmetic: (typeof coreCosmetics)[number] = coreCosmetics[0];
@@ -159,6 +160,7 @@ export class Renderer {
       }
     }
     for (const field of game.gravity.fields.values()) {
+      const singularity = isSingularity(field);
       const opacity = Math.min(1, field.remaining);
       ctx.save();
       ctx.translate(field.position.x, field.position.y);
@@ -209,37 +211,67 @@ export class Renderer {
           );
           ctx.stroke();
         }
+        ctx.fillStyle = color;
+        const particles = Math.min(
+          this.settings.lowQuality ? 3 : 8,
+          Math.floor(balance.presentation.maxFieldMotes / game.gravity.fields.size),
+        );
+        for (let i = 0; i < particles; i++) {
+          const progress = (now * 0.00018 + i / particles) % 1;
+          const angle = now * 0.0007 + i * 2.4;
+          const distance =
+            field.radius * (0.14 + 0.65 * (field.strength < 0 ? progress : 1 - progress));
+          ctx.globalAlpha = opacity * Math.sin(progress * Math.PI) * 0.8;
+          this.circle(
+            Math.cos(angle) * distance,
+            Math.sin(angle) * distance,
+            singularity ? 2.5 : 1.8,
+          );
+          ctx.fill();
+        }
       }
       ctx.globalAlpha = opacity;
-      ctx.fillStyle = '#101021';
-      this.circle(0, 0, 13);
+      ctx.fillStyle = singularity ? '#020309' : '#101021';
+      const coreRadius = singularity ? 25 : 13;
+      this.circle(0, 0, coreRadius);
       ctx.fill();
-      ctx.strokeStyle = '#d3b9ff';
+      ctx.strokeStyle = singularity ? '#eadfff' : '#d3b9ff';
       ctx.lineWidth = 2;
       ctx.stroke();
+      if (singularity) {
+        ctx.strokeStyle = `${color}b0`;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 44, 16, -0.35, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#020309';
+        this.circle(0, 0, coreRadius - 2);
+        ctx.fill();
+      }
       ctx.font = 'bold 14px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(
-        field.mode === 'zero'
-          ? '0'
-          : field.mode === 'vortex'
-            ? '↻'
-            : field.mode === 'directional'
-              ? Math.abs(field.direction.x) > Math.abs(field.direction.y)
-                ? field.direction.x * field.strength < 0
-                  ? '←'
-                  : '→'
-                : field.direction.y * field.strength < 0
-                  ? '↑'
-                  : '↓'
-              : field.strength < 0
-                ? '−'
-                : '+',
-        0,
-        0,
-      );
+      if (!singularity)
+        ctx.fillText(
+          field.mode === 'zero'
+            ? '0'
+            : field.mode === 'vortex'
+              ? '↻'
+              : field.mode === 'directional'
+                ? Math.abs(field.direction.x) > Math.abs(field.direction.y)
+                  ? field.direction.x * field.strength < 0
+                    ? '←'
+                    : '→'
+                  : field.direction.y * field.strength < 0
+                    ? '↑'
+                    : '↓'
+                : field.strength < 0
+                  ? '−'
+                  : '+',
+          0,
+          0,
+        );
       ctx.restore();
     }
     for (const id of this.trails.keys()) if (!game.world.entities.has(id)) this.trails.delete(id);
@@ -309,10 +341,37 @@ export class Renderer {
     const arena = game.room;
     ctx.fillStyle = biomes[arena.biome].color;
     ctx.fillRect(50, 50, arena.width - 100, arena.height - 100);
-    ctx.strokeStyle = '#8db0d008';
+    const lenses =
+      this.settings.lowQuality || this.settings.reducedMotion
+        ? []
+        : selectLenses(game.gravity.fields.values(), game.player.body.position);
+    ctx.strokeStyle = lenses.length ? '#8db0d022' : '#8db0d008';
     ctx.lineWidth = 1;
-    for (let x = 60; x < arena.width; x += 40) this.line(x, 50, x, arena.height - 50);
-    for (let y = 60; y < arena.height; y += 40) this.line(50, y, arena.width - 50, y);
+    ctx.beginPath();
+    const gridLine = (start: Vec2, end: Vec2): void => {
+      if (!lenses.length) {
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        return;
+      }
+      const steps = Math.ceil(
+        Math.hypot(end.x - start.x, end.y - start.y) / balance.presentation.lensGridStep,
+      );
+      for (let i = 0; i <= steps; i++) {
+        const point = lensPoint(
+          {
+            x: start.x + ((end.x - start.x) * i) / steps,
+            y: start.y + ((end.y - start.y) * i) / steps,
+          },
+          lenses,
+        );
+        if (i === 0) ctx.moveTo(point.x, point.y);
+        else ctx.lineTo(point.x, point.y);
+      }
+    };
+    for (let x = 60; x < arena.width; x += 40) gridLine({ x, y: 50 }, { x, y: arena.height - 50 });
+    for (let y = 60; y < arena.height; y += 40) gridLine({ x: 50, y }, { x: arena.width - 50, y });
+    ctx.stroke();
     const g = game.gravity.direction;
     const drift = this.settings.reducedMotion ? 0 : now * 0.018;
     for (let i = 0; i < 48; i++) {

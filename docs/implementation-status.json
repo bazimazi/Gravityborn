@@ -617,9 +617,13 @@
       "evidence": [
         "src/presentation/renderer.ts",
         "src/presentation/feedback.ts",
-        "scripts/visual-check.mjs"
+        "src/presentation/lensing.ts",
+        "tests/feedback.test.ts",
+        "tests/lensing.test.ts",
+        "tests/browser/lensing.spec.ts",
+        "scripts/benchmark.ts"
       ],
-      "remaining": "Procedural silhouettes, trails, pooled particles, impact deformation, strong-impact hit pause and a responsive HUD are present. Human visual-quality review and further field distortion polish remain."
+      "remaining": "Directional chevrons, signed field symbols, expanding pulse rings, curved field particles, motion trails, bounded impact deformation and background lensing are implemented. Void fields have a dark core and bright orbit ring. Lensing selects at most six sources; field motes cap at 64; low-power/reduced-motion disable grid distortion. Browser captures were reviewed. Human instant-readability and physical-device motion/performance review remain open."
     },
     {
       "section": 46,
@@ -627,10 +631,14 @@
       "status": "partial",
       "evidence": [
         "src/presentation/renderer.ts",
-        "src/content/ability-feedback.ts",
-        "src/presentation/feedback.ts"
+        "src/presentation/feedback.ts",
+        "src/presentation/lensing.ts",
+        "tests/feedback.test.ts",
+        "tests/lensing.test.ts",
+        "tests/browser/lensing.spec.ts",
+        "scripts/benchmark.ts"
       ],
-      "remaining": "Fields use mode glyphs, oriented chevrons, power colors and bounded curves. Pulses expand, zero zones retain distinct boundaries, and gravity changes animate the core. Stronger black-hole lensing and human readability review remain."
+      "remaining": "Directional chevrons, signed field symbols, expanding pulse rings, curved field particles, motion trails, bounded impact deformation and background lensing are implemented. Void fields have a dark core and bright orbit ring. Lensing selects at most six sources; field motes cap at 64; low-power/reduced-motion disable grid distortion. Browser captures were reviewed. Human instant-readability and physical-device motion/performance review remain open."
     },
     {
       "section": 47,

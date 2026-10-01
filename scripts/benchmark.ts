@@ -4,6 +4,7 @@ import arena from '../src/data/arena.json';
 import { GravitySystem } from '../src/physics/gravity';
 import { PhysicsWorld } from '../src/physics/world';
 import { Game } from '../src/gameplay/game';
+import { lensPoint, selectLenses } from '../src/presentation/lensing';
 
 for (const [count, sources] of [
   [15, 1],
@@ -50,6 +51,25 @@ for (const [count, sources] of [
       budgetMs: +balance.physics.stepMs.toFixed(3),
     }),
   );
+  if (sources === 50) {
+    const lenses = selectLenses(gravity.fields.values(), { x: 600, y: 400 });
+    const timings: number[] = [];
+    for (let frame = 0; frame < 120; frame++) {
+      const start = performance.now();
+      for (let y = 50; y < 750; y += 20)
+        for (let x = 50; x < 1150; x += 20) lensPoint({ x, y }, lenses);
+      if (frame >= 20) timings.push(performance.now() - start);
+    }
+    timings.sort((a, b) => a - b);
+    console.log(
+      JSON.stringify({
+        stage: 'background-lens-math',
+        lenses: lenses.length,
+        samples: 1925,
+        p95Ms: +timings[Math.floor(timings.length * 0.95)].toFixed(3),
+      }),
+    );
+  }
   world.dispose();
 }
 
