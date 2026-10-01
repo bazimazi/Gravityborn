@@ -12,6 +12,8 @@ import { freshMastery, masteryLevel } from '../progression/mastery';
 import type { Profile } from '../progression/profile';
 import { materialDescriptions } from '../content/objects';
 import { eliteCompatibility, type VariantKind } from '../content/variants';
+import { encounters } from '../content/events';
+import { mutations } from '../content/research';
 interface Entry {
   id: string;
   name: string;
@@ -51,7 +53,7 @@ export function codexView(profile: Profile): string {
       entries: Object.entries(bossDefinitions).map(([id, definition]) => ({
         id: `boss:${id}`,
         name: definition.name,
-        text: `Three phases. ${bossDescriptions[id as BossKind]}`,
+        text: `${known(`defeated:${id}`) ? 'Defeated.' : 'Encountered; no recorded victory yet.'} Three phases. ${bossDescriptions[id as BossKind]}`,
         known: known(`boss:${id}`),
       })),
     },
@@ -70,7 +72,7 @@ export function codexView(profile: Profile): string {
         id: `equipment:${item.id}`,
         name: item.name,
         text: `${item.description} Slot: ${item.slot}; family: ${item.set}. Tags: ${item.tags.join(', ')}.`,
-        known: Boolean(profile.equipment[item.id]),
+        known: Boolean(profile.equipment[item.id]) || known(`equipment:${item.id}`),
       })),
     },
     {
@@ -92,6 +94,35 @@ export function codexView(profile: Profile): string {
     {
       name: 'Materials',
       entries: materialDescriptions.map((material) => ({ ...material, known: true })),
+    },
+    {
+      name: 'Physics Objects',
+      entries: Object.entries(entityDefinitions)
+        .filter(([, item]) => item.faction === 'neutral')
+        .map(([id, item]) => ({
+          id: `object:${id}`,
+          name: 'name' in item ? item.name : id.replaceAll('_', ' '),
+          text: `Mass ${item.mass}; gravity response ${item.gravityResponse}; material ${item.material}; rebound ${item.restitution}. ${item.breakable ? 'Breakable.' : 'Durable.'} Tags: ${item.tags.join(', ')}.`,
+          known: known(`object:${id}`),
+        })),
+    },
+    {
+      name: 'Run Encounters',
+      entries: encounters.map((item) => ({
+        id: `event:${item.id}`,
+        name: item.name,
+        text: item.text,
+        known: known(`event:${item.id}`),
+      })),
+    },
+    {
+      name: 'Mutations',
+      entries: mutations.map((item) => ({
+        id: `mutation:${item.id}`,
+        name: item.name,
+        text: `${item.description} Tags: ${item.tags.join(', ')}.`,
+        known: profile.skills.includes('mutations') || known(`mutation:${item.id}`),
+      })),
     },
     {
       name: 'Gravity Phenomena',

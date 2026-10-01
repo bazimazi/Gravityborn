@@ -7,6 +7,7 @@ import { newProfile, readProfile, settleRun } from '../src/progression/profile';
 import { freshMastery, masteryLevel } from '../src/progression/mastery';
 import { codexView } from '../src/presentation/codex';
 import { challenges } from '../src/content/challenges';
+import { equipmentById } from '../src/content/equipment';
 
 it('credits a real wall-impact kill to the ability that supplied its causal chain', () => {
   const game = new Game(false);
@@ -26,6 +27,30 @@ it('credits a real wall-impact kill to the ability that supplied its causal chai
   expect(run.mastery.pulse.kills).toBe(1);
   expect(run.mastery.pulse.elites).toBe(1);
   expect(run.metrics.impactKills).toBe(1);
+});
+it.each([
+  ['orbital_engine', 'Orbital'],
+  ['zero', 'Void'],
+])('classifies %s collisions using authored power tags', (source, tag) => {
+  const game = new Game(false);
+  const run = new Expedition(game);
+  run.start('tagged-impact');
+  run.phase = 'room';
+  const enemy = game.world.spawn('chaser', { x: 1100, y: 360 })!;
+  enemy.health = 1;
+  let tags: string[] = [];
+  game.events.on('killed', (event) => {
+    if (event.kind === 'chaser') tags = event.damageTags;
+  });
+  game.markCause(enemy, game.createCause(source));
+  game.start();
+  game.gravity.strength = 0;
+  Matter.Body.setVelocity(enemy.body, { x: 18, y: 0 });
+  for (let i = 0; i < 40 && enemy.alive; i++) game.step();
+  expect(enemy.alive).toBe(false);
+  expect(tags).toContain(tag);
+  expect(run.mastery[source].kills).toBe(1);
+  game.world.dispose();
 });
 it('counts many parallel effects without allowing unbounded recursive depth or lifetime', () => {
   const chains = new ChainTracker();
@@ -68,6 +93,50 @@ it('persists discoveries and grants challenge rewards once', () => {
   expect(codex).toContain('Kepler Remnant');
   expect(codex).toContain('The last station');
   expect(codex).not.toContain('Aster Foundry');
+});
+it('records defeated guardians separately from encounters and remembers expedition-only equipment', () => {
+  const game = new Game(false);
+  const run = new Expedition(game);
+  const profile = newProfile();
+  run.start('collection-records');
+  run.discoveries.add('boss:magnetar');
+  expect(run.discoveries.has('defeated:magnetar')).toBe(false);
+  run.phase = 'room';
+  const boss = game.world.spawn('magnetar', { x: 800, y: 400 })!;
+  boss.health = 1;
+  game.applyDamage(boss, 85, game.createCause('planet'));
+  expect(run.discoveries.has('defeated:magnetar')).toBe(true);
+  run.phase = 'shop';
+  run.build.currency = 100;
+  run.shop = [{ id: 'equipment:hollow_core', price: 60, sold: false }];
+  expect(run.buy('equipment:hollow_core')).toBe(true);
+  run.phase = 'summary';
+  expect(settleRun(profile, run)).toBe(true);
+  expect(profile.equipment.hollow_core).toBeUndefined();
+  const restored = readProfile(JSON.parse(JSON.stringify(profile)));
+  expect(restored.discoveries).toContain('equipment:hollow_core');
+  expect(restored.discoveries).toContain('defeated:magnetar');
+  const codex = codexView(restored);
+  expect(codex).toContain('Defeated. Three phases.');
+  expect(codex.includes(equipmentById.get('hollow_core')!.name)).toBe(true);
+  game.world.dispose();
+});
+it('records initial props and later spawned machines and enemies for the persistent codex', () => {
+  const game = new Game(false);
+  const run = new Expedition(game);
+  const profile = newProfile();
+  run.start('codex-spawns', 'engineer');
+  run.enter(run.available[0].id);
+  expect([...run.discoveries].some((id) => id.startsWith('object:'))).toBe(true);
+  expect(game.castAbility('beacon', { x: 600, y: 400 })).toBe(true);
+  expect(run.discoveries.has('object:gravity_machine')).toBe(true);
+  game.world.spawn('parasite', { x: 700, y: 400 });
+  expect(run.discoveries.has('enemy:parasite')).toBe(true);
+  run.phase = 'summary';
+  settleRun(profile, run);
+  const codex = codexView(readProfile(JSON.parse(JSON.stringify(profile))));
+  expect(codex.includes('<h3>Gravity Machine</h3>')).toBe(true);
+  game.world.dispose();
 });
 
 it('keeps the complete collection of power challenges through profile migration', () => {

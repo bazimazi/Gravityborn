@@ -101,6 +101,7 @@ it.each([
     run.build.currency = 20;
     expect(run.resolveEvent(id)).toBe(true);
     expect(run.build.mutation).toBe(id);
+    expect(run.discoveries.has(`mutation:${id}`)).toBe(true);
     expect(run.game.player.body.mass).toBeCloseTo(run.game.player.definition.mass * mass);
     expect(
       run.game.abilities.modifiers.evaluate('movement', balance.player.acceleration),

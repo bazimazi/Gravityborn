@@ -178,7 +178,13 @@ export class Game {
     this.echoes.length = 0;
     this.world?.dispose();
     this.gravity = new GravitySystem(balance.gravity.strength, balance.physics.maxAcceleration);
-    this.world = new PhysicsWorld(this.gravity);
+    this.world = new PhysicsWorld(this.gravity, (entity) =>
+      this.events.emit('entitySpawned', {
+        entityId: entity.id,
+        kind: entity.kind,
+        position: { ...entity.body.position },
+      }),
+    );
     this.chains.clear();
     this.explosions.length = 0;
     this.wellChains.clear();
@@ -686,9 +692,10 @@ export class Game {
       target.lastImpact = this.time;
       const source = this.chains.source(cause.id);
       const tags = ['Impact', 'Velocity'];
-      if (['planet', 'binary', 'vortex', 'reflect', 'rotate'].includes(source))
+      const sourceTags = abilityById.get(source)?.tags ?? [];
+      if (sourceTags.includes('Orbit') || sourceTags.includes('Orbital'))
         tags.push('Orbital', 'Orbit');
-      if (['black_hole', 'rift'].includes(source)) tags.push('Void');
+      if (sourceTags.includes('Void')) tags.push('Void');
       this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
     }

@@ -58,6 +58,9 @@ export class Expedition {
   shop: ShopItem[] = [];
   private eventReward?: EventChoice;
   constructor(readonly game: Game) {
+    game.events.on('entitySpawned', (event) => {
+      if (this.phase === 'room') this.discoverEntity(event.kind as EntityKind);
+    });
     game.events.on('collected', (event) => {
       if (this.phase !== 'room') return;
       if (event.kind === 'xp') this.build.gainXP(event.amount);
@@ -104,6 +107,7 @@ export class Expedition {
         this.metrics[metric] = (this.metrics[metric] ?? 0) + 1;
       }
       this.discoveries.add(`${event.boss ? 'boss' : 'enemy'}:${event.kind}`);
+      if (event.boss) this.discoveries.add(`defeated:${event.kind}`);
       if (event.source === 'well' || event.source === 'flip' || abilityById.has(event.source)) {
         const progress = (this.mastery[event.source] ??= freshMastery());
         progress.kills++;
@@ -291,9 +295,7 @@ export class Expedition {
         wall.motion = index % 2 ? 'horizontal' : 'vertical';
       });
     this.game.reset(true, room);
-    for (const spawn of room.spawns)
-      if (entityDefinitions[spawn.kind].faction === 'enemy')
-        this.discoveries.add(`${spawn.kind in bossDefinitions ? 'boss' : 'enemy'}:${spawn.kind}`);
+    for (const spawn of room.spawns) this.discoverEntity(spawn.kind);
     this.game.abilities.restore(powers);
     this.build.apply();
     this.game.abilities.restore(powers);
@@ -344,6 +346,7 @@ export class Expedition {
       this.phase = 'event';
       const encounter = new Random(`${this.seed}:${node.id}:event`).pick(encounters);
       this.eventId = encounter.id;
+      this.discoveries.add(`event:${encounter.id}`);
       this.message = encounter.text;
     } else {
       if (node.type === 'rest') {
@@ -390,7 +393,10 @@ export class Expedition {
     this.build.currency += effect.currency ?? 0;
     this.build.gainXP(effect.xp ?? 0);
     if (effect.power) this.game.abilities.learn(effect.power);
-    if (effect.mutation) this.build.mutation = effect.mutation;
+    if (effect.mutation) {
+      this.build.mutation = effect.mutation;
+      this.discoveries.add(`mutation:${effect.mutation}`);
+    }
     if (effect.phenomenon) {
       this.phenomenon = effect.phenomenon;
       this.discoveries.add(`phenomenon:${effect.phenomenon}`);
@@ -428,7 +434,7 @@ export class Expedition {
           if (progress.kills >= Math.max(1, this.kills * 0.5)) progress.wins++;
         if (
           Object.entries(this.mastery)
-            .filter(([id]) => ['planet', 'binary', 'vortex', 'reflect', 'rotate'].includes(id))
+            .filter(([id]) => abilityById.get(id)?.tags.includes('Orbit'))
             .reduce((sum, [, progress]) => sum + progress.kills, 0) >=
           Math.max(1, this.kills * 0.75)
         )
@@ -618,6 +624,16 @@ export class Expedition {
     } catch {
       return false;
     }
+  }
+  private discoverEntity(kind: EntityKind): void {
+    if (kind === 'player' || kind === 'projectile') return;
+    const category =
+      kind in bossDefinitions
+        ? 'boss'
+        : entityDefinitions[kind].faction === 'enemy'
+          ? 'enemy'
+          : 'object';
+    this.discoveries.add(`${category}:${kind}`);
   }
   private grantRelic(rare = false): void {
     const pool = relics.filter(

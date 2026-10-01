@@ -2,6 +2,7 @@ import type { Vec2 } from './vector';
 import type { DiagnosticSample } from './diagnostics';
 
 export interface GameEvents {
+  entitySpawned: { entityId: number; kind: string; position: Vec2 };
   runStarted: { id: string; mode: string; classId: string; difficulty: number };
   runRestored: { id: string };
   runEnded: {

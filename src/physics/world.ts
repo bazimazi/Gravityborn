@@ -52,7 +52,10 @@ export class PhysicsWorld {
   private readonly projectilePool: Entity[] = [];
   private readonly safePositions = new Map<number, Vec2>();
 
-  constructor(readonly gravity: GravitySystem) {
+  constructor(
+    readonly gravity: GravitySystem,
+    private readonly onSpawn?: (entity: Entity) => void,
+  ) {
     this.engine.gravity.scale = 0;
     Events.on(this.engine, 'beforeSolve', () => {
       for (const entity of this.entities.values())
@@ -155,6 +158,7 @@ export class PhysicsWorld {
     this.entities.set(entity.id, entity);
     this.safePositions.set(entity.id, { ...position });
     Composite.add(this.engine.world, entity.body);
+    this.onSpawn?.(entity);
     return entity;
   }
 

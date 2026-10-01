@@ -730,28 +730,34 @@
     {
       "section": 54,
       "title": "Codex",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/story.ts",
-        "src/content/challenges.ts",
-        "src/progression/mastery.ts",
         "src/presentation/codex.ts",
-        "tests/mastery.test.ts"
+        "src/progression/profile.ts",
+        "src/progression/expedition.ts",
+        "src/core/events.ts",
+        "src/physics/world.ts",
+        "tests/mastery.test.ts",
+        "tests/run-events.test.ts",
+        "tests/browser/game.spec.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Codex records powers, enemies, bosses, relics, equipment, planets, materials, physics objects, phenomena, events, mutations, lore, challenges and mastery. Encountered and defeated bosses are distinct. Expedition-only equipment remains discovered after its temporary loadout ends. Initial props and later spawned objects/enemies record through typed spawn facts. Collection challenges unlock equipment/research/cosmetics and settle once; old saves cannot reconstruct historical per-boss defeats they never recorded."
     },
     {
       "section": 55,
       "title": "Collection",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/story.ts",
-        "src/content/challenges.ts",
-        "src/progression/mastery.ts",
         "src/presentation/codex.ts",
-        "tests/mastery.test.ts"
+        "src/progression/profile.ts",
+        "src/progression/expedition.ts",
+        "src/core/events.ts",
+        "src/physics/world.ts",
+        "tests/mastery.test.ts",
+        "tests/run-events.test.ts",
+        "tests/browser/game.spec.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Codex records powers, enemies, bosses, relics, equipment, planets, materials, physics objects, phenomena, events, mutations, lore, challenges and mastery. Encountered and defeated bosses are distinct. Expedition-only equipment remains discovered after its temporary loadout ends. Initial props and later spawned objects/enemies record through typed spawn facts. Collection challenges unlock equipment/research/cosmetics and settle once; old saves cannot reconstruct historical per-boss defeats they never recorded."
     },
     {
       "section": 56,
