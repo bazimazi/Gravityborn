@@ -56,7 +56,7 @@ export class AbilitySystem {
   private readonly bindings: Binding[] = [];
   private readonly statuses: Status[] = [];
   private readonly resistance = new Map<number, { until: number; generation: number }>();
-  private readonly planets: { entity: Entity; expires: number }[] = [];
+  private readonly constructs: { entity: Entity; expires: number }[] = [];
   private rotation?: { original: Vec2; start: number; duration: number; chain: number };
 
   constructor(private readonly host: AbilityHost) {}
@@ -127,15 +127,16 @@ export class AbilitySystem {
     const tuning = balance.abilities;
     const parameters = definition.parameters ?? {};
     const planets = definition.effect === 'planet' ? (parameters.planetCount ?? 1) : 0;
+    const bodies = planets + Number(definition.effect === 'deploy');
     const fieldSlots = planets
       ? planets * 2
-      : ['field', 'collapse', 'reflect'].includes(definition.effect)
+      : ['field', 'collapse', 'reflect', 'deploy'].includes(definition.effect)
         ? 1
         : 0;
     if (
       (!repeated && cost > this.energy) ||
       this.host.gravity.fields.size + fieldSlots > balance.physics.maxFields ||
-      this.host.world.entities.size + planets > balance.physics.maxBodies
+      this.host.world.entities.size + bodies > balance.physics.maxBodies
     )
       return false;
     const point =
@@ -395,11 +396,18 @@ export class AbilitySystem {
           if (!planet) continue;
           planet.gravityScale = tuning.planetGravityScale;
           this.host.markCause(planet, chain);
-          this.planets.push({ entity: planet, expires: this.host.time + duration });
+          this.constructs.push({ entity: planet, expires: this.host.time + duration });
           this.host.world.impulse(planet, { x: 0, y: (index % 2 ? -1 : 1) * tuning.planetImpulse });
           field('radial', planet.body.position, strength, planet);
           field('vortex', planet.body.position, strength * tuning.planetVortexRatio, planet);
         }
+        break;
+      }
+      case 'deploy': {
+        const machine = this.host.world.spawn('gravity_machine', point)!;
+        this.host.markCause(machine, chain);
+        this.constructs.push({ entity: machine, expires: this.host.time + duration });
+        field(definition.mode!, machine.body.position, strength, machine);
         break;
       }
       case 'chain': {
@@ -524,10 +532,13 @@ export class AbilitySystem {
           if (entity.kind === 'projectile') entity.redirected = true;
         }
     }
-    for (let index = this.planets.length - 1; index >= 0; index--)
-      if (this.planets[index].expires <= this.host.time) {
-        this.host.world.remove(this.planets[index].entity);
-        this.planets.splice(index, 1);
+    for (let index = this.constructs.length - 1; index >= 0; index--)
+      if (
+        this.constructs[index].expires <= this.host.time ||
+        !this.constructs[index].entity.alive
+      ) {
+        this.host.world.remove(this.constructs[index].entity);
+        this.constructs.splice(index, 1);
       }
     if (this.rotation) {
       const progress = Math.min(1, (this.host.time - this.rotation.start) / this.rotation.duration);

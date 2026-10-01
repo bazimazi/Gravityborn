@@ -38,6 +38,7 @@ const effects = [
   'collapse',
   'burst',
   'planet',
+  'deploy',
   'chain',
   'reverse',
   'rotate',
@@ -181,13 +182,13 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
     ] as const)
       check(isNumber(item[key], min, max), key, `Value must be finite and within ${min}–${max}.`);
     check(Number.isInteger(item.maxLevel), 'maxLevel', 'Maximum level must be an integer.');
-    if (['field', 'collapse', 'planet', 'reflect'].includes(item.effect))
+    if (['field', 'collapse', 'planet', 'reflect', 'deploy'].includes(item.effect))
       check(
         item.duration > 0 && item.radius > 0,
         'duration',
         'Persistent fields require positive radius and duration.',
       );
-    if (item.effect === 'field')
+    if (item.effect === 'field' || item.effect === 'deploy')
       check(
         ['radial', 'vortex', 'directional', 'zero'].includes(item.mode ?? ''),
         'mode',

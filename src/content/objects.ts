@@ -23,6 +23,15 @@ function object(
   };
 }
 export const objectDefinitions = {
+  gravity_machine: object(
+    'Gravity Machine',
+    'metal',
+    8,
+    65,
+    '#96dce9',
+    ['Gravity', 'Control', 'Machine'],
+    0.7,
+  ),
   rift_seal: object('Rift Seal', 'gravity', 24, 42, '#d9c3ff', ['Gravity', 'Environmental'], 0),
   crystal: object(
     'Gravity Crystal',

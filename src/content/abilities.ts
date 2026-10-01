@@ -9,6 +9,7 @@ export type EffectKind =
   | 'collapse'
   | 'burst'
   | 'planet'
+  | 'deploy'
   | 'chain'
   | 'reverse'
   | 'rotate'
@@ -48,6 +49,41 @@ export interface AbilityDefinition {
 }
 
 export const abilities: AbilityDefinition[] = [
+  {
+    id: 'beacon',
+    name: 'Gravity Beacon',
+    rarity: 'rare',
+    description:
+      'Deploy a movable, destructible machine that attracts nearby matter. Its field follows the machine until it breaks or expires.',
+    tags: ['Gravity', 'Control', 'Machine'],
+    effect: 'deploy',
+    mode: 'radial',
+    energy: 32,
+    cooldown: 12,
+    radius: 220,
+    strength: 0.004,
+    duration: 8,
+    target: 'point',
+    maxLevel: 3,
+    evolution: 'orbital_engine',
+  },
+  {
+    id: 'orbital_engine',
+    name: 'Orbital Engine',
+    rarity: 'epic',
+    description:
+      'An evolved machine bends nearby matter into a vortex. Launch the device to carry its orbit across the chamber.',
+    tags: ['Gravity', 'Control', 'Machine', 'Orbit'],
+    effect: 'deploy',
+    mode: 'vortex',
+    energy: 42,
+    cooldown: 14,
+    radius: 270,
+    strength: 0.0045,
+    duration: 10,
+    target: 'point',
+    maxLevel: 3,
+  },
   {
     id: 'pulse',
     rarity: 'common',

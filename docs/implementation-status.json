@@ -373,15 +373,15 @@
       "title": "Character Classes",
       "status": "partial",
       "evidence": [
-        "src/progression/expedition.ts",
+        "src/content/classes.ts",
+        "src/content/abilities.ts",
+        "src/content/objects.ts",
+        "src/gameplay/abilities.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/deployment.test.ts",
+        "tests/progression.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Eight classes have distinct starting powers and physical/stat trade-offs. Engineer now deploys a movable, destructible Gravity Beacon with an Orbital Engine evolution; its source follows the body and disappears on destruction/expiry. Core-mass collision damage respects Massborn and density changes. Automated behavior, save and browser rendering checks pass; human class identity and balance review remain open."
     },
     {
       "section": 29,

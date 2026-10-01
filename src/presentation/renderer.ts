@@ -643,6 +643,7 @@ export class Renderer {
               crystal: '◇',
               mine: '!',
               generator: 'G',
+              gravity_machine: '⚙',
               gravity_core: '◎',
               metal_plate: '=',
               container: '!!',

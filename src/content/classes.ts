@@ -79,9 +79,9 @@ export const classes: ClassDefinition[] = [
     id: 'engineer',
     name: 'The Engineer',
     description:
-      'Control space with repulsors and directional rifts. Efficient fields trade force for uptime.',
+      'Deploy a destructible gravity machine and reposition it with repulsors. Efficient fields trade force for uptime.',
     cost: 40,
-    powers: ['repulsor', 'rift'],
+    powers: ['beacon', 'repulsor'],
     modifiers: [
       { stat: 'energyCost', operation: 'multiply', value: 0.7 },
       { stat: 'strength', operation: 'multiply', value: 0.8 },
