@@ -73,6 +73,42 @@ for (const [count, sources] of [
   world.dispose();
 }
 
+// Exercise gameplay attribution as well as the solver at both shared budgets.
+const saturated = new Game(false);
+saturated.player.invulnerability = 1000;
+saturated.abilities.learn('vortex');
+for (let index = 0; saturated.world.entities.size < balance.physics.maxBodies; index++) {
+  const entity = saturated.world.spawn(index % 2 ? 'rock' : 'chaser', {
+    x: 90 + (index % 20) * 52,
+    y: 90 + Math.floor(index / 20) * 52,
+  })!;
+  entity.invulnerability = 1000;
+}
+for (let index = 0; index < balance.physics.maxFields; index++)
+  saturated.abilities.cast(
+    'vortex',
+    { x: 180 + (index % 5) * 210, y: 150 + Math.floor(index / 5) * 50 },
+    true,
+  );
+saturated.start();
+const fullTimings: number[] = [];
+for (let step = 0; step < 480; step++) {
+  const start = performance.now();
+  saturated.step();
+  if (step >= 100) fullTimings.push(performance.now() - start);
+}
+fullTimings.sort((a, b) => a - b);
+console.log(
+  JSON.stringify({
+    stage: 'full-gameplay-field-attribution',
+    bodies: saturated.world.entities.size,
+    fields: saturated.gravity.fields.size,
+    p95Ms: +fullTimings[Math.floor(fullTimings.length * 0.95)].toFixed(3),
+    budgetMs: +balance.physics.stepMs.toFixed(3),
+  }),
+);
+saturated.world.dispose();
+
 // A repeatable input-only playthrough confirms that the authored arena is winnable.
 const game = new Game();
 game.start();

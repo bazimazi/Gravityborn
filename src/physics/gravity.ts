@@ -84,6 +84,23 @@ export class GravitySystem {
     tags: readonly string[] = [],
     globalDirection = this.direction,
   ): Vec2 {
+    return this.calculate(position, response, tags, globalDirection);
+  }
+
+  /** Fields whose removal changes the actual, capped acceleration at this point. */
+  influencingFields(position: Vec2, response = 1, tags: readonly string[] = []): Set<number> {
+    const influences = new Set<number>();
+    this.calculate(position, response, tags, this.direction, influences);
+    return influences;
+  }
+
+  private calculate(
+    position: Vec2,
+    response: number,
+    tags: readonly string[],
+    globalDirection: Vec2,
+    influences?: Set<number>,
+  ): Vec2 {
     if (this.dirty) {
       this.index.clear();
       for (const field of this.fields.values())
@@ -92,6 +109,9 @@ export class GravitySystem {
     }
     const result = scale(globalDirection, this.strength);
     let attenuation = 1;
+    let zeroFields = 0;
+    const contributions: { id: number; x: number; y: number; attenuation: number }[] | undefined =
+      influences ? [] : undefined;
     const nearby = this.index.at(position);
     if (nearby)
       for (const field of nearby) {
@@ -107,14 +127,34 @@ export class GravitySystem {
             : field.falloff === 'inverseSquare'
               ? 1 / (1 + (distance / (field.radius * 0.2)) ** 2)
               : 1;
-        if (field.mode === 'zero')
-          attenuation *= 1 - Math.min(1, Math.abs(field.strength) * falloff);
-        else {
-          result.x += direction.x * field.strength * falloff;
-          result.y += direction.y * field.strength * falloff;
-        }
+        const factor =
+          field.mode === 'zero' ? 1 - Math.min(1, Math.abs(field.strength) * falloff) : 1;
+        if (factor === 0) zeroFields++;
+        else attenuation *= factor;
+        const x = field.mode === 'zero' ? 0 : direction.x * field.strength * falloff;
+        const y = field.mode === 'zero' ? 0 : direction.y * field.strength * falloff;
+        result.x += x;
+        result.y += y;
+        contributions?.push({ id: field.id, x, y, attenuation: factor });
       }
-    return clampVector(scale(result, response * attenuation), this.maxAcceleration);
+    const acceleration = clampVector(
+      scale(result, zeroFields ? 0 : response * attenuation),
+      this.maxAcceleration,
+    );
+    if (influences && contributions)
+      for (const contribution of contributions) {
+        const remainingZeros = zeroFields - Number(contribution.attenuation === 0);
+        const without = clampVector(
+          scale(
+            { x: result.x - contribution.x, y: result.y - contribution.y },
+            remainingZeros ? 0 : (response * attenuation) / (contribution.attenuation || 1),
+          ),
+          this.maxAcceleration,
+        );
+        if (Math.hypot(without.x - acceleration.x, without.y - acceleration.y) >= 1e-8)
+          influences.add(contribution.id);
+      }
+    return acceleration;
   }
 
   clear(): void {

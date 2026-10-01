@@ -540,14 +540,23 @@ export class AbilitySystem {
           x: field.position.x + binding.velocity.x * dt,
           y: field.position.y + binding.velocity.y * dt,
         });
-      if (field)
-        for (const entity of this.near(field.position, field.radius, field.affects)) {
-          if (entity.body.isStatic || entity.definition.gravityResponse * entity.gravityScale === 0)
-            continue;
-          this.host.markCause(entity, binding.chain);
-          if (entity.kind === 'projectile') entity.redirected = true;
-        }
     }
+    if (this.bindings.length)
+      for (const entity of this.host.world.entities.values()) {
+        if (entity === this.host.player || entity.body.isStatic) continue;
+        const response = entity.definition.gravityResponse * entity.gravityScale;
+        if (response === 0) continue;
+        const influences = this.host.gravity.influencingFields(entity.body.position, response, [
+          entity.definition.material,
+          ...entity.definition.tags,
+        ]);
+        // Newest effective cast keeps ownership when multiple powers influence one body.
+        for (const binding of this.bindings)
+          if (influences.has(binding.field)) {
+            this.host.markCause(entity, binding.chain);
+            if (entity.kind === 'projectile') entity.redirected = true;
+          }
+      }
     for (let index = this.constructs.length - 1; index >= 0; index--)
       if (
         this.constructs[index].expires <= this.host.time ||

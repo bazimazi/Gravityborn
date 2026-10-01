@@ -366,7 +366,13 @@ export class Game {
         if (
           !entity.body.isStatic &&
           entity.definition.gravityResponse * entity.gravityScale !== 0 &&
-          length(subtract(entity.body.position, bounded)) < radius
+          this.gravity
+            .influencingFields(
+              entity.body.position,
+              entity.definition.gravityResponse * entity.gravityScale,
+              [entity.definition.material, ...entity.definition.tags],
+            )
+            .has(fieldId)
         ) {
           this.attribute(entity, { id: chain, depth: 0 });
           if (entity.kind === 'projectile') entity.redirected = true;
@@ -459,7 +465,14 @@ export class Game {
           field.source === 'player-well' &&
           !entity.body.isStatic &&
           entity.definition.gravityResponse * entity.gravityScale !== 0 &&
-          length(subtract(entity.body.position, field.position)) < field.radius
+          length(subtract(entity.body.position, field.position)) < field.radius &&
+          this.gravity
+            .influencingFields(
+              entity.body.position,
+              entity.definition.gravityResponse * entity.gravityScale,
+              [entity.definition.material, ...entity.definition.tags],
+            )
+            .has(field.id)
         ) {
           if (entity.kind === 'projectile') entity.redirected = true;
           if (entity.chainId === null)
