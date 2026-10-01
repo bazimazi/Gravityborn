@@ -9,6 +9,7 @@ export type EntityKind = keyof typeof definitions;
 export type EntityDefinition = (typeof definitions)[EntityKind];
 export interface Entity {
   id: number;
+  generation: number;
   kind: EntityKind;
   definition: EntityDefinition;
   body: Matter.Body;
@@ -26,6 +27,8 @@ export interface Entity {
   redirected: boolean;
   ownerId: number | null;
   gravityScale: number;
+  gravityBase: number;
+  gravityFactors: Map<string, number>;
   elite?: EliteModifier;
   telegraph?: number;
 }
@@ -99,6 +102,11 @@ export class PhysicsWorld {
     const definition = definitions[kind];
     let entity = kind === 'projectile' ? this.projectilePool.pop() : undefined;
     if (entity) {
+      Body.setStatic(entity.body, false);
+      Body.setMass(entity.body, definition.mass);
+      entity.body.restitution = definition.restitution;
+      entity.body.frictionAir = definition.frictionAir;
+      entity.body.collisionFilter = { category: 2, mask: 0xffffffff, group: 0 };
       Body.setPosition(entity.body, position);
       Body.setAngle(entity.body, 0);
       Body.setVelocity(entity.body, { x: 0, y: 0 });
@@ -107,8 +115,23 @@ export class PhysicsWorld {
     } else {
       const body = this.makeBody(kind, position);
       entity = { id: body.id, body } as Entity;
+      Object.defineProperty(entity, 'gravityScale', {
+        enumerable: true,
+        get(this: Entity): number {
+          let response = this.gravityBase;
+          for (const factor of this.gravityFactors.values()) {
+            if (factor === 0) return 0;
+            response *= factor;
+          }
+          return Math.max(-4, Math.min(4, Number.isNaN(response) ? 1 : response));
+        },
+        set(this: Entity, value: number) {
+          this.gravityBase = value;
+        },
+      });
     }
     Object.assign(entity, {
+      generation: (entity.generation ?? 0) + 1,
       kind,
       definition,
       health: definition.health,
@@ -124,7 +147,10 @@ export class PhysicsWorld {
       chainExpires: 0,
       redirected: false,
       ownerId: null,
+      gravityFactors: new Map<string, number>(),
       gravityScale: 1,
+      elite: undefined,
+      telegraph: undefined,
     });
     this.entities.set(entity.id, entity);
     this.safePositions.set(entity.id, { ...position });

@@ -13,13 +13,10 @@ interface EnemyHost extends AbilityHost {
 interface EnemyState {
   next: number;
   fields: Map<string, number>;
-  phasing?: boolean;
-  phaseResponse?: number;
   initialized: boolean;
   carrier?: Entity;
   target?: Entity;
   lastDirection: Vec2;
-  previousResponse?: number;
 }
 
 /** Enemy decisions run before physics. Every field shares GravitySystem. */
@@ -165,11 +162,8 @@ export class EnemySystem {
     }
     if (entity.kind === 'phase') {
       const phasing = Math.floor(entity.life / tuning.phasePeriod) % 2 === 1;
-      if (phasing && !state.phasing) {
-        state.phaseResponse = entity.gravityScale;
-        entity.gravityScale = 0;
-      } else if (!phasing && state.phasing) entity.gravityScale = state.phaseResponse ?? 1;
-      state.phasing = phasing;
+      if (phasing) entity.gravityFactors.set('phase', 0);
+      else entity.gravityFactors.delete('phase');
       // Keep solid arena walls; only ignore other entities while phased.
       entity.body.collisionFilter.mask = phasing ? 1 : 0xffffffff;
       entity.telegraph = phasing ? 1 : 0;
@@ -198,8 +192,7 @@ export class EnemySystem {
         );
         if (target) {
           state.target = target;
-          state.previousResponse = target.gravityScale;
-          target.gravityScale *= tuning.parasite.response;
+          target.gravityFactors.set(`parasite:${entity.id}`, tuning.parasite.response);
         }
       }
       if (state.target?.alive)
@@ -259,8 +252,7 @@ export class EnemySystem {
     for (const source of this.host.gravity.fields.values())
       if (source.source === `enemy:${entity.id}`) this.host.gravity.removeField(source.id);
     const state = this.states.get(entity.id);
-    if (state?.target?.alive && state.previousResponse !== undefined)
-      state.target.gravityScale = state.previousResponse;
+    if (state?.target?.alive) state.target.gravityFactors.delete(`parasite:${entity.id}`);
     if (state?.carrier?.alive)
       this.host.markCause(state.carrier, entity.chainId ?? this.host.createCause());
     this.states.delete(entity.id);

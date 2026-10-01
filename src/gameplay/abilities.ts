@@ -34,9 +34,9 @@ interface Binding {
 }
 interface Status {
   entity: Entity;
+  generation: number;
   until: number;
   kind: 'lock' | 'theft';
-  original: number;
 }
 export interface AbilitySnapshot {
   levels: Record<string, number>;
@@ -53,7 +53,7 @@ export class AbilitySystem {
   stored = 0;
   private readonly bindings: Binding[] = [];
   private readonly statuses: Status[] = [];
-  private readonly resistance = new Map<number, number>();
+  private readonly resistance = new Map<number, { until: number; generation: number }>();
   private readonly planets: { entity: Entity; expires: number }[] = [];
   private rotation?: { original: Vec2; start: number; duration: number; chain: number };
 
@@ -69,6 +69,7 @@ export class AbilitySystem {
       if (
         entity.alive &&
         entity.definition.faction === 'enemy' &&
+        entity.kind !== 'projectile' &&
         length(subtract(entity.body.position, player.body.position)) <= radius
       )
         nearbyEnemies++;
@@ -245,13 +246,17 @@ export class AbilitySystem {
       }
       case 'lock':
         for (const entity of targets) {
-          if ((this.resistance.get(entity.id) ?? 0) > this.host.time || entity.body.isStatic)
+          const resistance = this.resistance.get(entity.id);
+          if (
+            (resistance?.generation === entity.generation && resistance.until > this.host.time) ||
+            entity.body.isStatic
+          )
             continue;
           this.statuses.push({
             entity,
+            generation: entity.generation,
             until: this.host.time + duration,
             kind: 'lock',
-            original: 0,
           });
           Matter.Body.setStatic(entity.body, true);
           this.host.markCause(entity, chain);
@@ -287,13 +292,16 @@ export class AbilitySystem {
           return false;
         this.statuses.push({
           entity: victim,
+          generation: victim.generation,
           until: this.host.time + duration,
           kind: 'theft',
-          original: victim.gravityScale,
         });
-        victim.gravityScale *= Math.max(
-          tuning.theftMinimumResponse,
-          definition.strength ** (strength / definition.strength),
+        victim.gravityFactors.set(
+          'theft',
+          Math.max(
+            tuning.theftMinimumResponse,
+            definition.strength ** (strength / definition.strength),
+          ),
         );
         this.stored = Math.min(
           tuning.storedMaximum,
@@ -430,11 +438,18 @@ export class AbilitySystem {
       this.cooldowns.set(id, Math.max(0, remaining - dt));
     for (let index = this.statuses.length - 1; index >= 0; index--) {
       const status = this.statuses[index];
+      if (status.generation !== status.entity.generation) {
+        this.statuses.splice(index, 1);
+        continue;
+      }
       if (status.until > this.host.time && status.entity.alive) continue;
       if (status.kind === 'lock') {
         Matter.Body.setStatic(status.entity.body, false);
-        this.resistance.set(status.entity.id, this.host.time + balance.abilities.lockResistance);
-      } else status.entity.gravityScale = status.original;
+        this.resistance.set(status.entity.id, {
+          until: this.host.time + balance.abilities.lockResistance,
+          generation: status.generation,
+        });
+      } else status.entity.gravityFactors.delete('theft');
       this.statuses.splice(index, 1);
     }
     for (let index = this.bindings.length - 1; index >= 0; index--) {
@@ -495,7 +510,11 @@ export class AbilitySystem {
       }
     }
     for (const [id, expiry] of this.resistance)
-      if (expiry < this.host.time) this.resistance.delete(id);
+      if (
+        expiry.until < this.host.time ||
+        this.host.world.entities.get(id)?.generation !== expiry.generation
+      )
+        this.resistance.delete(id);
   }
 
   snapshot(): AbilitySnapshot {
