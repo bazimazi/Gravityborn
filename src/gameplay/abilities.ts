@@ -154,8 +154,25 @@ export class AbilitySystem {
       definition.tags,
       context,
     );
-    const chain = this.host.createCause(id);
     const targets = this.near(point, radius, parameters.affects);
+    const victim =
+      definition.effect === 'theft'
+        ? targets.find(
+            (entity) => entity.definition.faction === 'enemy' && entity.kind !== 'projectile',
+          )
+        : undefined;
+    if (
+      definition.effect === 'theft' &&
+      (!victim ||
+        this.statuses.some((status) => status.entity === victim && status.kind === 'theft'))
+    )
+      return false;
+    if (
+      definition.effect === 'transfer' &&
+      targets.filter((entity) => !entity.body.isStatic).length < 2
+    )
+      return false;
+    const chain = this.host.createCause(id);
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
       this.host.markCause(entity, chain);
       if (entity.kind === 'projectile') entity.redirected = true;

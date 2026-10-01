@@ -51,6 +51,18 @@ it('upgrades and evolutions emit only when a power actually changes', () => {
   expect(build.choose('well:well')).toBe(true);
   expect(upgrades.at(-1)).toEqual({ id: 'well', previousLevel: 1, level: 2 });
 });
+it('rejected targeted powers do not begin phantom causal chains', () => {
+  const game = new Game(false);
+  const starts: number[] = [];
+  game.events.on('chainStarted', (event) => starts.push(event.id));
+  game.abilities.learn('theft');
+  game.abilities.learn('transfer');
+  game.start();
+  expect(game.castAbility('theft', { x: 800, y: 400 })).toBe(false);
+  expect(game.castAbility('transfer', { x: 800, y: 400 })).toBe(false);
+  expect(starts).toEqual([]);
+  expect(game.abilities.energy).toBe(100);
+});
 it('run events distinguish replacement, defeat and summary dismissal without duplication', () => {
   const game = new Game(false);
   const run = new Expedition(game);
