@@ -284,45 +284,69 @@ export const relics: RelicDefinition[] = [
 ];
 export const relicById = new Map(relics.map((relic) => [relic.id, relic]));
 
-export const synergies = [
+export interface SynergyDefinition {
+  id: string;
+  name: string;
+  description: string;
+  requires?: string[];
+  requiresTags?: string[];
+  modifiers?: Omit<Modifier, 'id'>[];
+  triggers?: Omit<TriggerRule, 'id'>[];
+}
+export const synergies: SynergyDefinition[] = [
   {
     id: 'tidal_cannon',
     name: 'Tidal Cannon',
+    description: 'Gravity Wave and Beam gain 35% velocity-tagged force.',
     requires: ['wave', 'beam'],
-    stat: 'strength',
-    value: 1.35,
-    tags: ['Velocity'],
+    modifiers: [{ stat: 'strength', operation: 'multiply', value: 1.35, tags: ['Velocity'] }],
   },
   {
     id: 'overload',
     name: 'Gravitational Overload',
+    description: 'Gravity Theft and the Pulse family amplify impact-tagged force by 60%.',
     requires: ['theft', 'pulse'],
-    stat: 'strength',
-    value: 1.6,
-    tags: ['Impact'],
+    modifiers: [{ stat: 'strength', operation: 'multiply', value: 1.6, tags: ['Impact'] }],
   },
   {
     id: 'prison',
     name: 'Orbital Prison',
-    requires: ['planet', 'lock'],
-    stat: 'duration',
-    value: 1.5,
-    tags: ['Orbit'],
+    description:
+      'A planet-family power and any Control-tagged power or relic extend orbital effects by 50%.',
+    requires: ['planet'],
+    requiresTags: ['Control'],
+    modifiers: [{ stat: 'duration', operation: 'multiply', value: 1.5, tags: ['Orbit'] }],
   },
   {
     id: 'storm',
     name: 'Projectile Storm',
+    description: 'Zero-G and Orbital Shield shorten projectile power cooldowns by 45%.',
     requires: ['zero', 'reflect'],
-    stat: 'cooldown',
-    value: 0.55,
-    tags: ['Projectile'],
+    modifiers: [{ stat: 'cooldown', operation: 'multiply', value: 0.55, tags: ['Projectile'] }],
   },
   {
     id: 'vacuum_bomb',
     name: 'Explosion Vacuum',
+    description: 'Vacuum and the Collapse family expand compression effects by 50%.',
     requires: ['vacuum', 'collapse'],
-    stat: 'radius',
-    value: 1.5,
-    tags: ['Compression'],
+    modifiers: [{ stat: 'radius', operation: 'multiply', value: 1.5, tags: ['Compression'] }],
   },
-] as const;
+  {
+    id: 'escape_window',
+    name: 'Escape Window',
+    description:
+      'Slingshot and Gravity Lock grant a 0.65-second shield when you cast a Movement power, once every six seconds.',
+    requires: ['slingshot', 'lock'],
+    triggers: [
+      { trigger: 'OnAbilityCast', effect: 'shield', value: 0.65, cooldown: 6, tags: ['Movement'] },
+    ],
+  },
+  {
+    id: 'entropy_engine',
+    name: 'Entropy Engine',
+    description:
+      'Theft and Burst recover 12 stored charge from impact kills, at most once per second.',
+    requires: ['theft', 'burst'],
+    triggers: [{ trigger: 'OnKill', effect: 'store', value: 12, cooldown: 1, tags: ['Impact'] }],
+  },
+];

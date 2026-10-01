@@ -750,7 +750,7 @@ export class Game {
     if (entity.definition.faction === 'enemy') {
       this.stats.kills++;
       this.stats.score += 100 + chainLength * 25;
-      this.trigger('OnKill', entity.definition.tags);
+      this.trigger('OnKill', tags);
       this.drop('xp', 18 + Math.min(30, chainLength * 3), entity.body.position);
       this.drop('shard', 5, { x: entity.body.position.x + 12, y: entity.body.position.y });
     }

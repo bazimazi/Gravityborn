@@ -303,6 +303,7 @@ export function validateContent(): ContentIssue[] {
     ['mutations', mutations],
     ['encounters', encounters],
     ['challenges', challenges],
+    ['synergies', synergies],
   ] as const)
     issues.push(...identities(catalog, name));
   const modifiers = (
@@ -407,12 +408,26 @@ export function validateContent(): ContentIssue[] {
       node = parent;
     }
   }
-  for (const item of synergies)
+  const buildTags = new Set([...abilities, ...relics].flatMap((item) => item.tags));
+  for (const item of synergies) {
+    modifiers(`synergies.${item.id}`, item.modifiers, item.triggers);
     check(
-      item.requires.every((id) => powerIds.has(id)),
+      Boolean(item.requires?.length || item.requiresTags?.length),
       `synergies.${item.id}`,
-      'Unknown synergy power.',
+      'A synergy needs a power or tag requirement.',
     );
+    check(
+      Boolean(item.modifiers?.length || item.triggers?.length),
+      `synergies.${item.id}`,
+      'A synergy needs an effect.',
+    );
+    check(
+      (item.requires ?? []).every((id) => powerIds.has(id)) &&
+        (item.requiresTags ?? []).every((tag) => buildTags.has(tag)),
+      `synergies.${item.id}`,
+      'Unknown synergy power or tag.',
+    );
+  }
   for (const item of encounters)
     for (const choice of item.choices) {
       check(

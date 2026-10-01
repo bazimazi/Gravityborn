@@ -10,6 +10,7 @@ import { equipmentById, equipmentSets, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
 import type { Profile } from './profile';
 import { wellEvolutions } from '../content/well';
+import { matchesSynergy } from './synergies';
 
 export interface UpgradeChoice {
   id: string;
@@ -269,15 +270,17 @@ export class RunBuild {
       const passive = passives.find((passive) => passive.id === id);
       if (passive) modifiers.add({ ...passive.modifier, id: `passive:${index}` });
     });
-    for (const synergy of synergies)
-      if (synergy.requires.every((id) => this.game.abilities.levels.has(id)))
-        modifiers.add({
-          id: `synergy:${synergy.id}`,
-          stat: synergy.stat,
-          operation: 'multiply',
-          value: synergy.value,
-          tags: [...synergy.tags],
-        });
+    for (const synergy of this.synergyDefinitions) {
+      synergy.modifiers?.forEach((modifier, index) =>
+        modifiers.add({ ...modifier, id: `synergy:${synergy.id}:${index}` }),
+      );
+      synergy.triggers?.forEach((rule, index) =>
+        modifiers.rules.set(`synergy:${synergy.id}:${index}`, {
+          ...rule,
+          id: `synergy:${synergy.id}:${index}`,
+        }),
+      );
+    }
     Matter.Body.setMass(
       this.game.player.body,
       Math.max(0.1, modifiers.evaluate('mass', this.game.player.definition.mass)),
@@ -291,9 +294,12 @@ export class RunBuild {
     );
   }
   get activeSynergies(): string[] {
-    return synergies
-      .filter((synergy) => synergy.requires.every((id) => this.game.abilities.levels.has(id)))
-      .map((synergy) => synergy.name);
+    return this.synergyDefinitions.map((synergy) => synergy.name);
+  }
+  get synergyDefinitions() {
+    const powers = new Set(this.game.abilities.levels.keys());
+    const tags = this.relics.flatMap((id) => relicById.get(id)?.tags ?? []);
+    return synergies.filter((synergy) => matchesSynergy(synergy, powers, tags));
   }
   snapshot(): unknown {
     return {

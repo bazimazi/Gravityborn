@@ -326,7 +326,7 @@
     {
       "section": 25,
       "title": "Ability Synergies",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/progression/expedition.ts",
         "src/progression/build.ts",
@@ -336,7 +336,7 @@
         "tests/save.test.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Seven authored synergies use generic power-family/tag requirements, modifier arrays and trigger arrays. Evolved descendants satisfy ancestor requirements; tags can come from powers or relics. Trigger cooldowns survive build rebuilds, kill triggers receive damage tags, and active combinations explain their effects in the build panel. Human balance tuning remains an external review."
     },
     {
       "section": 26,
