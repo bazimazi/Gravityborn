@@ -3,6 +3,7 @@ import { abilityById } from '../content/abilities';
 import type { EventBus } from '../core/events';
 import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import balance from '../data/balance.json';
+import { entityDefinitions } from '../content/enemies';
 import type { GravityField, GravitySystem } from '../physics/gravity';
 import type { Entity, PhysicsWorld } from '../physics/world';
 import { ModifierSet, type ModifierContext } from '../progression/modifiers';
@@ -14,6 +15,7 @@ export interface AbilityHost {
   time: number;
   readonly directionLocked: boolean;
   readonly difficulty: number;
+  readonly room: { width: number; height: number };
   events: EventBus;
   createCause(source?: string): number;
   markCause(entity: Entity, id: number, depth?: number): void;
@@ -142,6 +144,22 @@ export class AbilitySystem {
       return false;
     const point =
       definition.target === 'player' ? { ...this.host.player.body.position } : { ...target };
+    const placements = Array.from({ length: bodies }, (_, index) => ({
+      x: point.x + (planets ? (index - (planets - 1) / 2) * tuning.planetOffset * 2 : 0),
+      y: point.y,
+    }));
+    const bodyRadius = entityDefinitions[planets ? 'rock' : 'gravity_machine'].radius;
+    if (
+      placements.some(
+        (position) =>
+          position.x < bodyRadius ||
+          position.y < bodyRadius ||
+          position.x > this.host.room.width - bodyRadius ||
+          position.y > this.host.room.height - bodyRadius ||
+          !this.host.world.circleClear(position, bodyRadius),
+      )
+    )
+      return false;
     const factor = 1 + (level - 1) * tuning.levelStrength;
     const radius = this.modifiers.evaluate(
       'radius',
@@ -390,10 +408,7 @@ export class AbilitySystem {
       case 'planet': {
         const count = planets;
         for (let index = 0; index < count; index++) {
-          const planet = this.host.world.spawn('rock', {
-            x: point.x + (index - (count - 1) / 2) * tuning.planetOffset * 2,
-            y: point.y,
-          });
+          const planet = this.host.world.spawn('rock', placements[index]);
           if (!planet) continue;
           planet.gravityScale = tuning.planetGravityScale;
           this.host.markCause(planet, chain);

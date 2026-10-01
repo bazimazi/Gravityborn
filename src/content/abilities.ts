@@ -54,7 +54,7 @@ export const abilities: AbilityDefinition[] = [
     name: 'Gravity Beacon',
     rarity: 'rare',
     description:
-      'Deploy a movable, destructible machine that attracts nearby matter. Its field follows the machine until it breaks or expires.',
+      'Deploy a movable, destructible machine in open space. Its attraction field follows the machine until it breaks or expires.',
     tags: ['Gravity', 'Control', 'Machine'],
     effect: 'deploy',
     mode: 'radial',
@@ -72,7 +72,7 @@ export const abilities: AbilityDefinition[] = [
     name: 'Orbital Engine',
     rarity: 'epic',
     description:
-      'An evolved machine bends nearby matter into a vortex. Launch the device to carry its orbit across the chamber.',
+      'Deploy a vortex machine in open space. Launch the device to carry its orbit across the chamber.',
     tags: ['Gravity', 'Control', 'Machine', 'Orbit'],
     effect: 'deploy',
     mode: 'vortex',
@@ -263,7 +263,7 @@ export const abilities: AbilityDefinition[] = [
     rarity: 'rare',
     name: 'Micro Planet',
     description:
-      'Create a moving gravitational body. Its pull and tangential field capture nearby matter.',
+      'Create a moving gravitational body in open space. Its pull and tangential field capture nearby matter.',
     tags: ['Orbit', 'Mass', 'Gravity'],
     effect: 'planet',
     energy: 32,
@@ -422,7 +422,8 @@ export const abilities: AbilityDefinition[] = [
     parameters: { planetCount: 2 },
     rarity: 'legendary',
     name: 'Binary System',
-    description: 'Two orbiting gravitational bodies trap and slingshot nearby matter.',
+    description:
+      'Create two orbiting bodies in open space to trap and slingshot nearby matter. Both bodies need clearance.',
     tags: ['Orbit', 'Mass', 'Gravity'],
     effect: 'planet',
     energy: 48,

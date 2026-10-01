@@ -95,6 +95,38 @@ export class PhysicsWorld {
     Composite.add(this.engine.world, body);
   }
 
+  circleClear(position: Vec2, radius: number): boolean {
+    if (!Number.isFinite(position.x + position.y + radius) || radius <= 0) return false;
+    const blocked = (body: Matter.Body): boolean => {
+      if (
+        position.x + radius < body.bounds.min.x ||
+        position.x - radius > body.bounds.max.x ||
+        position.y + radius < body.bounds.min.y ||
+        position.y - radius > body.bounds.max.y
+      )
+        return false;
+      if (Matter.Vertices.contains(body.vertices, position)) return true;
+      return body.vertices.some((a, index, vertices) => {
+        const b = vertices[(index + 1) % vertices.length];
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const square = dx * dx + dy * dy;
+        const fraction = square
+          ? Math.max(0, Math.min(1, ((position.x - a.x) * dx + (position.y - a.y) * dy) / square))
+          : 0;
+        return (
+          Math.hypot(position.x - a.x - dx * fraction, position.y - a.y - dy * fraction) <= radius
+        );
+      });
+    };
+    return (
+      !this.walls.some(blocked) &&
+      ![...this.entities.values()].some(
+        (entity) => entity.alive && entity.body.isStatic && blocked(entity.body),
+      )
+    );
+  }
+
   spawn(kind: EntityKind, position: Vec2): Entity | undefined {
     if (
       this.entities.size >= balance.physics.maxBodies ||
