@@ -1639,6 +1639,25 @@ dialog::backdrop {
   line-height: 1.5;
   margin-bottom: 12px;
 }
+.challenge-code {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0;
+  font-size: calc(13px * var(--ui-scale, 1));
+}
+.challenge-code input,
+.challenge-code textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px;
+  color: #d6e7f2;
+  background: #0b1522;
+  border: 1px solid #466373;
+  border-radius: 8px;
+  font: inherit;
+  overflow-wrap: anywhere;
+}
 .story-card strong {
   display: block;
   color: #9fe6d6;

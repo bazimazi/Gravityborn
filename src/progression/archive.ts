@@ -72,6 +72,36 @@ export function recipeFor(run: Expedition): RunRecipe {
 function roomId(run: Expedition): string {
   return `${run.depth}:${run.biome}:${run.current?.id}`;
 }
+export function readRecipe(value: unknown): RunRecipe {
+  const recipe = record(value);
+  if (
+    !modes.some((item) => item.id === recipe.mode) ||
+    !contracts.some((item) => item.id === recipe.contract) ||
+    !classById.has(String(recipe.classId))
+  )
+    throw new Error('Unknown challenge rules');
+  const seed = text(recipe.seed, 64);
+  if (!seed || seed.trim() !== seed) throw new Error('Invalid challenge seed');
+  if (recipe.mode === 'daily' || recipe.mode === 'weekly') {
+    const date = seed.match(/^(daily|weekly):(\d{4}-\d{2}-\d{2})$/);
+    if (
+      !date ||
+      date[1] !== recipe.mode ||
+      !Number.isFinite(Date.parse(date[2])) ||
+      new Date(date[2]).toISOString().slice(0, 10) !== date[2] ||
+      (recipe.mode === 'weekly' && new Date(date[2]).getUTCDay() !== 1)
+    )
+      throw new Error('Invalid challenge date');
+  }
+  return {
+    seed,
+    classId: recipe.classId as string,
+    mode: recipe.mode as RunMode,
+    contract: recipe.contract as Contract,
+    difficulty: integer(recipe.difficulty, 6),
+    biome: integer(recipe.biome, regions.length - 1),
+  };
+}
 export function readReport(value: unknown): RunReport {
   const data = record(value);
   const recipe = record(data.recipe);
@@ -115,14 +145,7 @@ export function readReport(value: unknown): RunReport {
   return {
     id: text(data.id, 100),
     revision: text(data.revision, 100),
-    recipe: {
-      seed: text(recipe.seed, 64),
-      classId: recipe.classId as string,
-      mode: recipe.mode as RunMode,
-      contract: recipe.contract as Contract,
-      difficulty: integer(recipe.difficulty, 6),
-      biome: integer(recipe.biome, regions.length - 1),
-    },
+    recipe: readRecipe(recipe),
     loadout: text(data.loadout, 16000),
     outcome: data.outcome as RunReport['outcome'],
     assisted: data.assisted,

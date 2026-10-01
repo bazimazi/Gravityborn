@@ -787,9 +787,13 @@
         "src/progression/archive.ts",
         "src/presentation/archive.ts",
         "tests/archive.test.ts",
-        "tests/browser/archive.spec.ts"
+        "tests/browser/archive.spec.ts",
+        "src/progression/challenge-code.ts",
+        "src/core/export.ts",
+        "tests/challenge-code.test.ts",
+        "tests/export.test.ts"
       ],
-      "remaining": "Offline run/build/ghost JSON sharing and historical daily/weekly challenge setup are implemented. Imported scores are labeled unverified and cannot grant rewards. Compact challenge codes and online leaderboard replays remain future extensions."
+      "remaining": "Offline run/build/ghost JSON sharing and compact Unicode-safe challenge codes are implemented, including historical daily/weekly dates, checksums, catalog validation and unlock enforcement. Codes share seeds/rules, not scores or progression; ordinary runs retain the recipient loadout. Cross-revision codes display a compatibility notice. Native exports use the OS share sheet. Online leaderboard/replay services remain optional future extensions."
     },
     {
       "section": 59,

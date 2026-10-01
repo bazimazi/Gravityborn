@@ -44,7 +44,8 @@ import { biomes } from './content/rooms';
 import { statusBadges } from './presentation/status';
 import { cosmeticById } from './content/cosmetics';
 import { challenges } from './content/challenges';
-import { RunArchive } from './progression/archive';
+import { RunArchive, replayRevision, type RunRecipe } from './progression/archive';
+import { readChallengeCode } from './progression/challenge-code';
 import { archiveView } from './presentation/archive';
 import { exportJson } from './core/export';
 
@@ -388,37 +389,24 @@ document.addEventListener('click', (event) => {
       renderProfile();
     } else if (report && button.dataset.runAction === 'archive-export') {
       downloadJson('gravityborn-run.json', archive.export(report.id)!);
-    } else if (report && button.dataset.runAction === 'archive-prepare') {
-      const recipe = report.recipe;
-      const rotating = recipe.mode === 'daily' || recipe.mode === 'weekly';
-      const region = element<HTMLSelectElement>('#run-region');
-      if (
-        (!rotating && !profile.classes.includes(recipe.classId)) ||
-        (recipe.mode === 'endless' && !profile.skills.includes('endless')) ||
-        region.options[recipe.biome].disabled
-      ) {
-        toast('Unlock this class, mode or starting region before using these rules.');
-        return;
+    } else if (report && button.dataset.runAction === 'archive-copy-code') {
+      const code = element<HTMLTextAreaElement>('#shared-challenge-code');
+      code.select();
+      if (navigator.clipboard?.writeText)
+        void navigator.clipboard.writeText(code.value).then(
+          () => toast('Challenge code copied.'),
+          () => toast('Code selected. Use Copy to share it.'),
+        );
+      else toast('Code selected. Use Copy to share it.');
+    } else if (button.dataset.runAction === 'archive-code-prepare') {
+      try {
+        const shared = readChallengeCode(element<HTMLInputElement>('#challenge-code').value);
+        prepareSharedRules(shared.recipe, shared.revision);
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Invalid challenge code.');
       }
-      challengeDate = undefined;
-      if (rotating) {
-        const date = recipe.seed.match(/^(daily|weekly):(\d{4}-\d{2}-\d{2})$/)?.[2];
-        if (!date || !Number.isFinite(Date.parse(date))) {
-          toast('This rotating challenge has no valid date.');
-          return;
-        }
-        challengeDate = new Date(`${date}T00:00:00Z`);
-      } else profile.selectedClass = recipe.classId;
-      element<HTMLInputElement>('#run-seed').value = recipe.seed;
-      element<HTMLSelectElement>('#run-mode').value = recipe.mode;
-      element<HTMLSelectElement>('#run-contract').value = recipe.contract;
-      element<HTMLSelectElement>('#run-difficulty').value = String(recipe.difficulty);
-      region.value = String(recipe.biome);
-      renderProfile();
-      element('#mode-description').textContent = rotating
-        ? `Archived ${recipe.mode} challenge: ${recipe.seed}. Starting bonuses are disabled.`
-        : 'Shared rules selected. Your current equipment and research apply; matching bonuses are needed for ghost playback.';
-      toast('Run rules selected. Start when ready.');
+    } else if (report && button.dataset.runAction === 'archive-prepare') {
+      prepareSharedRules(report.recipe, report.revision);
     }
     return;
   }
@@ -508,6 +496,44 @@ document.addEventListener('click', (event) => {
   updateHud(60);
   if (run.phase === 'room' && !run.build.pending) canvas.focus({ preventScroll: true });
 });
+
+function prepareSharedRules(recipe: RunRecipe, revision: string): void {
+  const rotating = recipe.mode === 'daily' || recipe.mode === 'weekly';
+  const region = element<HTMLSelectElement>('#run-region');
+  if (
+    (!rotating && !profile.classes.includes(recipe.classId)) ||
+    (recipe.mode === 'endless' && !profile.skills.includes('endless')) ||
+    !region.options[recipe.biome] ||
+    region.options[recipe.biome].disabled
+  ) {
+    toast('Unlock this class, mode or starting region before using these rules.');
+    return;
+  }
+  challengeDate = undefined;
+  if (rotating) {
+    const date = recipe.seed.match(/^(daily|weekly):(\d{4}-\d{2}-\d{2})$/)?.[2];
+    if (!date || !Number.isFinite(Date.parse(date))) {
+      toast('This rotating challenge has no valid date.');
+      return;
+    }
+    challengeDate = new Date(`${date}T00:00:00Z`);
+  } else profile.selectedClass = recipe.classId;
+  element<HTMLInputElement>('#run-seed').value = recipe.seed;
+  element<HTMLSelectElement>('#run-mode').value = recipe.mode;
+  element<HTMLSelectElement>('#run-contract').value = recipe.contract;
+  element<HTMLSelectElement>('#run-difficulty').value = String(recipe.difficulty);
+  region.value = String(recipe.biome);
+  renderProfile();
+  const description = rotating
+    ? `Archived ${recipe.mode} challenge: ${recipe.seed}. Starting bonuses are disabled.`
+    : 'Shared rules selected. Your current equipment and research apply; matching bonuses are needed for ghost playback.';
+  element('#mode-description').textContent =
+    description +
+    (revision === replayRevision
+      ? ''
+      : ' This code comes from a different game revision; content and physics may differ.');
+  toast('Run rules selected. Start when ready.');
+}
 
 function toast(message: string): void {
   element('#toast').textContent = message;

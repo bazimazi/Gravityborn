@@ -5,7 +5,7 @@ export interface SaveEnvelope {
 }
 export type SaveState = 'empty' | 'loaded' | 'recovered' | 'corrupt' | 'future' | 'unavailable';
 const key = 'gravityborn.save';
-function checksum(text: string): string {
+export function checksum(text: string): string {
   let hash = 2166136261;
   for (let i = 0; i < text.length; i++) {
     hash ^= text.charCodeAt(i);

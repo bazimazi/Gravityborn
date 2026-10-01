@@ -87,3 +87,5 @@ Browser tests launch their own server at 127.0.0.1:5187 and cover Chromium deskt
 With the dev server running, `npm run playtest` performs a longer input-driven browser attempt and saves screenshots to `artifacts/`. Tests and screenshots never ship in the production bundle. Read-only development diagnostics are stripped from production builds.
 
 See [architecture](docs/architecture.md), [milestone review](docs/prototype-review.md), and the [roadmap](docs/roadmap.md) for implementation boundaries and the next validation gate.
+
+Compact challenge sharing is available in **Observatory → Run archive & ghosts**. Copy a recorded run's challenge code or paste someone else's code to select its seed and rules. Ordinary runs use your own progression; daily/weekly challenges use their fixed starting build. Full JSON exports also include build/results and any saved ghost. Native JSON exports open the OS share sheet.
