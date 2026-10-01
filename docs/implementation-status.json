@@ -1,35 +1,42 @@
-﻿{
+{
   "updated": "2026-10-02",
   "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
   "requirements": [
     {
       "section": 1,
       "title": "Product Vision",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/progression/expedition.ts",
+        "tests/gameplay.test.ts"
+      ],
+      "remaining": "Physics-driven movement, force combat, arenas and roguelite progression are integrated. Product vision also requires observed player experimentation, replay desire and mobile feel; these human/device outcomes are not established by automated wins."
     },
     {
       "section": 2,
       "title": "Design Pillars",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/design-specification.md",
+        "docs/prototype-review.md",
+        "tests/gameplay.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Shared physics, combinable powers, visible force feedback, readable controls and progression are implemented. Human evaluation of the design pillars remains open."
     },
     {
       "section": 3,
       "title": "Core Gameplay Loop",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/progression/expedition.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
+        "src/progression/profile.ts",
         "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/modes.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Enter a room, manipulate matter, collect physical rewards, choose upgrades/routes, fight guardians, return with persistent discoveries and restart. Quick, standard, campaign and endless transitions/checkpoints are covered. Run duration and human balance remain in section 21."
     },
     {
       "section": 4,
@@ -79,36 +86,35 @@
         "tests/abilities.test.ts",
         "tests/enemies.test.ts"
       ],
-      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain circulates signed response through up to five eligible targets; Transfer exchanges a pair\u0027s gravity and momentum. Independent generation-bound factors expire without erasing phase/theft/parasite effects. Static or suppressed bodies no longer acquire flip/rotation ownership."
+      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain circulates signed response through up to five eligible targets; Transfer exchanges a pair's gravity and momentum. Independent generation-bound factors expire without erasing phase/theft/parasite effects. Static or suppressed bodies no longer acquire flip/rotation ownership."
     },
     {
       "section": 8,
       "title": "Advanced Gravity Abilities",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
+        "src/content/abilities.ts",
         "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
+        "src/gameplay/game.ts",
         "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/response.test.ts",
+        "tests/deployment.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "The listed initial powers are modular effects with signed response transfer/theft, stored burst, real planets, collapse, void and rift fields. A deploy effect now supports destructible machines. Catalog breadth targets remain in sections 82–84."
     },
     {
       "section": 9,
       "title": "Physics Interaction System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts",
+        "src/content/enemies.ts",
         "src/content/objects.ts",
-        "src/gameplay/objects.ts",
-        "tests/objects.test.ts"
+        "src/physics/world.ts",
+        "src/gameplay/materials.ts",
+        "tests/objects.test.ts",
+        "tests/materials.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Shared entity definitions expose mass, gravity response, material, faction, tags, breakability and collision parameters; Matter owns velocity/angular state. Objects compose field, explosion, conductivity, ignition and physical response behavior."
     },
     {
       "section": 10,
@@ -116,40 +122,37 @@
       "status": "partial",
       "evidence": [
         "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/gameplay.test.ts",
+        "tests/objects.test.ts",
+        "tests/abilities.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Real wall/object impacts, sustained crush, redirected shots, hazards, moving sources and orbital/void/compression effects produce combat without a conventional attack. Human testing must establish that creative manipulation dominates passive waiting."
     },
     {
       "section": 11,
       "title": "Damage Types",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/gameplay/game.ts",
         "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts",
-        "src/content/objects.ts",
-        "src/gameplay/objects.ts",
-        "tests/objects.test.ts"
+        "src/gameplay/environment.ts",
+        "src/gameplay/materials.ts",
+        "tests/mastery.test.ts",
+        "tests/materials.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Impact/Velocity, Crush/Gravity, Environmental/Explosion, Orbital/Orbit, Compression and Void damage tags feed modifiers, mastery and diagnostics. Thermal/conductive reactions add material damage. Orbital/void classification derives from authored source tags."
     },
     {
       "section": 12,
       "title": "Physics-Based Damage",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/objects.ts",
-        "src/gameplay/objects.ts",
         "src/gameplay/game.ts",
+        "src/progression/modifiers.ts",
+        "tests/gameplay.test.ts",
         "tests/objects.test.ts"
       ],
-      "remaining": "Physical materials, object fields, mines, pickups, sustained crush, and bounded causal chains implemented; extended interaction and balance audit remains."
+      "remaining": "Collision damage uses finite dynamic attacker mass, normal incoming speed, threshold/coefficient, impact modifiers and target mitigation. Static contacts use the moving target mass. Core mass changes now affect direct impacts. Sustained pressure is separately evaluated for crush."
     },
     {
       "section": 13,
@@ -208,47 +211,39 @@
     {
       "section": 17,
       "title": "Arena Design",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/content/rooms.ts",
+        "src/data/regions.json",
+        "src/gameplay/environment.ts",
+        "tests/rooms.test.ts",
+        "tests/exploration.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Authored geometry composes walls/platforms, moving structures, hazards, props, sources, resources, switches and physical seals revealing secret routes. Human room readability remains a playtest gate."
     },
     {
       "section": 18,
       "title": "Arena Types",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/data/regions.json",
+        "src/content/regions.ts",
+        "src/content/rooms.ts",
+        "tests/regions.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "All eight named environment families have distinct catalogs, hazards, objects, enemies, guardians and visual palettes. Geometry changes use moving walls in the collapsing region and deep endless combinations."
     },
     {
       "section": 19,
       "title": "Procedural Level Generation",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/progression/map.ts",
+        "src/content/rooms.ts",
+        "tests/rooms.test.ts",
+        "tests/exploration.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Seeded authored templates produce reachable branching maps across combat, elite, treasure, shop, event, challenge, puzzle, rest, boss and hidden secret rooms. Map determinism, reachability and room composition are tested."
     },
     {
       "section": 20,
@@ -284,32 +279,29 @@
     {
       "section": 22,
       "title": "Run Progression",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
+        "src/progression/shop.ts",
+        "src/progression/expedition.ts",
         "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/shop.test.ts",
+        "tests/run-events.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Physical XP/currency/energy, three-choice level-ups, powers, upgrades, passives, relics, temporary gear, mutations and discoveries integrate with room transitions. Offers, purchases, event rewards and snapshots preserve run state."
     },
     {
       "section": 23,
       "title": "Build System",
       "status": "partial",
       "evidence": [
-        "src/progression/expedition.ts",
+        "src/content/classes.ts",
+        "src/content/relics.ts",
+        "src/content/equipment.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/synergies.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Seven cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
     },
     {
       "section": 24,
@@ -341,32 +333,28 @@
     {
       "section": 26,
       "title": "Relic System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/content/relics.ts",
+        "src/progression/modifiers.ts",
+        "src/gameplay/game.ts",
+        "tests/modifiers.test.ts",
+        "tests/events.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Twenty-three authored relics change mass, gravity randomness, echo casting, wells, momentum, resource generation, survival and conditional behavior. Catalog breadth and balance targets remain in sections 82–84 and 88."
     },
     {
       "section": 27,
       "title": "Equipment",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
-        "src/gameplay/rules.ts",
+        "src/progression/profile.ts",
+        "src/progression/shop.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/shop.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Fifty designs cover six slots, rarity, trade-offs, five upgrade levels, affixes, eight family sets and two trigger-based unique items. Temporary run purchases replace a slot without granting permanent ownership. These are not fifty independently playtested builds."
     },
     {
       "section": 28,
@@ -386,47 +374,39 @@
     {
       "section": 29,
       "title": "Permanent Progression",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
+        "src/progression/profile.ts",
+        "src/content/research.ts",
         "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/mastery.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Two permanent currencies fund classes, research, crafting, equipment upgrades and affixes. Defeats retain earned discoveries and bounded rewards; run settlement and challenges cannot award twice."
     },
     {
       "section": 30,
       "title": "Meta Progression Trees",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
         "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
-        "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "src/progression/profile.ts",
+        "src/progression/build.ts",
+        "tests/equipment.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Twelve nodes across Gravity Mastery, Survivor, Research, Technology, Discovery and Mastery unlock choices, equipment tools, regions and endless with modest numerical benefits. Prerequisites and purchases are validated."
     },
     {
       "section": 31,
       "title": "Mutation System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
         "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
-        "src/gameplay/rules.ts",
+        "src/progression/build.ts",
+        "src/progression/profile.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/run-events.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Nine mutations include density/lightness, negative response, dual wells, instability, echo fields, damage-to-energy, low-health horizon and personal gravity. Research unlocks persistent selection; events/shops may replace the mutation for a run. Mass, triggers, tags and recovery are tested."
     },
     {
       "section": 32,
@@ -443,17 +423,15 @@
     {
       "section": 33,
       "title": "Gravitational Phenomena",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
+        "src/content/phenomena.ts",
         "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "src/content/endless.ts",
+        "tests/modes.test.ts",
+        "tests/endless.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Eleven gravity phenomena include storms, collisions, singularities, rain, zero zones, reversal, orbital collapse, rifts, dense matter, elasticity and rotation. Deep endless layers compatible combinations; pooled entities receive rules per generation."
     },
     {
       "section": 34,
@@ -508,23 +486,22 @@
       "section": 37,
       "title": "Shops",
       "status": "implemented",
-      "evidence": ["src/progression/shop.ts", "tests/shop.test.ts"],
+      "evidence": [
+        "src/progression/shop.ts",
+        "tests/shop.test.ts"
+      ],
       "remaining": "Seven purchase categories implemented with build-aware stock, costs, replacement semantics, single purchases, and saved inventories. Economy balance remains under playtest."
     },
     {
       "section": 38,
       "title": "Risk / Reward",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
+        "src/content/phenomena.ts",
         "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
         "tests/modes.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Four optional contracts trade +50/100/200/300 percent room currency for unstable force, locked direction, heavy enemies or collision pulses. Direction powers respect the lock; pulse rate is bounded to preserve stability."
     },
     {
       "section": 39,
@@ -571,32 +548,31 @@
       "title": "Infinite Build Scaling",
       "status": "partial",
       "evidence": [
-        "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
+        "src/content/endless.ts",
         "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
-        "tests/modes.test.ts",
-        "src/data/stat-limits.json",
-        "tests/modifiers.test.ts"
+        "src/progression/mastery.ts",
+        "src/progression/archive.ts",
+        "tests/endless.test.ts"
       ],
-      "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
+      "remaining": "Endless combines new field/geometry rules at milestones through stage 500, then continues bounded numerical pressure. Difficulties, contracts, daily/weekly seeds, mastery and local records support replay. Online seasonal competitions/leaderboards remain optional future services."
     },
     {
       "section": 43,
       "title": "Difficulty System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
-        "src/content/modes.ts",
+        "src/content/phenomena.ts",
+        "src/data/balance.json",
+        "src/data/boss-behavior.json",
+        "src/progression/expedition.ts",
+        "src/gameplay/bosses.ts",
         "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "src/presentation/renderer.ts",
+        "tests/bosses.test.ts",
+        "tests/modes.test.ts",
+        "tests/browser/difficulty.spec.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Seven tiers escalate encounters, elite behaviors, hazards and gravity anomalies. Chaos/Singularity/Infinite award 90/80/70% chamber shards and XP; contracts multiply that base while physical pickups and explicit event offers retain their values. Singularity adds locked-target, telegraphed boss repulsion traps from phase 2; Infinite phase 3 uses vortices. Traps share field limits, expire and clean up on boss death. Human balance validation remains external."
     },
     {
       "section": 44,
@@ -682,9 +658,14 @@
     {
       "section": 50,
       "title": "\"Impossible Kill\" Moments",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "tests/gameplay.test.ts",
+        "tests/objects.test.ts",
+        "tests/mastery.test.ts",
+        "src/progression/archive.ts"
+      ],
+      "remaining": "Solver-driven tests demonstrate object-to-enemy kills, chained barrel explosions, gravity-bent projectile return kills and tagged orbital impacts. Results/builds/seeds and bounded victory ghosts are shareable. Human memorable-moment frequency and exact cinematic example sequences are not proven."
     },
     {
       "section": 51,
@@ -706,26 +687,24 @@
       "title": "Narrative",
       "status": "partial",
       "evidence": [
+        "src/data/regions.json",
         "src/content/story.ts",
-        "src/content/challenges.ts",
-        "src/progression/mastery.ts",
-        "src/presentation/codex.ts",
-        "tests/mastery.test.ts"
+        "src/content/events.ts",
+        "src/presentation/codex.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Eight region chapters, short event encounters, guardian memories, planetary descriptions and hidden archives develop The Weight and the awakened core. Human narrative pacing/coherence and expanded environmental staging remain open."
     },
     {
       "section": 53,
       "title": "Story Structure",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/story.ts",
-        "src/content/challenges.ts",
-        "src/progression/mastery.ts",
-        "src/presentation/codex.ts",
-        "tests/mastery.test.ts"
+        "src/data/regions.json",
+        "src/progression/expedition.ts",
+        "tests/modes.test.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "Five named acts span the eight-region campaign and guardian memories. Endless continues into the gravitational frontier after the campaign; full campaign routing is automated."
     },
     {
       "section": 54,
@@ -762,17 +741,15 @@
     {
       "section": 56,
       "title": "Daily / Rotating Content",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/equipment.ts",
-        "src/content/research.ts",
-        "src/content/events.ts",
         "src/content/modes.ts",
-        "src/gameplay/rules.ts",
-        "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "src/progression/expedition.ts",
+        "src/progression/challenge-code.ts",
+        "tests/modes.test.ts",
+        "tests/challenge-code.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "UTC daily and Monday-based weekly seeds fix character/rules and suppress permanent loadout advantages. Historical challenges can be prepared through archives/codes. Competition is local/offline sharing; no online service is claimed."
     },
     {
       "section": 57,
@@ -817,17 +794,16 @@
     {
       "section": 60,
       "title": "Seeded Runs",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
+        "src/core/random.ts",
+        "src/progression/map.ts",
+        "src/content/rooms.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/rooms.test.ts",
+        "tests/progression.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Stable seed streams generate rooms, enemy composition, events and offers. Identical choices and starting rules produce identical content within a game revision. Physics is fixed-step and bounded; cross-device bit-identical solver replays are not promised."
     },
     {
       "section": 61,
@@ -921,28 +897,28 @@
     {
       "section": 67,
       "title": "Physics Optimization",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/physics/gravity.ts",
+        "src/physics/spatial-grid.ts",
+        "tests/gravity.test.ts",
+        "scripts/benchmark.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "The gravity authority indexes field bounds and queries only nearby candidate sources, with movement/removal invalidation and exact radius/material filters. Separate non-force attribution scans remain bounded by production caps."
     },
     {
       "section": 68,
       "title": "Physics Stability",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/physics/world.ts",
+        "src/physics/gravity.ts",
+        "src/data/balance.json",
+        "tests/physics.test.ts",
+        "tests/regressions.test.ts",
+        "tests/endless.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Velocity, angular speed, acceleration, impulses, fields, bodies and chains have limits. Corrupt geometry reconstructs at its last finite position; projectile containment, overlapping fields, stacked interactions and extreme endless combinations have regression coverage."
     },
     {
       "section": 69,
@@ -1051,14 +1027,20 @@
       "section": 77,
       "title": "Audio Design",
       "status": "partial",
-      "evidence": ["src/presentation/audio.ts", "src/presentation/feedback.ts"],
+      "evidence": [
+        "src/presentation/audio.ts",
+        "src/presentation/feedback.ts"
+      ],
       "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues implemented. Listening tests and expanded power-specific timbres remain."
     },
     {
       "section": 78,
       "title": "Music",
       "status": "implemented",
-      "evidence": ["src/presentation/audio.ts", "src/main.ts"],
+      "evidence": [
+        "src/presentation/audio.ts",
+        "src/main.ts"
+      ],
       "remaining": "Seven adaptive music arrangements with anomaly modulation and separate volume implemented. Device listening/mix validation remains external."
     },
     {
@@ -1077,37 +1059,60 @@
     {
       "section": 80,
       "title": "Monetization",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "package.json",
+        "src/progression/profile.ts",
+        "docs/native-delivery.md"
+      ],
+      "remaining": "The current local game has no payments, ads, energy timers, loot boxes or server progression gates. Cosmetics are earned. Store pricing, commercial distribution and any future optional purchase model are release/business decisions, not implemented integrations."
     },
     {
       "section": 81,
       "title": "Content Roadmap",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/roadmap.md",
+        "docs/prototype-review.md",
+        "docs/implementation-status.json"
+      ],
+      "remaining": "Physics/combat, roguelite core and vertical-slice systems are implemented. Commercial-quality feel and release validation remain open; the later alpha/beta/launch quantity targets are tracked separately."
     },
     {
       "section": 82,
       "title": "Alpha",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/abilities.ts",
+        "src/content/relics.ts",
+        "src/content/classes.ts",
+        "scripts/validate-content.ts"
+      ],
+      "remaining": "Current catalog: eight biomes, ten bosses, sixteen base enemies plus 72 curated variants, 24 powers, 23 relics, eight classes and 138 challenges. The alpha 50-power/50-relic targets are not met. Further content must introduce worthwhile mechanics and receive balance review, not filler."
     },
     {
       "section": 83,
       "title": "Beta",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/roadmap.md",
+        "src/content/abilities.ts",
+        "src/content/relics.ts",
+        "src/content/classes.ts",
+        "tests/endless.test.ts"
+      ],
+      "remaining": "Equipment, mutations, endless and daily/weekly modes exist; environments/bosses/variant targets are covered. The suggested 100-plus combined power/relic catalog and ten-class beta target are not met. Eight classes meet the separate launch class target."
     },
     {
       "section": 84,
       "title": "Launch Version",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/roadmap.md",
+        "scripts/validate-content.ts",
+        "docs/native-delivery.md"
+      ],
+      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 72 variants, fifty equipment designs and eight classes. Powers/relics remain 24/23 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,
@@ -1128,9 +1133,14 @@
     {
       "section": 86,
       "title": "Example Expansion",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/abilities.ts",
+        "src/content/bosses.ts",
+        "src/data/regions.json",
+        "tests/deployment.test.ts"
+      ],
+      "remaining": "The Planetfall example is not a shipped expansion pack. Existing planets, Binary System, slingshot, planetary regions/enemies and guardians provide its architectural basis; Planet Split, dedicated Orbital Strike, named expansion relics and a distinct planetary endless package are not claimed."
     },
     {
       "section": 87,
@@ -1150,22 +1160,35 @@
     {
       "section": 88,
       "title": "Balance Philosophy",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/data/balance.json",
+        "src/core/diagnostics.ts",
+        "scripts/expedition-playtest.ts",
+        "docs/roadmap.md"
+      ],
+      "remaining": "Balance tuning is authored, bounded and instrumented. Input-only bots demonstrate routes can be won without stalls, but quick victories remain much shorter than target pacing. Human build viability, win rates and risk/reward evaluation remain open."
     },
     {
       "section": 89,
       "title": "Build Diversity",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/content/relics.ts",
+        "src/content/equipment.ts",
+        "src/content/research.ts",
+        "tests/synergies.test.ts"
+      ],
+      "remaining": "Mechanical trade-offs, density mutations, cast/flip/kill triggers, deployable fields and generic tag synergies provide build variety beyond percentage bonuses. Human evidence that offers create consistently meaningful choices remains open."
     },
     {
       "section": 90,
       "title": "Anti-Degenerate Design",
       "status": "partial",
-      "evidence": ["src/data/stat-limits.json", "tests/modifiers.test.ts"],
+      "evidence": [
+        "src/data/stat-limits.json",
+        "tests/modifiers.test.ts"
+      ],
       "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
     },
     {
@@ -1300,122 +1323,164 @@
     {
       "section": 100,
       "title": "Recommended Development Order",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/prototype-review.md",
+        "docs/roadmap.md"
+      ],
+      "remaining": "The repository progressed from a tested physics/combat prototype into run generation and progression, then authored systems and native preparation. Release preparation, optimization audits and human/device validation remain ongoing."
     },
     {
       "section": 101,
       "title": "Vertical Slice Requirement",
       "status": "partial",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
+        "docs/prototype-review.md",
+        "docs/roadmap.md",
         "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/tutorial.test.ts",
+        "tests/modes.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "The listed one-biome vertical-slice systems and content minima exist and integrate. Its required immediate-replay fun judgment has not been established by observed human players."
     },
     {
       "section": 102,
       "title": "Core Fun Test",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "tests/gameplay.test.ts",
+        "tests/tutorial.test.ts",
+        "scripts/expedition-playtest.ts"
+      ],
+      "remaining": "Automated inputs demonstrate flips, object weapons, projectile redirection and chains. Whether uncoached players naturally experiment and prefer this to passive waiting requires human observation."
     },
     {
       "section": 103,
       "title": "First Playable Prototype",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
+        "docs/prototype-review.md",
         "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "tests/gameplay.test.ts",
+        "tests/browser/game.spec.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "The original small laboratory prototype implements the exact movement/gravity/object/enemy/combat/feedback foundation and real no-attack kills. Later systems live around it; the original review remains a historical milestone record."
     },
     {
       "section": 104,
       "title": "Second Prototype",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/progression/expedition.ts",
         "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
         "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/modes.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "More than ten physical powers and enemy behaviors, XP, level-up choices, authored rooms, elites, guardians, run completion, defeat and restart are implemented with regression coverage."
     },
     {
       "section": 105,
       "title": "Third Prototype",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/progression/profile.ts",
+        "src/presentation/codex.ts",
+        "src/content/equipment.ts",
+        "tests/equipment.test.ts",
+        "tests/mastery.test.ts",
+        "tests/endless.test.ts"
+      ],
+      "remaining": "Relics, eight classes, equipment, permanent progression, challenges, codex, multiple regions/bosses, story and endless are implemented as the third-prototype foundation. This is not a commercial release claim."
     },
     {
       "section": 106,
       "title": "AI Agent Rules",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/architecture.md",
+        "docs/prototype-review.md",
+        "scripts/validate-content.ts",
+        "tests/content.test.ts"
+      ],
+      "remaining": "One gravity authority, authored catalogs/tuning, tested mechanics, bounded effects and extensible definitions are enforced. Human feel prioritization and ongoing code/quality audits remain active obligations, not one-time completion boxes."
     },
     {
       "section": 107,
       "title": "AI Agent Development Loop",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/roadmap.md",
+        "docs/implementation-status.json",
+        "docs/prototype-review.md"
+      ],
+      "remaining": "Implementation, focused regression checks, browser/device inspection, performance checks and corrections are being repeated per milestone. The full plan remains active."
     },
     {
       "section": 108,
       "title": "Review Loop",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/prototype-review.md",
+        "docs/implementation-status.json"
+      ],
+      "remaining": "Historical review passes and current section-by-section audits are recorded. New failures have resulted in checkpoint, combat, native export, content and discovery fixes. Human/mobile review gates remain open."
     },
     {
       "section": 109,
       "title": "Ten-Round Quality Review",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/prototype-review.md",
+        "docs/implementation-status.json"
+      ],
+      "remaining": "The first playable milestone has ten documented review passes. Current continuation audits cover correctness, physics, architecture, host performance, UX, accessibility, extensibility and native emulator delivery; human balance/device/final polish gates remain open."
     },
     {
       "section": 110,
       "title": "Definition of Done",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "docs/implementation-status.json",
+        "docs/native-delivery.md",
+        "docs/roadmap.md"
+      ],
+      "remaining": "Passing compilation is not treated as completion. Implemented features have simulation/browser/save/integration evidence, but full content, observed fun/pacing, physical-device performance, iOS and store readiness remain incomplete."
     },
     {
       "section": 111,
       "title": "Most Important Design Principle",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/gameplay/game.ts",
+        "src/physics/gravity.ts",
+        "tests/gameplay.test.ts",
+        "tests/deployment.test.ts"
+      ],
+      "remaining": "Direction, force, mass, momentum, environment and movable sources drive combat. The physics-sandbox identity has implementation evidence; its perceived success remains a human evaluation."
     },
     {
       "section": 112,
       "title": "Final Target Experience",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "tests/gameplay.test.ts",
+        "tests/modes.test.ts",
+        "tests/run-events.test.ts",
+        "tests/deployment.test.ts"
+      ],
+      "remaining": "The described constituent systems are integrated, including run-long event gravity changes, movable machines/planets, chains, relic triggers, bosses and persistent discoveries. The exact cinematic sequence and immediate human replay desire are not claimed."
     },
     {
       "section": 113,
       "title": "Ultimate Success Criteria",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "tests/gameplay.test.ts",
+        "tests/abilities.test.ts",
+        "tests/mastery.test.ts",
+        "docs/roadmap.md"
+      ],
+      "remaining": "Return-projectile kills, interacting sources, force theft and extreme builds are mechanically possible and partly regression-tested. Success requires players to generate and recount these stories naturally; no such human research is claimed."
     }
   ]
 }

@@ -1,4 +1,7 @@
 {
+  "difficulty": {
+    "roomRewardFactors": [1, 1, 1, 1, 0.9, 0.8, 0.7]
+  },
   "physics": {
     "stepMs": 8.333333333333334,
     "maxFrameMs": 100,

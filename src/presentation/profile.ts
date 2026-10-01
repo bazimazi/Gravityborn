@@ -5,7 +5,7 @@ import { biomes } from '../content/rooms';
 import type { Profile } from '../progression/profile';
 import type { SaveState } from '../core/save';
 import { modes } from '../content/modes';
-import { contracts, difficulties } from '../content/phenomena';
+import { contracts, difficulties, difficultyDescriptions } from '../content/phenomena';
 import { codexView } from './codex';
 import { diagnosticsView } from './diagnostics';
 import { coreCosmetics } from '../content/cosmetics';
@@ -32,6 +32,7 @@ export function profileView(profile: Profile, state: SaveState, checkpoint: bool
   <label class="setting-row">Expedition seed <input id="run-seed" maxlength="64" placeholder="Random seed"></label>
   <label class="setting-row">Run mode <select id="run-mode">${modes.map((mode) => `<option value="${mode.id}" ${mode.id === 'standard' ? 'selected' : ''} ${mode.id === 'endless' && !profile.skills.includes('endless') ? 'disabled' : ''}>${mode.name}</option>`).join('')}</select></label>
   <label class="setting-row">Difficulty <select id="run-difficulty">${difficulties.map((name, index) => `<option value="${index}">${name}</option>`).join('')}</select></label>
+  <p id="difficulty-description" class="dialog-copy">${difficultyDescriptions[0]} Daily and weekly challenges use Veteran rules.</p>
   <label class="setting-row">Risk / reward contract <select id="run-contract">${contracts.map((contract) => `<option value="${contract.id}">${contract.name}</option>`).join('')}</select></label>
   <p id="mode-description" class="dialog-copy">Standard Expedition: three regions. Daily and weekly challenges use the same seed, class, and rules for everyone, without permanent bonuses.</p>
   <p id="contract-description" class="dialog-copy">Standard rewards.</p>

@@ -139,6 +139,18 @@ export class Renderer {
           60 + boss.telegraph * 25,
         );
         ctx.stroke();
+        if (boss.aim && boss.ambush) {
+          ctx.setLineDash([6, 5]);
+          this.circle(boss.aim.x, boss.aim.y, boss.ambush.radius);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillStyle = '#ffe3b5';
+          ctx.fillText(
+            boss.ambush.mode === 'vortex' ? 'VORTEX TRAP' : 'REPULSION TRAP',
+            boss.aim.x,
+            boss.aim.y + boss.ambush.radius + 20,
+          );
+        }
         if (boss.aim && ['comet', 'weaver'].includes(boss.entity.kind)) {
           ctx.setLineDash([8, 8]);
           this.line(

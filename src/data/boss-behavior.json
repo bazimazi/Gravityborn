@@ -5,6 +5,15 @@
   "cooldown": 5,
   "phaseCooldownReduction": 0.7,
   "fieldReserve": 2,
+  "ambush": {
+    "difficulty": 5,
+    "vortexDifficulty": 6,
+    "minPhase": 2,
+    "radius": 110,
+    "strength": -0.004,
+    "vortexStrength": 0.004,
+    "duration": 2.1
+  },
   "inverter": {
     "strength": -0.003,
     "radius": 280,

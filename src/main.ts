@@ -29,7 +29,7 @@ import {
 } from './progression/profile';
 import { equipmentById } from './content/equipment';
 import { modes, type RunMode } from './content/modes';
-import { contracts, phenomena, type Contract } from './content/phenomena';
+import { contracts, phenomena, difficultyDescriptions, type Contract } from './content/phenomena';
 import { objectDefinitions } from './content/objects';
 import { installAccessibility, joystickInput } from './presentation/accessibility';
 import { installPlatform } from './core/platform';
@@ -213,6 +213,9 @@ function renderProfile(): void {
   element<HTMLSelectElement>('#run-region').value = region;
   for (const [id, value] of Object.entries(preserved))
     if (value) element<HTMLSelectElement>(`#${id}`).value = value;
+  element('#difficulty-description').textContent =
+    difficultyDescriptions[Number(element<HTMLSelectElement>('#run-difficulty').value)] +
+    ' Daily and weekly challenges use Veteran rules.';
   element('#profile-dialog')
     .querySelectorAll('details')
     .forEach((detail, index) => {
@@ -279,6 +282,12 @@ document.addEventListener('change', (event) => {
   if (select.id === 'run-contract') {
     element('#contract-description').textContent =
       contracts.find((contract) => contract.id === select.value)?.description ?? '';
+    return;
+  }
+  if (select.id === 'run-difficulty') {
+    element('#difficulty-description').textContent =
+      difficultyDescriptions[Number(select.value)] +
+      ' Daily and weekly challenges use Veteran rules.';
     return;
   }
   if (select.id === 'cosmetic-select') {

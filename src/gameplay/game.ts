@@ -221,6 +221,9 @@ export class Game {
   get directionLocked(): boolean {
     return this.rules.directionLocked;
   }
+  get difficulty(): number {
+    return this.rules.difficulty;
+  }
   createCause(source = 'environment'): number {
     return this.chains.start(this.time, source);
   }

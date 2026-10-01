@@ -5,6 +5,7 @@ import { newProfile } from '../src/progression/profile';
 import { rotatingChallenge, type RunMode } from '../src/content/modes';
 import { phenomena, contracts } from '../src/content/phenomena';
 import { encounters } from '../src/content/events';
+import { vi } from 'vitest';
 
 function progress(run: Expedition): void {
   if (run.build.pending) {
@@ -39,6 +40,37 @@ function progress(run: Expedition): void {
       run.game.step();
   }
 }
+it('high difficulties reduce chamber rewards before contract multiplication and survive recovery', () => {
+  for (const [difficulty, factor] of [
+    [0, 1],
+    [3, 1],
+    [4, 0.9],
+    [5, 0.8],
+    [6, 0.7],
+  ]) {
+    const original = new Expedition(new Game(false));
+    original.start('difficulty-rewards', 'manipulator', undefined, 0, {
+      difficulty,
+      contract: 'heavy',
+    });
+    const run = new Expedition(new Game(false));
+    expect(run.restore(original.snapshot())).toBe(true);
+    run.enter(run.available[0].id);
+    const xp = vi.spyOn(run.build, 'gainXP');
+    const before = run.build.currency;
+    let pickups = 0;
+    run.game.events.on('collected', (event) => {
+      if (event.kind === 'shard') pickups += event.amount;
+    });
+    run.game.player.invulnerability = 100;
+    for (let i = 0; i < 80 && run.phase === 'room'; i++) progress(run);
+    expect(run.phase).toBe('reward');
+    expect(run.build.currency - before - pickups).toBe(Math.floor(15 * factor * 3));
+    expect(xp).toHaveBeenLastCalledWith(Math.floor(30 * factor));
+    original.game.world.dispose();
+    run.game.world.dispose();
+  }
+});
 it('Anchored Charter rejects global-direction powers without spending resources or starting chains', () => {
   const game = new Game(false);
   game.world.spawn('heavy', { x: 900, y: 350 });

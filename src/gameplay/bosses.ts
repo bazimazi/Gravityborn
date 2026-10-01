@@ -16,12 +16,20 @@ interface BossState {
   walls: { body: Matter.Body; expires: number }[];
   frozen: { entity: Entity; velocity: Vec2; until: number }[];
   aim?: Vec2;
+  ambush?: { radius: number; mode: 'radial' | 'vortex' };
 }
 export class BossSystem {
   private readonly states = new Map<number, BossState>();
   constructor(private readonly host: AbilityHost) {}
   get active():
-    | { entity: Entity; name: string; phase: number; telegraph: number; aim?: Vec2 }
+    | {
+        entity: Entity;
+        name: string;
+        phase: number;
+        telegraph: number;
+        aim?: Vec2;
+        ambush?: { radius: number; mode: 'radial' | 'vortex' };
+      }
     | undefined {
     for (const [id, state] of this.states) {
       const entity = this.host.world.entities.get(id);
@@ -31,6 +39,7 @@ export class BossSystem {
           name: bossDefinitions[entity.kind as BossKind].name,
           phase: state.phase,
           aim: state.aim,
+          ambush: state.ambush,
           telegraph: Math.max(0, 1 - (state.next - this.host.time) / behavior.telegraph),
         };
     }
@@ -58,7 +67,10 @@ export class BossSystem {
     state.phase =
       entity.health > (entity.maxHealth * 2) / 3 ? 1 : entity.health > entity.maxHealth / 3 ? 2 : 3;
     entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / behavior.telegraph);
-    if (entity.telegraph > 0 && !state.aim) state.aim = { ...this.host.player.body.position };
+    if (entity.telegraph > 0 && !state.aim && this.host.time < state.next) {
+      state.aim = { ...this.host.player.body.position };
+      state.ambush = this.ambush(state.phase);
+    }
     for (let index = state.frozen.length - 1; index >= 0; index--) {
       const frozen = state.frozen[index];
       if (frozen.until > this.host.time && frozen.entity.alive) continue;
@@ -249,8 +261,38 @@ export class BossSystem {
       );
     }
     this.advancedAttack(entity, state);
+    const ambush = state.ambush;
+    // Only fire at a position that was actually telegraphed on an earlier update.
+    if (
+      ambush &&
+      state.aim &&
+      this.host.gravity.fields.size < balance.physics.maxFields - behavior.fieldReserve
+    )
+      this.host.gravity.addField({
+        source: `boss:${entity.id}`,
+        mode: ambush.mode,
+        position: { ...state.aim },
+        direction: { x: 0, y: 1 },
+        strength:
+          ambush.mode === 'vortex' ? behavior.ambush.vortexStrength : behavior.ambush.strength,
+        radius: ambush.radius,
+        remaining: behavior.ambush.duration,
+        falloff: 'linear',
+      });
     state.aim = undefined;
+    state.ambush = undefined;
     return true;
+  }
+  private ambush(phase: number): { radius: number; mode: 'radial' | 'vortex' } | undefined {
+    if (this.host.difficulty < behavior.ambush.difficulty || phase < behavior.ambush.minPhase)
+      return undefined;
+    return {
+      radius: behavior.ambush.radius,
+      mode:
+        this.host.difficulty >= behavior.ambush.vortexDifficulty && phase === 3
+          ? 'vortex'
+          : 'radial',
+    };
   }
   private advancedAttack(entity: Entity, state: BossState): void {
     const tuning = balance.bosses;

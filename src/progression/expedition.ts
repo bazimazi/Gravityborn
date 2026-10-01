@@ -21,6 +21,7 @@ import { shopInventory, shopDescription, purchase, type ShopItem } from './shop'
 import { eliteCompatibility, type VariantKind } from '../content/variants';
 import type { EliteModifier } from '../content/enemies';
 import { endlessTuning } from '../content/endless';
+import balance from '../data/balance.json';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -675,12 +676,14 @@ export class Expedition {
     if (!this.current || this.current.visited) return;
     this.current.visited = true;
     this.rooms++;
+    const rewardFactor = balance.difficulty.roomRewardFactors[this.difficulty];
     const currency = Math.floor(
       (this.current.type === 'challenge' ? 35 : 15) *
+        rewardFactor *
         contracts.find((contract) => contract.id === this.contract)!.reward,
     );
     this.build.currency += currency;
-    this.build.gainXP(this.current.type === 'boss' ? 100 : 30);
+    this.build.gainXP(Math.floor((this.current.type === 'boss' ? 100 : 30) * rewardFactor));
     if (combat) {
       this.message = `Chamber cleared. +${currency} matter shards.`;
       if (['elite', 'boss', 'puzzle', 'challenge', 'secret'].includes(this.current.type))

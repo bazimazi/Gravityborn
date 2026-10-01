@@ -79,3 +79,12 @@ export const difficulties = [
   'Singularity',
   'Infinite',
 ] as const;
+export const difficultyDescriptions = [
+  'Standard enemy strength and chamber rewards.',
+  'Stronger enemies and larger encounters.',
+  'Stronger enemies and guaranteed elite modifiers.',
+  'Elite modifiers and additional laser hazards.',
+  'Elites, lasers and a gravity anomaly in every chamber. Chamber shard and XP rewards are 90%.',
+  'Chaos rules with stronger elites and telegraphed boss repulsion traps from phase 2. Chamber shard and XP rewards are 80%.',
+  'Singularity rules; phase 3 boss traps become vortices. Chamber shard and XP rewards are 70%.',
+] as const;

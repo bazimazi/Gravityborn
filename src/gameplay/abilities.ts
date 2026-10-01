@@ -13,6 +13,7 @@ export interface AbilityHost {
   player: Entity;
   time: number;
   readonly directionLocked: boolean;
+  readonly difficulty: number;
   events: EventBus;
   createCause(source?: string): number;
   markCause(entity: Entity, id: number, depth?: number): void;

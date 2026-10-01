@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import { expect, it } from 'vitest';
 import { Game } from '../src/gameplay/game';
 import { type BossKind } from '../src/content/bosses';
+import balance from '../src/data/balance.json';
 
 function encounter(kind: BossKind) {
   const game = new Game(false);
@@ -10,6 +11,64 @@ function encounter(kind: BossKind) {
   game.bosses.update(boss);
   return { game, boss };
 }
+it('high-tier boss traps commit to a visible target, respect tiers and clean up on death', () => {
+  for (const [difficulty, health, mode] of [
+    [4, 0.5, undefined],
+    [5, 0.8, undefined],
+    [5, 0.5, 'radial'],
+    [6, 0.5, 'radial'],
+    [6, 0.2, 'vortex'],
+  ] as const) {
+    const { game, boss } = encounter('magnetar');
+    game.rules.configure('ambush', '', 'none', difficulty);
+    boss.health = boss.maxHealth * health;
+    Matter.Body.setPosition(game.player.body, { x: 400, y: 350 });
+    game.time = 1.2;
+    game.bosses.update(boss);
+    expect(game.bosses.active?.ambush?.mode).toBe(mode);
+    Matter.Body.setPosition(game.player.body, { x: 950, y: 600 });
+    game.time = 2.01;
+    game.bosses.update(boss);
+    const trap = [...game.gravity.fields.values()].find((field) => field.position.x === 400);
+    expect(trap?.mode).toBe(mode);
+    if (mode) {
+      expect(trap?.position).toEqual({ x: 400, y: 350 });
+      expect(trap?.radius).toBe(110);
+      expect(trap?.remaining).toBe(2.1);
+    }
+    game.bosses.onDeath(boss);
+    expect(game.gravity.fields.size).toBe(0);
+    game.world.dispose();
+  }
+});
+it('boss traps do not fire without warning and preserve field capacity', () => {
+  const { game, boss } = encounter('magnetar');
+  game.rules.configure('ambush', '', 'none', 6);
+  boss.health = boss.maxHealth * 0.2;
+  game.time = 3;
+  game.bosses.update(boss);
+  expect(
+    [...game.gravity.fields.values()].every((field) => field.position.x === boss.body.position.x),
+  ).toBe(true);
+  game.time = 5;
+  game.bosses.update(boss);
+  expect(game.bosses.active?.ambush?.mode).toBe('vortex');
+  while (game.gravity.fields.size < balance.physics.maxFields - 2)
+    game.gravity.addField({
+      source: 'test',
+      mode: 'radial',
+      position: { x: 50, y: 50 },
+      direction: { x: 0, y: 1 },
+      strength: 0.001,
+      radius: 10,
+      remaining: 20,
+      falloff: 'linear',
+    });
+  game.time = 6;
+  game.bosses.update(boss);
+  expect(game.gravity.fields.size).toBe(balance.physics.maxFields - 2);
+  game.world.dispose();
+});
 it('Magnetar alternates metal-only attraction and repulsion', () => {
   const { game, boss } = encounter('magnetar');
   game.gravity.strength = 0;
