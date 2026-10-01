@@ -71,7 +71,7 @@
     {
       "section": 7,
       "title": "Gravity Modes",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/gameplay/game.ts",
         "src/gameplay/abilities.ts",
@@ -79,7 +79,7 @@
         "tests/abilities.test.ts",
         "tests/enemies.test.ts"
       ],
-      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain currently passes an impulse between targets; broader gravity-state transfer remains to audit."
+      "remaining": "Cardinal, rotating, radial, repulsive, orbital, zero, inverted, well, vortex, traveling-wave and lock modes are implemented. Gravity Chain circulates signed response through up to five eligible targets; Transfer exchanges a pair's gravity and momentum. Independent generation-bound factors expire without erasing phase/theft/parasite effects. Static or suppressed bodies no longer acquire flip/rotation ownership."
     },
     {
       "section": 8,

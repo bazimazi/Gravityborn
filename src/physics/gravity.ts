@@ -78,14 +78,19 @@ export class GravitySystem {
     }
   }
 
-  sample(position: Vec2, response = 1, tags: readonly string[] = []): Vec2 {
+  sample(
+    position: Vec2,
+    response = 1,
+    tags: readonly string[] = [],
+    globalDirection = this.direction,
+  ): Vec2 {
     if (this.dirty) {
       this.index.clear();
       for (const field of this.fields.values())
         this.index.insert(field, field.position, field.radius);
       this.dirty = false;
     }
-    const result = scale(this.direction, this.strength);
+    const result = scale(globalDirection, this.strength);
     let attenuation = 1;
     const nearby = this.index.at(position);
     if (nearby)

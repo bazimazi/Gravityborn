@@ -981,9 +981,20 @@ function updateHud(fps: number): void {
     .toString()
     .padStart(2, '0')}`;
   const g = game.gravity.direction;
-  const direction = g.x < -0.5 ? 'left' : g.x > 0.5 ? 'right' : g.y < -0.5 ? 'up' : 'down';
+  const direction =
+    Math.hypot(g.x, g.y) < 0.01
+      ? 'zero'
+      : g.x < -0.5
+        ? 'left'
+        : g.x > 0.5
+          ? 'right'
+          : g.y < -0.5
+            ? 'up'
+            : 'down';
   element('#gravity-name').textContent = direction.toUpperCase();
-  element('#gravity-arrow').textContent = { left: '←', right: '→', up: '↑', down: '↓' }[direction];
+  element('#gravity-arrow').textContent = { left: '←', right: '→', up: '↑', down: '↓', zero: '○' }[
+    direction
+  ];
   for (const button of document.querySelectorAll<HTMLButtonElement>('[data-direction]')) {
     button.classList.toggle('active', button.dataset.direction === direction);
     button.setAttribute('aria-pressed', String(button.dataset.direction === direction));

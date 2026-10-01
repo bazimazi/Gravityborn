@@ -1,7 +1,6 @@
 import Matter from 'matter-js';
 import type { Game } from './game';
 import type { RoomDefinition } from '../content/rooms';
-import balance from '../data/balance.json';
 
 export const lessons = [
   {
@@ -49,9 +48,7 @@ export class Tutorial {
   constructor(
     private readonly game: Game,
     private readonly finished: () => void,
-  ) {
-    game.events.on('gravityChanged', () => this.enableGravity());
-  }
+  ) {}
   get lesson() {
     return lessons[this.index];
   }
@@ -123,7 +120,7 @@ export class Tutorial {
     if (this.index >= 5)
       for (const x of [760, 840, 920]) room.spawns.push({ kind: 'barrel', x, y: 400 });
     this.game.reset(true, room);
-    this.game.gravity.strength = 0;
+    this.game.gravity.setDirection({ x: 0, y: 0 });
     this.game.player.invulnerability = 36000;
     for (const entity of this.game.world.entities.values()) {
       if (entity.kind === 'rock') this.rockId = entity.id;
@@ -132,10 +129,7 @@ export class Tutorial {
         entity.health = 28;
       }
     }
-    // The first directional input restores normal gravity after a calm introduction.
+    // No initial direction: the first input applies normal gravity and owns its physical effects.
     this.game.start();
-  }
-  enableGravity(): void {
-    if (this.active) this.game.gravity.strength = balance.gravity.strength;
   }
 }

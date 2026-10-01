@@ -170,19 +170,37 @@ export class AbilitySystem {
         this.statuses.some((status) => status.entity === victim && status.kind === 'theft'))
     )
       return false;
-    const transferable =
-      definition.effect === 'transfer'
-        ? targets
-            .filter(
-              (entity) =>
-                !entity.body.isStatic &&
-                Math.abs(entity.gravityScale * entity.definition.gravityResponse) > 0.0001 &&
-                ![...entity.gravityFactors.keys()].some((key) => key.startsWith('transfer:')),
-            )
-            .slice(0, 2)
-        : [];
-    if (definition.effect === 'transfer' && transferable.length < 2) return false;
+    const transferable = ['transfer', 'chain'].includes(definition.effect)
+      ? targets
+          .filter(
+            (entity) =>
+              !entity.body.isStatic &&
+              Math.abs(entity.gravityScale * entity.definition.gravityResponse) > 0.0001 &&
+              ![...entity.gravityFactors.keys()].some((key) => key.startsWith('transfer:')),
+          )
+          .slice(
+            0,
+            definition.effect === 'transfer' ? 2 : (parameters.chainTargets ?? tuning.chainTargets),
+          )
+      : [];
+    if (['transfer', 'chain'].includes(definition.effect) && transferable.length < 2) return false;
     const chain = this.host.createCause(id);
+    const transferResponse = (entity: Entity, response: number): void => {
+      const factor = `transfer:${chain}`;
+      entity.gravityFactors.set(
+        factor,
+        response / (entity.gravityScale * entity.definition.gravityResponse),
+      );
+      this.statuses.push({
+        entity,
+        generation: entity.generation,
+        kind: 'transfer',
+        factor,
+        until: this.host.time + duration,
+      });
+      this.host.markCause(entity, chain);
+      if (entity.kind === 'projectile') entity.redirected = true;
+    };
     const impulse = (entity: Entity, direction: Vec2, power: number): void => {
       if (entity.body.isStatic) return;
       this.host.markCause(entity, chain);
@@ -324,23 +342,11 @@ export class AbilitySystem {
         const [a, b] = transferable;
         const aResponse = a.gravityScale * a.definition.gravityResponse;
         const bResponse = b.gravityScale * b.definition.gravityResponse;
-        const factor = `transfer:${chain}`;
-        a.gravityFactors.set(factor, bResponse / aResponse);
-        b.gravityFactors.set(factor, aResponse / bResponse);
+        transferResponse(a, bResponse);
+        transferResponse(b, aResponse);
         const velocity = Matter.Body.getVelocity(a.body);
         Matter.Body.setVelocity(a.body, Matter.Body.getVelocity(b.body));
         Matter.Body.setVelocity(b.body, velocity);
-        for (const entity of [a, b]) {
-          this.statuses.push({
-            entity,
-            generation: entity.generation,
-            kind: 'transfer',
-            factor,
-            until: this.host.time + duration,
-          });
-          this.host.markCause(entity, chain);
-          if (entity.kind === 'projectile') entity.redirected = true;
-        }
         break;
       }
       case 'beam': {
@@ -396,9 +402,11 @@ export class AbilitySystem {
       }
       case 'chain': {
         let source = { ...this.host.player.body.position };
-        for (const [index, entity] of targets
-          .slice(0, parameters.chainTargets ?? tuning.chainTargets)
-          .entries()) {
+        const responses = transferable.map(
+          (entity) => entity.gravityScale * entity.definition.gravityResponse,
+        );
+        for (const [index, entity] of transferable.entries()) {
+          transferResponse(entity, responses[(index + responses.length - 1) % responses.length]);
           impulse(
             entity,
             normalize(subtract(entity.body.position, source)),
@@ -423,7 +431,11 @@ export class AbilitySystem {
       case 'reflect':
         field('vortex', point, strength, this.host.player);
         for (const entity of targets)
-          if (entity.kind === 'projectile') {
+          if (
+            entity.kind === 'projectile' &&
+            !entity.body.isStatic &&
+            entity.definition.gravityResponse * entity.gravityScale !== 0
+          ) {
             entity.redirected = true;
             this.host.markCause(entity, chain);
           }
@@ -504,6 +516,8 @@ export class AbilitySystem {
         });
       if (field)
         for (const entity of this.near(field.position, field.radius, field.affects)) {
+          if (entity.body.isStatic || entity.definition.gravityResponse * entity.gravityScale === 0)
+            continue;
           this.host.markCause(entity, binding.chain);
           if (entity.kind === 'projectile') entity.redirected = true;
         }
@@ -517,12 +531,20 @@ export class AbilitySystem {
       const progress = Math.min(1, (this.host.time - this.rotation.start) / this.rotation.duration);
       const angle = progress * Math.PI * 2;
       const original = this.rotation.original;
+      const previous = this.host.gravity.direction;
       this.host.gravity.setDirection({
         x: original.x * Math.cos(angle) - original.y * Math.sin(angle),
         y: original.x * Math.sin(angle) + original.y * Math.cos(angle),
       });
       for (const entity of this.host.world.entities.values())
-        this.host.markCause(entity, this.rotation.chain);
+        if (!entity.body.isStatic) {
+          const response = entity.definition.gravityResponse * entity.gravityScale;
+          const tags = [entity.definition.material, ...entity.definition.tags];
+          const before = this.host.gravity.sample(entity.body.position, response, tags, previous);
+          const after = this.host.gravity.sample(entity.body.position, response, tags);
+          if (length(subtract(after, before)) < 1e-8) continue;
+          this.host.markCause(entity, this.rotation.chain);
+        }
       if (progress === 1) {
         this.host.gravity.setDirection(original);
         this.rotation = undefined;

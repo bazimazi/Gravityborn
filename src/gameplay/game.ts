@@ -290,6 +290,12 @@ export class Game {
       return false;
     const chain = this.chains.start(this.time, 'flip');
     for (const entity of this.world.entities.values()) {
+      if (entity.body.isStatic) continue;
+      const response = entity.definition.gravityResponse * entity.gravityScale;
+      const tags = [entity.definition.material, ...entity.definition.tags];
+      const before = this.gravity.sample(entity.body.position, response, tags, previous);
+      const after = this.gravity.sample(entity.body.position, response, tags);
+      if (length(subtract(after, before)) < 1e-8) continue;
       if (entity.kind !== 'player') this.attribute(entity, { id: chain, depth: 0 });
       if (entity.kind === 'projectile') entity.redirected = true;
     }
@@ -312,7 +318,7 @@ export class Game {
       copies,
       Math.floor(modifiers.evaluate('maxWells', balance.gravity.maxWells)),
     );
-    const chain = this.chains.start(this.time, 'well');
+    let chain: number | undefined;
     let created = 0;
     for (let copy = 0; copy < copies; copy++) {
       const wells = [...this.gravity.fields.values()].filter(
@@ -320,6 +326,7 @@ export class Game {
       );
       if (wells.length >= maxWells) this.gravity.removeField(wells[0].id);
       if (this.gravity.fields.size >= balance.physics.maxFields) break;
+      chain ??= this.chains.start(this.time, 'well');
       const offset = copies > 1 ? (copy ? 1 : -1) * balance.gravity.dualWellOffset : 0;
       const bounded = {
         x: Math.max(
@@ -344,7 +351,11 @@ export class Game {
       });
       this.wellChains.set(fieldId, chain);
       for (const entity of this.world.entities.values())
-        if (length(subtract(entity.body.position, bounded)) < radius) {
+        if (
+          !entity.body.isStatic &&
+          entity.definition.gravityResponse * entity.gravityScale !== 0 &&
+          length(subtract(entity.body.position, bounded)) < radius
+        ) {
           this.attribute(entity, { id: chain, depth: 0 });
           if (entity.kind === 'projectile') entity.redirected = true;
         }
@@ -434,6 +445,8 @@ export class Game {
       for (const field of this.gravity.fields.values()) {
         if (
           field.source === 'player-well' &&
+          !entity.body.isStatic &&
+          entity.definition.gravityResponse * entity.gravityScale !== 0 &&
           length(subtract(entity.body.position, field.position)) < field.radius
         ) {
           if (entity.kind === 'projectile') entity.redirected = true;

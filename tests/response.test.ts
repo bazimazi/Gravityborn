@@ -1,6 +1,45 @@
 import { expect, it } from 'vitest';
 import { Game } from '../src/gameplay/game';
 import { abilityById } from '../src/content/abilities';
+import Matter from 'matter-js';
+
+it('gravity chain circulates signed response through eligible targets and expires independently', () => {
+  const game = new Game(false);
+  const targets = [700, 740, 780].map((x) => game.world.spawn('crate', { x, y: 400 })!);
+  const original = [0.5, -1, 2];
+  targets.forEach((entity, index) => {
+    entity.gravityScale = original[index];
+  });
+  const phased = game.world.spawn('crate', { x: 810, y: 400 })!;
+  phased.gravityFactors.set('phase', 0);
+  const locked = game.world.spawn('crate', { x: 680, y: 400 })!;
+  Matter.Body.setStatic(locked.body, true);
+  game.abilities.learn('chain');
+  game.start();
+  expect(game.castAbility('chain', targets[0].body.position)).toBe(true);
+  expect(targets.map((entity) => entity.gravityScale)).toEqual([2, 0.5, -1]);
+  expect(new Set(targets.map((entity) => entity.chainId)).size).toBe(1);
+  expect(phased.chainId).toBeNull();
+  expect(locked.chainId).toBeNull();
+  game.abilities.cooldowns.clear();
+  expect(game.castAbility('chain', targets[0].body.position)).toBe(false);
+  targets[2].gravityFactors.set('parasite:test', -1.8);
+  game.time = 5;
+  game.abilities.tick(0);
+  expect(targets.map((entity) => entity.gravityScale)).toEqual([0.5, -1, -3.6]);
+});
+
+it('one eligible chain target consumes neither energy nor a causal chain', () => {
+  const game = new Game(false);
+  const target = game.world.spawn('crate', { x: 700, y: 400 })!;
+  game.abilities.learn('chain');
+  game.start();
+  let causes = 0;
+  game.events.on('chainStarted', () => causes++);
+  expect(game.castAbility('chain', target.body.position)).toBe(false);
+  expect(game.abilities.energy).toBe(100);
+  expect(causes).toBe(0);
+});
 
 it('phase exit preserves theft and inversion regardless of effect expiration order', () => {
   const game = new Game(false);

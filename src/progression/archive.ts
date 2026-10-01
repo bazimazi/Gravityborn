@@ -12,7 +12,7 @@ import { researchNodes, mutations } from '../content/research';
 import { regions } from '../content/regions';
 
 // Increment when content or simulation rules change incompatibly with recorded routes.
-export const replayRevision = 'gravityborn-0.4-r1';
+export const replayRevision = 'gravityborn-0.4-r2';
 const key = 'gravityborn.archive';
 const maxSamples = 24000;
 const maxBytes = 2000000;

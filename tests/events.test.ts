@@ -5,6 +5,76 @@ import { ChainTracker } from '../src/gameplay/chains';
 import { Game } from '../src/gameplay/game';
 import { Expedition } from '../src/progression/expedition';
 import { RunBuild } from '../src/progression/build';
+import balance from '../src/data/balance.json';
+
+it('gravity changes cannot claim static, phased or fully zero-G projectiles', () => {
+  const game = new Game(false);
+  const locked = game.world.spawn('projectile', { x: 400, y: 400 })!;
+  const phased = game.world.spawn('projectile', { x: 500, y: 400 })!;
+  const zero = game.world.spawn('projectile', { x: 600, y: 400 })!;
+  const affected = game.world.spawn('projectile', { x: 800, y: 400 })!;
+  Matter.Body.setStatic(locked.body, true);
+  phased.gravityFactors.set('phase', 0);
+  game.gravity.addField({
+    source: 'environment',
+    mode: 'zero',
+    position: zero.body.position,
+    direction: { x: 0, y: 0 },
+    strength: 1,
+    radius: 30,
+    falloff: 'constant',
+    remaining: 10,
+  });
+  game.start();
+  expect(game.flip({ x: 0, y: -1 })).toBe(true);
+  for (const entity of [locked, phased, zero]) {
+    expect(entity.chainId).toBeNull();
+    expect(entity.redirected).toBe(false);
+  }
+  expect(affected.chainId).not.toBeNull();
+  expect(affected.redirected).toBe(true);
+  game.abilities.learn('rotate');
+  game.castAbility('rotate', game.player.body.position);
+  game.time = 0.5;
+  game.abilities.tick(0);
+  for (const entity of [locked, phased, zero]) expect(entity.chainId).toBeNull();
+});
+
+it('wells and orbit shields do not redirect bodies immune to their fields', () => {
+  const game = new Game(false);
+  const shot = game.world.spawn('projectile', { x: 500, y: 400 })!;
+  shot.gravityFactors.set('phase', 0);
+  const locked = game.world.spawn('crate', { x: 550, y: 400 })!;
+  Matter.Body.setStatic(locked.body, true);
+  game.start();
+  game.createWell(shot.body.position);
+  game.abilities.learn('reflect');
+  game.castAbility('reflect', shot.body.position);
+  game.abilities.tick(0);
+  expect(shot.chainId).toBeNull();
+  expect(shot.redirected).toBe(false);
+  expect(locked.chainId).toBeNull();
+});
+
+it('a full field budget rejects a well without emitting a phantom chain', () => {
+  const game = new Game(false);
+  for (let i = 0; i < balance.physics.maxFields; i++)
+    game.gravity.addField({
+      source: 'environment',
+      mode: 'radial',
+      position: { x: 600, y: 400 },
+      direction: { x: 0, y: 0 },
+      strength: 0.001,
+      radius: 100,
+      falloff: 'linear',
+      remaining: 10,
+    });
+  let starts = 0;
+  game.events.on('chainStarted', () => starts++);
+  game.start();
+  expect(game.createWell({ x: 600, y: 400 })).toBe(false);
+  expect(starts).toBe(0);
+});
 
 it('chains emit one extension per distinct effect and one ending per expiration or reset', () => {
   const events = new EventBus();
