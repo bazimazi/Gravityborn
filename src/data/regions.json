@@ -1,0 +1,352 @@
+[
+  {
+    "id": "facility",
+    "name": "Ruined Facility",
+    "color": "#0e1a2a",
+    "accent": "#8cf2e3",
+    "enemies": ["chaser", "shooter", "slime", "anchor", "bomber", "heavy"],
+    "guardian": "inverter",
+    "prop": "generator",
+    "secondaryProp": "energy_cell",
+    "hazard": "spikes",
+    "fields": [],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "I · Awakening",
+      "title": "The first weight",
+      "intro": "You wake beneath a broken calibration ring. The machines call you an error. When you move, the dust chooses a new direction.",
+      "memory": "Memory 01: We did not give the core gravity. We taught it to remember where things belonged."
+    },
+    "secret": {
+      "name": "The maintenance passage",
+      "text": "Behind the foundry seal, a worker left a calibration mark: every locked door has a direction in which it is already open."
+    },
+    "planet": {
+      "name": "Aster Foundry",
+      "mass": 1.1,
+      "radius": 6200,
+      "gravity": 1,
+      "atmosphere": "Thin nitrogen",
+      "property": "Mechanical gravity machinery",
+      "anomalies": ["reverse", "dense"],
+      "resource": "Alloy"
+    }
+  },
+  {
+    "id": "crystal",
+    "name": "Crystal Caverns",
+    "color": "#211a32",
+    "accent": "#ccaaff",
+    "enemies": ["slime", "repulsor", "mirror", "swarm", "leech"],
+    "guardian": "planet_eater",
+    "prop": "crystal",
+    "secondaryProp": "ice",
+    "hazard": "laser",
+    "fields": [
+      {
+        "source": "environment",
+        "mode": "radial",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 0.0025,
+        "radius": 300,
+        "falloff": "linear",
+        "remaining": 36000
+      }
+    ],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "II · The Machines",
+      "title": "A language in the crystal",
+      "intro": "Every crystal repeats the same mechanical pulse. The caverns were grown around a signal older than the facility.",
+      "memory": "Memory 02: The first civilization built no roads. It changed where falling ended."
+    },
+    "secret": {
+      "name": "The first resonance",
+      "text": "A crystal preserves an argument between two architects. One wanted a perfect center. The other wanted every traveler to carry one."
+    },
+    "planet": {
+      "name": "Resonance",
+      "mass": 0.8,
+      "radius": 4100,
+      "gravity": 0.8,
+      "atmosphere": "Crystal vapor",
+      "property": "Natural attraction crystals",
+      "anomalies": ["collapse", "elastic"],
+      "resource": "Gravity crystal"
+    }
+  },
+  {
+    "id": "dead_planet",
+    "name": "Dead Planet",
+    "color": "#292219",
+    "accent": "#e8cba2",
+    "enemies": ["heavy", "anchor", "orbiter", "floater", "bomber"],
+    "guardian": "magnetar",
+    "prop": "fragment",
+    "secondaryProp": "energy_cell",
+    "hazard": "spikes",
+    "fields": [
+      {
+        "source": "environment",
+        "mode": "radial",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 0.0025,
+        "radius": 300,
+        "falloff": "linear",
+        "remaining": 36000
+      }
+    ],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "III · The Broken Worlds",
+      "title": "The manufactured horizon",
+      "intro": "The planet is hollow. Under its dead surface, damaged engines still pull toward a center that no longer exists.",
+      "memory": "Memory 03: A world is a promise between its matter. Break the promise, and the pieces keep searching."
+    },
+    "secret": {
+      "name": "Weight of the survivors",
+      "text": "The dead planet’s vault lists no kings or weapons. Its last inventory counts shelters, gardens, and the mass required to keep them together."
+    },
+    "planet": {
+      "name": "Cinder Shell",
+      "mass": 3.2,
+      "radius": 9000,
+      "gravity": 1.4,
+      "atmosphere": "Vacuum",
+      "property": "Competing planetary fields",
+      "anomalies": ["collision", "rift"],
+      "resource": "Meteoric iron"
+    }
+  },
+  {
+    "id": "station",
+    "name": "Orbital Station",
+    "color": "#152631",
+    "accent": "#8dceef",
+    "enemies": ["shooter", "orbiter", "summoner", "phase", "parasite"],
+    "guardian": "architect",
+    "prop": "metal_plate",
+    "secondaryProp": "ice",
+    "hazard": "laser",
+    "fields": [],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "III · The Broken Worlds",
+      "title": "The last station",
+      "intro": "A silent station circles an absent sun. Its navigation records show thousands of artificial planets moving away from something.",
+      "memory": "Memory 04: Evacuation was not an escape through space. We moved the space itself."
+    },
+    "secret": {
+      "name": "An unsent course",
+      "text": "The station kept an evacuation route hidden from its own guardian. It leads toward the broken worlds, where the missing passengers chose to rebuild."
+    },
+    "planet": {
+      "name": "Kepler Remnant",
+      "mass": 0.4,
+      "radius": 700,
+      "gravity": 0.6,
+      "atmosphere": "Artificial",
+      "property": "Rotating structures",
+      "anomalies": ["rotating", "zero"],
+      "resource": "Circuit cores"
+    }
+  },
+  {
+    "id": "black_hole",
+    "name": "Black Hole Interior",
+    "color": "#1a1229",
+    "accent": "#be8cff",
+    "enemies": ["singularity", "phase", "leech", "mirror"],
+    "guardian": "singularity_boss",
+    "prop": "void_matter",
+    "secondaryProp": "energy_cell",
+    "hazard": "spikes",
+    "fields": [
+      {
+        "source": "environment",
+        "mode": "radial",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 0.004,
+        "radius": 300,
+        "falloff": "linear",
+        "remaining": 36000
+      }
+    ],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "IV · The Singularity",
+      "title": "Inside the missing star",
+      "intro": "Light bends around your core. Beyond the horizon, an old intelligence asks why you still believe that gravity must pull.",
+      "memory": "Memory 05: A singularity is not a point. It is a decision that the universe refuses to undo."
+    },
+    "secret": {
+      "name": "A horizon with a hinge",
+      "text": "Inside the singularity, the sealed archive has two exits occupying the same point. The old intelligence calls this its first act of mercy."
+    },
+    "planet": {
+      "name": "Umbra",
+      "mass": 8,
+      "radius": 2800,
+      "gravity": 2,
+      "atmosphere": "Ionized plasma",
+      "property": "Extreme local gravity",
+      "anomalies": ["singularity", "collapse"],
+      "resource": "Void dust"
+    }
+  },
+  {
+    "id": "laboratory",
+    "name": "Gravity Laboratory",
+    "color": "#142b29",
+    "accent": "#92efd8",
+    "enemies": ["repulsor", "mirror", "parasite", "summoner", "slime"],
+    "guardian": "chronarch",
+    "prop": "gravity_core",
+    "secondaryProp": "ice",
+    "hazard": "laser",
+    "fields": [
+      {
+        "source": "environment",
+        "mode": "zero",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 1,
+        "radius": 150,
+        "falloff": "constant",
+        "remaining": 36000
+      }
+    ],
+    "hazards": [],
+    "movingWalls": false,
+    "story": {
+      "act": "IV · The Singularity",
+      "title": "The unfinished experiment",
+      "intro": "The laboratory holds copies of your first chamber. Each copy ends differently. One recording contains your voice.",
+      "memory": "Memory 06: We made a mind that could choose its own center. Then we became afraid of what it might choose."
+    },
+    "secret": {
+      "name": "Experiment zero",
+      "text": "Your earliest recording contains no orders. A researcher asks what you want to hold, then waits while you learn to answer."
+    },
+    "planet": {
+      "name": "Palinode",
+      "mass": 1.4,
+      "radius": 5200,
+      "gravity": 1.1,
+      "atmosphere": "Filtered oxygen",
+      "property": "Experimental zero-G chambers",
+      "anomalies": ["zero", "reverse"],
+      "resource": "Research cores"
+    }
+  },
+  {
+    "id": "islands",
+    "name": "Floating Islands",
+    "color": "#1a2930",
+    "accent": "#acdccc",
+    "enemies": ["floater", "swarm", "orbiter", "bomber"],
+    "guardian": "comet",
+    "prop": "rubber",
+    "secondaryProp": "energy_cell",
+    "hazard": "spikes",
+    "fields": [],
+    "hazards": [
+      {
+        "kind": "wind",
+        "x": 650,
+        "y": 420,
+        "width": 350,
+        "height": 450,
+        "period": 6,
+        "phase": 0
+      }
+    ],
+    "movingWalls": false,
+    "story": {
+      "act": "V · Beyond Weight",
+      "title": "The unbound gardens",
+      "intro": "Islands drift without a planet beneath them. Life has learned to follow tiny, temporary centers instead of a single world.",
+      "memory": "Memory 07: Freedom was never the absence of gravity. It was the right to change what held you."
+    },
+    "secret": {
+      "name": "The gardener’s orbit",
+      "text": "The drifting islands are connected by seeds. Each carries enough gravity to find another patch of earth, and enough freedom to leave it."
+    },
+    "planet": {
+      "name": "Zephyr Crown",
+      "mass": 0.25,
+      "radius": 1200,
+      "gravity": 0.4,
+      "atmosphere": "Dense oxygen",
+      "property": "Vertical winds",
+      "anomalies": ["rain", "storm"],
+      "resource": "Spore glass"
+    }
+  },
+  {
+    "id": "dimension",
+    "name": "Collapsing Dimension",
+    "color": "#29192b",
+    "accent": "#f0a4dc",
+    "enemies": ["singularity", "mirror", "phase", "summoner", "leech", "parasite"],
+    "guardian": "star",
+    "prop": "magnet",
+    "secondaryProp": "ice",
+    "hazard": "laser",
+    "fields": [],
+    "hazards": [],
+    "movingWalls": true,
+    "story": {
+      "act": "V · Beyond Weight",
+      "title": "The open frontier",
+      "intro": "The final boundary is collapsing. You can restore its old center, or carry its fragments into a frontier that has no fixed shape.",
+      "memory": "Memory 08: You are not the last Gravityborn. You are the first one who can leave."
+    },
+    "secret": {
+      "name": "The unfinished map",
+      "text": "The vault contains a map with its final boundary erased. The Gravityborn who drew it expected a future traveler to choose what came next."
+    },
+    "planet": {
+      "name": "The Unfinished",
+      "mass": 2,
+      "radius": 3300,
+      "gravity": 1.6,
+      "atmosphere": "Unstable",
+      "property": "Shifting geometry",
+      "anomalies": ["rift", "storm"],
+      "resource": "Anomaly fragments"
+    }
+  }
+]

@@ -9,6 +9,7 @@ import { abilityById } from '../content/abilities';
 import { relicById } from '../content/relics';
 import { equipmentById, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
+import { regions } from '../content/regions';
 
 // Increment when content or simulation rules change incompatibly with recorded routes.
 export const replayRevision = 'gravityborn-0.4-r1';
@@ -120,7 +121,7 @@ export function readReport(value: unknown): RunReport {
       mode: recipe.mode as RunMode,
       contract: recipe.contract as Contract,
       difficulty: integer(recipe.difficulty, 6),
-      biome: integer(recipe.biome, 7),
+      biome: integer(recipe.biome, regions.length - 1),
     },
     loadout: text(data.loadout, 16000),
     outcome: data.outcome as RunReport['outcome'],

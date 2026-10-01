@@ -1,7 +1,7 @@
 import { Game } from '../gameplay/game';
 import { RunBuild } from './build';
 import { generateMap, type MapNode } from './map';
-import { buildRoom } from '../content/rooms';
+import { buildRoom, biomes } from '../content/rooms';
 import { entityDefinitions } from '../content/enemies';
 import { relics } from '../content/relics';
 import type { EntityKind } from '../physics/world';
@@ -192,7 +192,7 @@ export class Expedition {
     this.startBiome =
       profile?.skills.includes('navigation') &&
       (profile.skills.includes('survey') || profile.discoveries.includes(`biome:${biome}`))
-        ? Math.max(0, Math.min(7, Math.floor(biome)))
+        ? Math.max(0, Math.min(biomes.length - 1, Math.floor(biome)))
         : 0;
     this.biome = this.startBiome;
     this.rooms = 0;
@@ -383,7 +383,10 @@ export class Expedition {
     if (this.phase !== 'reward' || this.build.pending > 0) return false;
     if (this.current?.type === 'boss' && this.current.next.length === 0) {
       const limit = modes.find((mode) => mode.id === this.mode)!.regions;
-      if (this.mode !== 'endless' && this.biome >= Math.min(7, this.startBiome + limit - 1)) {
+      if (
+        this.mode !== 'endless' &&
+        this.biome >= Math.min(biomes.length - 1, this.startBiome + limit - 1)
+      ) {
         this.won = true;
         for (const progress of Object.values(this.mastery))
           if (progress.kills >= Math.max(1, this.kills * 0.5)) progress.wins++;
@@ -399,7 +402,7 @@ export class Expedition {
         this.recordEnd('victory');
         return true;
       }
-      this.biome = (this.biome + 1) % 8;
+      this.biome = (this.biome + 1) % biomes.length;
       this.depth++;
       this.map = this.createMap();
       this.current = undefined;
@@ -491,8 +494,8 @@ export class Expedition {
         return false;
       const phases = ['map', 'reward', 'shop', 'event', 'summary'];
       if (typeof data.phase !== 'string' || !phases.includes(data.phase)) return false;
-      const biome = Math.floor(finite(data.biome, 0, 7));
-      const startBiome = Math.floor(finite(data.startBiome ?? 0, 0, 7));
+      const biome = Math.floor(finite(data.biome, 0, biomes.length - 1));
+      const startBiome = Math.floor(finite(data.startBiome ?? 0, 0, biomes.length - 1));
       const visited = strings(data.visited, 30);
       const mode = modes.some((mode) => mode.id === data.mode)
         ? (data.mode as RunMode)

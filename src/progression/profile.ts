@@ -66,7 +66,9 @@ export function readProfile(value: unknown): Profile {
     profile.tutorialCompleted = data.tutorialCompleted === true;
     for (const key of ['shards', 'research', 'runs', 'wins', 'kills'] as const)
       profile[key] = Math.floor(finite(data[key], 0, 100000000));
-    profile.classes = strings(data.classes, 8).filter((id) => classById.has(id));
+    profile.classes = strings(data.classes, Math.max(100, classById.size)).filter((id) =>
+      classById.has(id),
+    );
     if (!profile.classes.includes('manipulator')) profile.classes.push('manipulator');
     if (typeof data.selectedClass === 'string' && profile.classes.includes(data.selectedClass))
       profile.selectedClass = data.selectedClass;

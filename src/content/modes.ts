@@ -1,4 +1,5 @@
 import { classes } from './classes';
+import { regions } from './regions';
 import type { Phenomenon } from './phenomena';
 export const modes = [
   { id: 'quick', name: 'Quick Run', regions: 1, description: 'One region and its guardian.' },
@@ -17,8 +18,10 @@ export const modes = [
   {
     id: 'campaign',
     name: 'Story Expedition',
-    regions: 8,
-    description: 'Travel through all eight regions and five story acts.',
+    get regions() {
+      return regions.length;
+    },
+    description: 'Travel through every story region, from awakening to the frontier.',
   },
   {
     id: 'endless',

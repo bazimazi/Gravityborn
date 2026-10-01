@@ -16,10 +16,11 @@ import {
   type TriggerRule,
   type ModifierCondition,
 } from '../progression/modifiers';
-import { enemyVariants } from './variants';
+import { enemyVariants, eliteCompatibility } from './variants';
 import { eliteModifiers } from './enemies';
 import { phenomena } from './phenomena';
 import { coreCosmetics, challengeMemories } from './cosmetics';
+import { regions, type RegionDefinition } from './regions';
 
 export interface ContentIssue {
   path: string;
@@ -53,6 +54,96 @@ function identities(items: readonly { id: string }[], category: string): Content
         message: 'ID must be unique and use lowercase letters, digits or underscores.',
       });
     seen.add(item.id);
+  }
+  return issues;
+}
+export function validateRegions(catalog: readonly RegionDefinition[]): ContentIssue[] {
+  const issues = identities(catalog, 'regions');
+  const check = (valid: boolean, path: string, message: string): void => {
+    if (!valid) issues.push({ path, message });
+  };
+  check(catalog.length > 0 && catalog.length <= 100, 'regions', 'Use one to 100 regions.');
+  for (const region of catalog) {
+    const path = `regions.${region.id}`;
+    check(
+      /^#[0-9a-f]{6}$/i.test(region.color) && /^#[0-9a-f]{6}$/i.test(region.accent),
+      path,
+      'Use six-digit region colors.',
+    );
+    check(region.guardian in bossDefinitions, `${path}.guardian`, 'Unknown guardian.');
+    check(
+      region.enemies.length > 0 && region.enemies.every((id) => id in eliteCompatibility),
+      `${path}.enemies`,
+      'Choose enemies with registered elite compatibility.',
+    );
+    check(
+      [region.prop, region.secondaryProp].every(
+        (id) => id in entityDefinitions && entityDefinitions[id].faction === 'neutral',
+      ),
+      `${path}.props`,
+      'Region props must be physical objects.',
+    );
+    check(
+      ['spikes', 'laser', 'wind', 'crusher'].includes(region.hazard),
+      `${path}.hazard`,
+      'Unknown hazard.',
+    );
+    check(
+      [region.name, ...Object.values(region.story), ...Object.values(region.secret)].every(
+        (value) => typeof value === 'string' && value.length > 0 && value.length <= 1000,
+      ),
+      path,
+      'Region narrative text must be nonempty and bounded.',
+    );
+    check(
+      isNumber(region.planet.mass, 0.001, 1000) &&
+        isNumber(region.planet.radius, 1, 1000000) &&
+        isNumber(region.planet.gravity, 0, 100),
+      `${path}.planet`,
+      'Invalid planetary properties.',
+    );
+    check(
+      region.planet.anomalies.length > 0 &&
+        region.planet.anomalies.every((id) => phenomena.some((item) => item.id === id)),
+      `${path}.anomalies`,
+      'Unknown planetary anomaly.',
+    );
+    check(
+      region.fields.length <= 20 && region.hazards.length <= 20,
+      path,
+      'Region environment exceeds its field/hazard budget.',
+    );
+    for (const field of region.fields) {
+      check(
+        ['radial', 'vortex', 'zero', 'directional'].includes(field.mode) &&
+          ['linear', 'constant', 'inverseSquare'].includes(field.falloff) &&
+          field.source === 'environment',
+        `${path}.fields`,
+        'Invalid field kind, falloff or owner.',
+      );
+      check(
+        isNumber(field.radius, 1, 2400) &&
+          isNumber(field.strength, -1, 1) &&
+          isNumber(field.remaining, 0.1, 86400) &&
+          [field.position.x, field.position.y, field.direction.x, field.direction.y].every(
+            (value) => isNumber(value, -2400, 2400),
+          ),
+        `${path}.fields`,
+        'Invalid field parameters.',
+      );
+    }
+    for (const hazard of region.hazards)
+      check(
+        ['spikes', 'laser', 'wind', 'crusher'].includes(hazard.kind) &&
+          isNumber(hazard.width, 1, 1200) &&
+          isNumber(hazard.height, 1, 800) &&
+          isNumber(hazard.x, 0, 1200) &&
+          isNumber(hazard.y, 0, 800) &&
+          isNumber(hazard.period, 0.1, 60) &&
+          isNumber(hazard.phase, 0, 60),
+        `${path}.hazards`,
+        'Invalid environmental hazard.',
+      );
   }
   return issues;
 }
@@ -184,6 +275,7 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
 }
 export function validateContent(): ContentIssue[] {
   const issues = validateAbilities(abilities);
+  issues.push(...validateRegions(regions));
   issues.push(...identities(enemyVariants, 'variants'));
   const check = (valid: boolean, path: string, message: string): void => {
     if (!valid) issues.push({ path, message });

@@ -1,4 +1,5 @@
 import base from '../data/entities.json';
+import { regions } from './regions';
 function boss(name: string, color: string, tags: string[]) {
   return {
     ...base.heavy,
@@ -24,16 +25,7 @@ export const bossDefinitions = {
   weaver: boss('The Void Weaver', '#cf9ce8', ['Void', 'Control']),
 } as const;
 export type BossKind = keyof typeof bossDefinitions;
-export const regionGuardians: BossKind[] = [
-  'inverter',
-  'planet_eater',
-  'magnetar',
-  'architect',
-  'singularity_boss',
-  'chronarch',
-  'comet',
-  'star',
-];
+export const regionGuardians: BossKind[] = regions.map((region) => region.guardian);
 export const bossDescriptions: Record<BossKind, string> = {
   inverter: 'Changes global gravity and emits repulsive fields.',
   planet_eater: 'Creates moving, destructible gravity sources.',

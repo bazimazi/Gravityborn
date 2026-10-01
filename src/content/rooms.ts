@@ -3,7 +3,7 @@ import type { EntityKind } from '../physics/world';
 import type { GravityField } from '../physics/gravity';
 import type { EliteModifier } from './enemies';
 import { Random } from '../core/random';
-import { regionGuardians } from './bosses';
+import { regions } from './regions';
 import { eliteCompatibility, type VariantKind } from './variants';
 
 export type RoomType =
@@ -44,56 +44,7 @@ export interface RoomDefinition {
   waves?: { kind: EntityKind; x: number; y: number; elite?: EliteModifier }[][];
   manualCompletion?: boolean;
 }
-export const biomes = [
-  {
-    name: 'Ruined Facility',
-    color: '#0e1a2a',
-    accent: '#8cf2e3',
-    enemies: ['chaser', 'shooter', 'slime', 'anchor', 'bomber', 'heavy'],
-  },
-  {
-    name: 'Crystal Caverns',
-    color: '#211a32',
-    accent: '#ccaaff',
-    enemies: ['slime', 'repulsor', 'mirror', 'swarm', 'leech'],
-  },
-  {
-    name: 'Dead Planet',
-    color: '#292219',
-    accent: '#e8cba2',
-    enemies: ['heavy', 'anchor', 'orbiter', 'floater', 'bomber'],
-  },
-  {
-    name: 'Orbital Station',
-    color: '#152631',
-    accent: '#8dceef',
-    enemies: ['shooter', 'orbiter', 'summoner', 'phase', 'parasite'],
-  },
-  {
-    name: 'Black Hole Interior',
-    color: '#1a1229',
-    accent: '#be8cff',
-    enemies: ['singularity', 'phase', 'leech', 'mirror'],
-  },
-  {
-    name: 'Gravity Laboratory',
-    color: '#142b29',
-    accent: '#92efd8',
-    enemies: ['repulsor', 'mirror', 'parasite', 'summoner', 'slime'],
-  },
-  {
-    name: 'Floating Islands',
-    color: '#1a2930',
-    accent: '#acdccc',
-    enemies: ['floater', 'swarm', 'orbiter', 'bomber'],
-  },
-  {
-    name: 'Collapsing Dimension',
-    color: '#29192b',
-    accent: '#f0a4dc',
-    enemies: ['singularity', 'mirror', 'phase', 'summoner', 'leech', 'parasite'],
-  },
-] as const;
+export const biomes = regions;
 const bounds: Wall[] = [
   { x: 600, y: 25, width: 1200, height: 50 },
   { x: 600, y: 775, width: 1200, height: 50 },
@@ -196,7 +147,8 @@ export function buildRoom(
   difficulty = 0,
 ): RoomDefinition {
   const random = new Random(`${seed}:${id}`);
-  const region = biomes[Math.max(0, Math.min(7, biome))];
+  biome = Number.isFinite(biome) ? Math.max(0, Math.min(biomes.length - 1, Math.floor(biome))) : 0;
+  const region = biomes[biome];
   const layout = random.pick(layouts);
   const combat = ['combat', 'elite', 'challenge', 'boss'].includes(type);
   const room: RoomDefinition = {
@@ -216,18 +168,8 @@ export function buildRoom(
       ...point,
       kind: index % 3 === 0 ? 'barrel' : index % 3 === 1 ? 'rock' : 'crate',
     });
-  const props: EntityKind[] = [
-    'generator',
-    'crystal',
-    'fragment',
-    'metal_plate',
-    'void_matter',
-    'gravity_core',
-    'rubber',
-    'magnet',
-  ];
-  room.spawns.push({ kind: props[biome], x: 1050, y: 100 });
-  room.spawns.push({ kind: biome % 2 ? 'ice' : 'energy_cell', x: 150, y: 650 });
+  room.spawns.push({ kind: region.prop, x: 1050, y: 100 });
+  room.spawns.push({ kind: region.secondaryProp, x: 150, y: 650 });
   if (['combat', 'elite', 'challenge'].includes(type))
     room.spawns.push({ kind: 'rift_seal', x: 1080, y: 200 });
   if (type === 'secret') {
@@ -250,7 +192,7 @@ export function buildRoom(
   }
   if (type === 'boss') {
     room.spawns.push({
-      kind: regionGuardians[biome],
+      kind: region.guardian,
       x: 860,
       y: 400,
     });
@@ -266,7 +208,7 @@ export function buildRoom(
       });
     }
     room.hazards.push({
-      kind: biome % 2 ? 'laser' : 'spikes',
+      kind: region.hazard,
       x: 1000,
       y: 710,
       width: 220,
@@ -290,28 +232,9 @@ export function buildRoom(
         }),
       );
   }
-  if (biome === 1 || biome === 2 || biome === 4 || biome === 5)
-    room.fields.push({
-      source: 'environment',
-      mode: biome === 5 ? 'zero' : 'radial',
-      position: { x: 600, y: 400 },
-      direction: { x: 0, y: 1 },
-      strength: biome === 5 ? 1 : biome === 4 ? 0.004 : 0.0025,
-      radius: biome === 5 ? 150 : 300,
-      falloff: biome === 5 ? 'constant' : 'linear',
-      remaining: 36000,
-    });
-  if (biome === 6)
-    room.hazards.push({
-      kind: 'wind',
-      x: 650,
-      y: 420,
-      width: 350,
-      height: 450,
-      period: 6,
-      phase: 0,
-    });
-  if (biome === 7)
+  room.fields.push(...structuredClone(region.fields));
+  room.hazards.push(...structuredClone(region.hazards));
+  if (region.movingWalls)
     room.walls
       .slice(4)
       .forEach((wall, index) => (wall.motion = index % 2 ? 'horizontal' : 'vertical'));

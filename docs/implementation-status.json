@@ -1083,9 +1083,18 @@
     {
       "section": 85,
       "title": "Post-Launch Content Architecture",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/data/regions.json",
+        "src/content/regions.ts",
+        "src/content/validate.ts",
+        "src/content/abilities.ts",
+        "src/content/relics.ts",
+        "src/content/events.ts",
+        "tests/regions.test.ts",
+        "tests/content.test.ts"
+      ],
+      "remaining": "A validated append-only region catalog owns biome, planet, guardian, environment, story and hidden lore. Campaign/endless routing, save bounds and class loading derive from catalog size. Existing effect/modifier/behavior catalogs extend abilities, relics, enemies and events without changing the physics engine. Novel behaviors need their own tested gameplay handler. All 80 existing region/room outputs were preserved during migration; a ninth-region/class extension is regression-tested."
     },
     {
       "section": 86,
