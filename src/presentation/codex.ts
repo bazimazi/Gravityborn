@@ -1,11 +1,12 @@
 import { abilities } from '../content/abilities';
 import { entityDefinitions } from '../content/enemies';
-import { bossDefinitions } from '../content/bosses';
+import { bossDefinitions, bossDescriptions, type BossKind } from '../content/bosses';
 import { relics } from '../content/relics';
 import { equipment } from '../content/equipment';
 import { phenomena } from '../content/phenomena';
 import { planets, story } from '../content/story';
 import { challenges } from '../content/challenges';
+import { challengeProgress } from '../progression/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
 import type { Profile } from '../progression/profile';
 import { materialDescriptions } from '../content/objects';
@@ -48,7 +49,7 @@ export function codexView(profile: Profile): string {
       entries: Object.entries(bossDefinitions).map(([id, definition]) => ({
         id: `boss:${id}`,
         name: definition.name,
-        text: `Three phases. ${id === 'inverter' ? 'Changes global gravity and emits repulsive fields.' : id === 'planet_eater' ? 'Creates moving, destructible gravity sources.' : id === 'architect' ? 'Builds temporary walls near your path and localized vortices.' : id === 'star' ? 'Emits outward waves that launch loose matter.' : 'Pulls the arena toward a growing singularity.'}`,
+        text: `Three phases. ${bossDescriptions[id as BossKind]}`,
         known: known(`boss:${id}`),
       })),
     },
@@ -106,7 +107,7 @@ export function codexView(profile: Profile): string {
       entries: challenges.map((challenge) => ({
         id: challenge.id,
         name: challenge.name,
-        text: `${challenge.description} Progress: ${Math.min(challenge.target, Math.floor(profile.metrics[challenge.metric] ?? 0))} / ${challenge.target}. Reward: ${challenge.shards} shards and ${challenge.research} research.${profile.challenges.includes(challenge.id) ? ' Completed.' : ''}`,
+        text: `${challenge.description} Progress: ${Math.min(challenge.target, Math.floor(challengeProgress(profile, challenge)))} / ${challenge.target}. Reward: ${challenge.shards} shards and ${challenge.research} research.${profile.challenges.includes(challenge.id) ? ' Completed.' : ''}`,
         known: true,
       })),
     },

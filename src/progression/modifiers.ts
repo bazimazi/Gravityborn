@@ -1,3 +1,4 @@
+import limits from '../data/stat-limits.json';
 export type ModifierOperation = 'add' | 'multiply' | 'override';
 export interface Modifier {
   id: string;
@@ -47,7 +48,9 @@ export class ModifierSet {
       else if (value.operation === 'multiply') multiplier *= value.value;
       else if (!override || (value.priority ?? 0) >= (override.priority ?? 0)) override = value;
     }
-    return override?.value ?? added * multiplier;
+    const result = override?.value ?? added * multiplier;
+    const [min, max] = (limits as Record<string, number[]>)[stat] ?? [-1000000, 1000000];
+    return Math.max(min, Math.min(max, Number.isNaN(result) ? base : result));
   }
   fire(trigger: Trigger, time: number, tags: readonly string[] = []): TriggerRule[] {
     const effects: TriggerRule[] = [];

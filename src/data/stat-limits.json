@@ -1,0 +1,19 @@
+{
+  "maxHealth": [20, 2000],
+  "maxEnergy": [20, 500],
+  "mass": [0.25, 100],
+  "gravityResponse": [-4, 4],
+  "movement": [0.0005, 0.009],
+  "radius": [1, 600],
+  "strength": [-32, 32],
+  "duration": [0, 20],
+  "cooldown": [0.25, 120],
+  "energyCost": [0, 500],
+  "energyRegen": [0, 50],
+  "maxWells": [1, 6],
+  "wellCopies": [1, 2],
+  "wellCompression": [0, 85],
+  "impactDamage": [0.1, 8],
+  "projectileDamage": [0.1, 8],
+  "damage": [0, 85]
+}

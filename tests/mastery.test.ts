@@ -6,6 +6,7 @@ import { Expedition } from '../src/progression/expedition';
 import { newProfile, readProfile, settleRun } from '../src/progression/profile';
 import { freshMastery, masteryLevel } from '../src/progression/mastery';
 import { codexView } from '../src/presentation/codex';
+import { challenges } from '../src/content/challenges';
 
 it('credits a real wall-impact kill to the ability that supplied its causal chain', () => {
   const game = new Game(false);
@@ -24,6 +25,7 @@ it('credits a real wall-impact kill to the ability that supplied its causal chai
   expect(enemy.alive).toBe(false);
   expect(run.mastery.pulse.kills).toBe(1);
   expect(run.mastery.pulse.elites).toBe(1);
+  expect(run.metrics.impactKills).toBe(1);
 });
 it('counts many parallel effects without allowing unbounded recursive depth or lifetime', () => {
   const chains = new ChainTracker();
@@ -47,6 +49,15 @@ it('persists discoveries and grants challenge rewards once', () => {
   run.mastery.pulse = { casts: 50, kills: 100, elites: 1, bosses: 1, chain: 10, wins: 1 };
   expect(settleRun(profile, run)).toBe(true);
   expect(profile.challenges).toContain('chain_twenty');
+  expect(profile.challenges).toEqual(
+    expect.arrayContaining([
+      'pulse_practice',
+      'pulse_force',
+      'pulse_breaker',
+      'pulse_cascade',
+      'pulse_master',
+    ]),
+  );
   expect(profile.equipment.event_horizon).toBe(1);
   expect(masteryLevel(profile.abilityMastery.pulse)).toBe(5);
   const currency = profile.shards;
@@ -57,6 +68,14 @@ it('persists discoveries and grants challenge rewards once', () => {
   expect(codex).toContain('Kepler Remnant');
   expect(codex).toContain('The last station');
   expect(codex).not.toContain('Aster Foundry');
+});
+
+it('keeps the complete collection of power challenges through profile migration', () => {
+  expect(challenges.length).toBeGreaterThanOrEqual(100);
+  expect(new Set(challenges.map((item) => item.id)).size).toBe(challenges.length);
+  const profile = newProfile();
+  profile.challenges = challenges.map((item) => item.id);
+  expect(readProfile(profile).challenges).toEqual(profile.challenges);
 });
 it('mastery milestones require actual combat achievements beyond cast count', () => {
   const progress = freshMastery();

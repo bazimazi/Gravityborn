@@ -14,6 +14,7 @@ export interface GameEvents {
     source: string;
     elite: boolean;
     boss: boolean;
+    damageTags: string[];
   };
   ended: { won: boolean };
   abilityUsed: { id: string; tags: string[]; position: Vec2; level: number };

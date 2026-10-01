@@ -107,6 +107,24 @@ export class Renderer {
           60 + boss.telegraph * 25,
         );
         ctx.stroke();
+        if (boss.aim && ['comet', 'weaver'].includes(boss.entity.kind)) {
+          ctx.setLineDash([8, 8]);
+          this.line(
+            boss.entity.body.position.x,
+            boss.entity.body.position.y,
+            boss.aim.x,
+            boss.aim.y,
+          );
+          ctx.setLineDash([]);
+          this.circle(boss.aim.x, boss.aim.y, 40);
+          ctx.stroke();
+          ctx.fillStyle = '#ffe3b5';
+          ctx.fillText(
+            boss.entity.kind === 'comet' ? 'DASH PATH' : 'VOID WEAVE',
+            boss.aim.x,
+            boss.aim.y - 50,
+          );
+        }
       }
     }
     for (const field of game.gravity.fields.values()) {

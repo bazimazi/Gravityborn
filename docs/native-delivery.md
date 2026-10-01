@@ -16,6 +16,8 @@ The CLI's Xcode helper uses UUID's compatible CommonJS `v4` API. A scoped overri
 
 ## Remaining release verification
 
+Verified locally on 2026-10-01: `assembleDebug` succeeded with JDK 21 and Android SDK 36, producing a roughly 6.4 MB debug APK. An isolated API 36 Pixel 7 emulator installed and launched the APK, played with gravity inputs, paused, survived forced process termination, restored native settings, and recovered the route checkpoint. `scripts/android-smoke.mjs` records these checks and refuses to target physical devices. This validates the packaged 0.4 delivery milestone (`d3ee5c5`), not later content edits or physical hardware performance.
+
 Generated projects and passing browser tests do not establish native performance, safe-area behavior, OS lifecycle reliability, native save durability, physical haptics, or store approval. Test an installed build on low/mid/high Android hardware and iPhone/iPad in both orientations, including background/foreground, process termination, audio interruption, airplane-mode launch, save migration, sustained thermal load, and 30/60 FPS. Signing, store accounts, and distribution are separate from local development and have not been performed.
 
 Implementation follows the official [Capacitor installation workflow](https://capacitorjs.com/docs/getting-started), [environment requirements](https://capacitorjs.com/docs/getting-started/environment-setup), and [Preferences persistence/privacy guidance](https://capacitorjs.com/docs/apis/preferences).

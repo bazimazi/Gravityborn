@@ -9,12 +9,13 @@ import { record, finite, strings } from '../core/save';
 import { equipmentById, equipmentSets, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
 import type { Profile } from './profile';
+import { wellEvolutions } from '../content/well';
 
 export interface UpgradeChoice {
   id: string;
   name: string;
   description: string;
-  kind: 'ability' | 'relic' | 'passive';
+  kind: 'ability' | 'relic' | 'passive' | 'well';
   target: string;
 }
 const passives: {
@@ -49,6 +50,7 @@ const passives: {
   },
 ];
 export class RunBuild {
+  wellLevel = 1;
   equipment: { id: string; level: number; affix: string }[] = [];
   skills: string[] = [];
   mutation = '';
@@ -100,6 +102,16 @@ export class RunBuild {
   offer(): UpgradeChoice[] {
     if (this.choices.length) return this.choices;
     const pool: UpgradeChoice[] = [];
+    if (this.wellLevel < wellEvolutions.length) {
+      const evolution = wellEvolutions[this.wellLevel];
+      pool.push({
+        id: 'well:well',
+        kind: 'well',
+        target: 'well',
+        name: evolution.name,
+        description: evolution.description,
+      });
+    }
     for (const ability of abilities) {
       const level = this.game.abilities.levels.get(ability.id) ?? 0;
       const isEvolution = abilities.some((parent) => parent.evolution === ability.id);
@@ -144,7 +156,10 @@ export class RunBuild {
     if (this.pending <= 0) return false;
     const choice = this.choices.find((choice) => choice.id === id);
     if (!choice) return false;
-    if (choice.kind === 'ability') this.game.abilities.learn(choice.target);
+    if (choice.kind === 'well') {
+      if (this.wellLevel >= wellEvolutions.length) return false;
+      this.wellLevel++;
+    } else if (choice.kind === 'ability') this.game.abilities.learn(choice.target);
     else if (choice.kind === 'relic') this.relics.push(choice.target);
     else this.passives.push(choice.target);
     this.pending--;
@@ -165,6 +180,10 @@ export class RunBuild {
     // Preserve trigger clocks within a room while rebuilding derived modifiers.
     modifiers.values.clear();
     modifiers.rules.clear();
+    for (let level = 1; level < this.wellLevel; level++)
+      wellEvolutions[level].modifiers.forEach((modifier, index) =>
+        modifiers.add({ ...modifier, id: `well:${level}:${index}` }),
+      );
     classById
       .get(this.classId)
       ?.modifiers.forEach((modifier, index) =>
@@ -253,6 +272,7 @@ export class RunBuild {
   snapshot(): unknown {
     return {
       equipment: this.equipment,
+      wellLevel: this.wellLevel,
       skills: this.skills,
       mutation: this.mutation,
       rerolls: this.rerolls,
@@ -268,6 +288,7 @@ export class RunBuild {
   }
   restore(value: unknown): void {
     const data = record(value);
+    this.wellLevel = Math.floor(finite(data.wellLevel ?? 1, 1, wellEvolutions.length));
     this.skills = strings(data.skills ?? [], 100).filter((id) =>
       researchNodes.some((node) => node.id === id),
     );
@@ -332,7 +353,9 @@ export class RunBuild {
               ? relicById.get(target)
               : kind === 'passive'
                 ? passives.find((passive) => passive.id === target)
-                : undefined;
+                : kind === 'well' && target === 'well' && this.wellLevel < wellEvolutions.length
+                  ? wellEvolutions[this.wellLevel]
+                  : undefined;
         if (!definition) throw new Error('Unknown upgrade');
         this.choices.push({
           id: choice.id,

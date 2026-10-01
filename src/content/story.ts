@@ -1,4 +1,5 @@
 import { biomes } from './rooms';
+import { bossDefinitions, regionGuardians } from './bosses';
 export const story = [
   {
     act: 'I · Awakening',
@@ -109,7 +110,5 @@ export const planets = biomes.map((biome, index) => ({
     'Spore glass',
     'Anomaly fragments',
   ][index],
-  boss: ['The Inverter', 'The Planet Eater', 'The Singularity', 'The Architect', 'The Star'][
-    index % 5
-  ],
+  boss: bossDefinitions[regionGuardians[index]].name,
 }));

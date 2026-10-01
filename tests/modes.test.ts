@@ -41,7 +41,7 @@ function progress(run: Expedition): void {
 }
 for (const [mode, count] of [
   ['quick', 7],
-  ['boss_rush', 5],
+  ['boss_rush', 10],
   ['gauntlet', 7],
   ['campaign', 56],
 ] as [RunMode, number][])

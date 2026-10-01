@@ -5,6 +5,7 @@ import { equipmentById, affixes } from '../content/equipment';
 import { researchNodes, mutations } from '../content/research';
 import { readMastery, mergeMastery, type MasteryProgress } from './mastery';
 import { challenges } from '../content/challenges';
+import { challengeProgress } from './challenges';
 export interface Profile {
   shards: number;
   research: number;
@@ -61,8 +62,8 @@ export function readProfile(value: unknown): Profile {
     profile.discoveries = strings(data.discoveries, 1000);
     profile.skills = strings(data.skills ?? [], 100);
     profile.abilityMastery = readMastery(data.abilityMastery ?? {});
-    profile.challenges = strings(data.challenges ?? [], 100).filter((id) =>
-      challenges.some((challenge) => challenge.id === id),
+    profile.challenges = strings(data.challenges ?? [], Math.max(1000, challenges.length)).filter(
+      (id) => challenges.some((challenge) => challenge.id === id),
     );
     for (const [id, value] of Object.entries(record(data.metrics ?? {})))
       if (id.length < 50) profile.metrics[id] = finite(value, 0, 100000000);
@@ -121,12 +122,12 @@ export function settleRun(profile: Profile, run: Expedition): boolean {
   for (const challenge of challenges)
     if (
       !profile.challenges.includes(challenge.id) &&
-      (profile.metrics[challenge.metric] ?? 0) >= challenge.target
+      challengeProgress(profile, challenge) >= challenge.target
     ) {
       profile.challenges.push(challenge.id);
       profile.shards += challenge.shards;
       profile.research += challenge.research;
-      if ('equipment' in challenge && !profile.equipment[challenge.equipment])
+      if (challenge.equipment && !profile.equipment[challenge.equipment])
         profile.equipment[challenge.equipment] = 1;
     }
   return true;

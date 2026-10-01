@@ -17,7 +17,10 @@
     "wellRadius": 265,
     "wellDuration": 4.2,
     "wellCooldown": 5.5,
-    "maxWells": 2
+    "maxWells": 2,
+    "dualWellOffset": 80,
+    "wellCompressionRadius": 55,
+    "wellCompressionInterval": 0.5
   },
   "player": { "acceleration": 0.0028, "invulnerability": 0.8, "contactDamage": 9 },
   "combat": {
@@ -55,6 +58,18 @@
     "projectileLife": 7,
     "maxProjectiles": 36,
     "telegraph": 0.6
+  },
+  "bosses": {
+    "magnetRadius": 500,
+    "magnetStrength": 0.004,
+    "stasisRadius": 430,
+    "stasisDuration": 1,
+    "tidalRadius": 290,
+    "tidalStrength": 0.005,
+    "cometImpulse": 13,
+    "voidRadius": 145,
+    "voidStrength": 0.004,
+    "voidDuration": 3
   },
   "presentation": { "maxParticles": 200, "maxPixelRatio": 2, "shake": 5 }
 }

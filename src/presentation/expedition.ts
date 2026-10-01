@@ -4,6 +4,7 @@ import { relicById } from '../content/relics';
 import { encounters } from '../content/events';
 import { story } from '../content/story';
 import { canBuy, shopDescription } from '../progression/shop';
+import { wellEvolutions } from '../content/well';
 
 const escape = (text: string): string =>
   text.replace(
@@ -12,7 +13,7 @@ const escape = (text: string): string =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!,
   );
 export function expeditionView(run: Expedition): string {
-  const stats = `<p class="run-stats mono">${escape(biomes[run.biome].name)} · LEVEL ${run.build.level} · ${run.build.currency} SHARDS · ${Math.ceil(run.game.player.health)} / ${run.game.maxHealth} INTEGRITY</p>`;
+  const stats = `<p class="run-stats mono">${escape(biomes[run.biome].name)} · LEVEL ${run.build.level} · ${run.build.currency} SHARDS · ${Math.ceil(run.game.player.health)} / ${run.game.maxHealth} INTEGRITY</p><p class="well-evolution">${wellEvolutions[run.build.wellLevel - 1].name}</p>`;
   let content = '';
   if (run.build.pending > 0 && run.phase !== 'summary')
     content = `<h2>Choose your next power</h2><p>Level ${run.build.level} · ${run.build.pending} upgrade${run.build.pending === 1 ? '' : 's'} available</p><div class="run-choices">${run.build
@@ -26,7 +27,7 @@ export function expeditionView(run: Expedition): string {
       )}</div><button class="text-button" data-run-action="reroll" ${run.build.rerolls ? '' : 'disabled'}>Reroll · ${run.build.rerolls} remaining</button>`;
   else if (run.phase === 'map')
     content = `<h2>Choose your route</h2><div class="story-card"><strong>ACT ${escape(story[run.biome].act)} · ${escape(story[run.biome].title)}</strong>${escape(story[run.biome].intro)}</div><p>Choose an illuminated chamber to continue. Every route reaches the region's guardian.</p><div class="run-map" aria-label="Expedition map">${Array.from(
-      { length: 7 },
+      { length: Math.max(...run.map.map((node) => node.row)) + 1 },
       (_, row) =>
         `<div class="map-row"><span class="mono">${row + 1}</span>${run.map
           .filter((node) => node.row === row)

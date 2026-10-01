@@ -36,7 +36,7 @@ export const modes = [
     id: 'boss_rush',
     name: 'Boss Rush',
     regions: 1,
-    description: 'Five guardians in sequence, with upgrades between encounters.',
+    description: 'Ten guardians in sequence, with upgrades between encounters.',
   },
   {
     id: 'gauntlet',

@@ -16,6 +16,7 @@ import { contracts, phenomena, type Contract, type Phenomenon } from '../content
 import { bossDefinitions, type BossKind } from '../content/bosses';
 import { freshMastery, readMastery, type MasteryProgress } from './mastery';
 import { story } from '../content/story';
+import { abilityById } from '../content/abilities';
 import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
 export interface RunOptions {
   mode?: RunMode;
@@ -75,12 +76,18 @@ export class Expedition {
       if (this.phase !== 'room' || entityDefinitions[event.kind as EntityKind]?.faction !== 'enemy')
         return;
       this.kills++;
+      for (const tag of event.damageTags) {
+        const metric = `${tag.toLowerCase()}Kills`;
+        this.metrics[metric] = (this.metrics[metric] ?? 0) + 1;
+      }
       this.discoveries.add(`${event.boss ? 'boss' : 'enemy'}:${event.kind}`);
-      const progress = (this.mastery[event.source] ??= freshMastery());
-      progress.kills++;
-      progress.elites += Number(event.elite);
-      progress.bosses += Number(event.boss);
-      progress.chain = Math.max(progress.chain, event.chainLength);
+      if (event.source === 'well' || event.source === 'flip' || abilityById.has(event.source)) {
+        const progress = (this.mastery[event.source] ??= freshMastery());
+        progress.kills++;
+        progress.elites += Number(event.elite);
+        progress.bosses += Number(event.boss);
+        progress.chain = Math.max(progress.chain, event.chainLength);
+      }
       this.metrics.bosses = (this.metrics.bosses ?? 0) + Number(event.boss);
       this.metrics.elites = (this.metrics.elites ?? 0) + Number(event.elite);
       if (event.boss && event.source === 'well')
@@ -191,7 +198,12 @@ export class Expedition {
     if (this.mode === 'boss_rush')
       room.spawns = room.spawns.map((spawn) =>
         spawn.kind in bossDefinitions
-          ? { ...spawn, kind: (Object.keys(bossDefinitions) as BossKind[])[node.row % 5] }
+          ? {
+              ...spawn,
+              kind: (Object.keys(bossDefinitions) as BossKind[])[
+                node.row % Object.keys(bossDefinitions).length
+              ],
+            }
           : spawn,
       );
     if (this.difficulty >= 2) {
@@ -489,14 +501,20 @@ export class Expedition {
     depth = this.depth,
   ): MapNode[] {
     if (mode === 'boss_rush' || mode === 'gauntlet')
-      return Array.from({ length: mode === 'boss_rush' ? 5 : 7 }, (_, row) => ({
-        id: `${biome}:${row}:1`,
-        row,
-        lane: 1,
-        type: mode === 'boss_rush' || row === 6 ? 'boss' : 'elite',
-        next: row === (mode === 'boss_rush' ? 4 : 6) ? [] : [`${biome}:${row + 1}:1`],
-        visited: false,
-      }));
+      return Array.from(
+        { length: mode === 'boss_rush' ? Object.keys(bossDefinitions).length : 7 },
+        (_, row) => ({
+          id: `${biome}:${row}:1`,
+          row,
+          lane: 1,
+          type: mode === 'boss_rush' || row === 6 ? 'boss' : 'elite',
+          next:
+            row === (mode === 'boss_rush' ? Object.keys(bossDefinitions).length - 1 : 6)
+              ? []
+              : [`${biome}:${row + 1}:1`],
+          visited: false,
+        }),
+      );
     return generateMap(depth ? `${seed}:${depth}` : seed, biome);
   }
   private completeRoom(combat = true): void {

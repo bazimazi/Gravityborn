@@ -53,12 +53,12 @@ Choose **Enter the chamber** for the original six-hostile laboratory, or **Begin
 
 Beyond the original laboratory, the current implementation includes:
 
-- 21 physical powers with levels/evolutions, 15 relics, tagged modifiers, triggers, and four build synergies.
-- 13 additional enemy behaviors, eight elite modifiers, five bosses, and eight biome definitions.
+- 21 physical powers with levels/evolutions, a four-stage primary well, 15 relics, tagged modifiers, triggers, and four build synergies.
+- 13 additional enemy behaviors, eight elite modifiers, ten bosses, and eight biome definitions.
 - Seeded authored-room composition, branching routes, puzzles, hazards, shops, six events, and three-choice XP upgrades.
 - Eight classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and seven mutations.
 - Quick, standard, long, campaign, endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
-- Five story acts, eight collectible planet records, a discovery codex, causal ability mastery, and challenge rewards.
+- Five story acts, eight collectible planet records, a discovery codex, causal ability mastery, and 123 reward-bearing challenges.
 - Physical XP/shard pickups, nine material definitions, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Seven shop purchase categories with build-aware power selection, equipment replacement, and persistent sold inventory.
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.

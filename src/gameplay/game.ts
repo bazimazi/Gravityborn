@@ -66,6 +66,7 @@ export class Game {
   stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
   private readonly explosions: { entity: Entity; cause: Cause }[] = [];
   private readonly wellChains = new Map<number, number>();
+  private nextWellCompression = 0;
   private readonly echoes: { id: string; position: Vec2; time: number }[] = [];
   private random = new Random('laboratory');
 
@@ -159,6 +160,7 @@ export class Game {
     this.time = 0;
     this.wellCooldown = 0;
     this.waveIndex = 0;
+    this.nextWellCompression = 0;
     this.nextWaveAt = undefined;
     this.state = 'ready';
     this.move = { x: 0, y: 0 };
@@ -275,52 +277,63 @@ export class Game {
       !Number.isFinite(position.x + position.y)
     )
       return false;
-    const bounded = {
-      x: Math.max(65, Math.min(this.room.width - 65, position.x)),
-      y: Math.max(65, Math.min(this.room.height - 65, position.y)),
-    };
-    const wells = [...this.gravity.fields.values()].filter(
-      (field) => field.source === 'player-well',
+    const modifiers = this.abilities.modifiers;
+    const tags = ['Gravity', 'Control', 'Well'];
+    const copies = Math.max(1, Math.min(2, Math.floor(modifiers.evaluate('wellCopies', 1))));
+    const maxWells = Math.max(
+      copies,
+      Math.floor(modifiers.evaluate('maxWells', balance.gravity.maxWells)),
     );
-    if (wells.length >= this.abilities.modifiers.evaluate('maxWells', balance.gravity.maxWells))
-      this.gravity.removeField(wells[0].id);
-    if (this.gravity.fields.size >= balance.physics.maxFields) return false;
     const chain = this.chains.start(this.time, 'well');
-    const fieldId = this.gravity.addField({
-      source: 'player-well',
-      mode: 'radial',
-      position: bounded,
-      direction: { x: 0, y: 0 },
-      strength: this.abilities.modifiers.evaluate('strength', balance.gravity.wellStrength, [
-        'Gravity',
-        'Control',
-      ]),
-      radius: this.abilities.modifiers.evaluate('radius', balance.gravity.wellRadius, [
-        'Gravity',
-        'Control',
-      ]),
-      falloff: 'linear',
-      remaining: this.abilities.modifiers.evaluate('duration', balance.gravity.wellDuration, [
-        'Gravity',
-        'Control',
-      ]),
-    });
-    this.wellChains.set(fieldId, chain);
-    for (const entity of this.world.entities.values()) {
-      if (length(subtract(entity.body.position, bounded)) < balance.gravity.wellRadius) {
-        this.attribute(entity, { id: chain, depth: 0 });
-        if (entity.kind === 'projectile') entity.redirected = true;
-      }
+    let created = 0;
+    for (let copy = 0; copy < copies; copy++) {
+      const wells = [...this.gravity.fields.values()].filter(
+        (field) => field.source === 'player-well',
+      );
+      if (wells.length >= maxWells) this.gravity.removeField(wells[0].id);
+      if (this.gravity.fields.size >= balance.physics.maxFields) break;
+      const offset = copies > 1 ? (copy ? 1 : -1) * balance.gravity.dualWellOffset : 0;
+      const bounded = {
+        x: Math.max(
+          65,
+          Math.min(this.room.width - 65, position.x + offset * this.gravity.direction.y),
+        ),
+        y: Math.max(
+          65,
+          Math.min(this.room.height - 65, position.y - offset * this.gravity.direction.x),
+        ),
+      };
+      const radius = modifiers.evaluate('radius', balance.gravity.wellRadius, tags);
+      const fieldId = this.gravity.addField({
+        source: 'player-well',
+        mode: 'radial',
+        position: bounded,
+        direction: { x: 0, y: 0 },
+        strength: modifiers.evaluate('strength', balance.gravity.wellStrength, tags),
+        radius,
+        falloff: 'linear',
+        remaining: modifiers.evaluate('duration', balance.gravity.wellDuration, tags),
+      });
+      this.wellChains.set(fieldId, chain);
+      for (const entity of this.world.entities.values())
+        if (length(subtract(entity.body.position, bounded)) < radius) {
+          this.attribute(entity, { id: chain, depth: 0 });
+          if (entity.kind === 'projectile') entity.redirected = true;
+        }
+      created++;
     }
+    if (!created) return false;
     this.stats.wells++;
     this.wellCooldown = Math.max(
       0.25,
-      this.abilities.modifiers.evaluate('cooldown', balance.gravity.wellCooldown, [
-        'Gravity',
-        'Control',
-      ]),
+      modifiers.evaluate('cooldown', balance.gravity.wellCooldown, tags),
     );
-    this.events.emit('wellCreated', { position: bounded });
+    this.events.emit('wellCreated', {
+      position: {
+        x: Math.max(65, Math.min(this.room.width - 65, position.x)),
+        y: Math.max(65, Math.min(this.room.height - 65, position.y)),
+      },
+    });
     return true;
   }
 
@@ -335,6 +348,22 @@ export class Game {
         this.abilities.cast(echo.id, echo.position, true);
       }
     this.abilities.tick(dt);
+    const compression = this.abilities.modifiers.evaluate('wellCompression', 0);
+    if (compression > 0 && this.time >= this.nextWellCompression) {
+      this.nextWellCompression = this.time + balance.gravity.wellCompressionInterval;
+      for (const [id, chain] of this.wellChains) {
+        const field = this.gravity.fields.get(id);
+        if (!field) continue;
+        for (const entity of [...this.world.entities.values()])
+          if (
+            entity.definition.faction === 'enemy' &&
+            entity.kind !== 'projectile' &&
+            length(subtract(entity.body.position, field.position)) <
+              balance.gravity.wellCompressionRadius
+          )
+            this.applyDamage(entity, compression, chain, 'Compression');
+      }
+    }
     this.rules.tick();
     this.environment.tick();
     if (length(this.gravity.sample(this.player.body.position)) < 0.00001)
@@ -505,6 +534,7 @@ export class Game {
             id: projectile.chainId,
             depth: projectile.chainDepth + 1,
           },
+          ['Projectile', 'Velocity'],
         );
         if (projectile.redirected && this.stats.kills > before) this.stats.redirectedKills++;
       }
@@ -581,7 +611,7 @@ export class Game {
       const source = this.chains.source(cause.id);
       const tags = ['Impact', 'Velocity'];
       if (['planet', 'binary', 'vortex', 'reflect', 'rotate'].includes(source))
-        tags.push('Orbital');
+        tags.push('Orbital', 'Orbit');
       if (['black_hole', 'rift'].includes(source)) tags.push('Void');
       this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
@@ -651,6 +681,7 @@ export class Game {
       source: this.chains.source(cause.id),
       elite: Boolean(entity.elite),
       boss: entity.kind in bossDefinitions,
+      damageTags: tags,
     });
   }
 

@@ -183,17 +183,14 @@
     {
       "section": 16,
       "title": "Boss Philosophy",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
+        "src/content/bosses.ts",
         "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "tests/bosses.test.ts",
+        "tests/progression.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Ten three-phase bosses with rule-changing physical attacks and a full Boss Rush route implemented. Human difficulty and encounter tuning remain."
     },
     {
       "section": 17,
@@ -305,17 +302,14 @@
     {
       "section": 24,
       "title": "Ability Evolution",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/content/abilities.ts",
+        "src/content/well.ts",
+        "src/gameplay/game.ts",
+        "tests/well.test.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Pulse, collapse, planet and primary-well evolution paths implemented; further launch catalog breadth remains tracked in section 84."
     },
     {
       "section": 25,
@@ -521,15 +515,14 @@
     {
       "section": 39,
       "title": "Challenge System",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/content/story.ts",
         "src/content/challenges.ts",
-        "src/progression/mastery.ts",
-        "src/presentation/codex.ts",
+        "src/progression/challenges.ts",
+        "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "Playable narrative, collection, mastery, and challenge foundation is tested. Full content breadth and section-specific audit remain."
+      "remaining": "123 challenges including per-power mastery milestones. Rewards, damage attribution, idempotency and large-collection migration tested. Balance remains."
     },
     {
       "section": 40,
@@ -570,9 +563,11 @@
         "src/content/modes.ts",
         "src/gameplay/rules.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/modes.test.ts",
+        "src/data/stat-limits.json",
+        "tests/modifiers.test.ts"
       ],
-      "remaining": "Systems implemented and tested. Full section audit, balance validation, presentation polish, and content breadth remain."
+      "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
     },
     {
       "section": 43,
@@ -1060,9 +1055,12 @@
     {
       "section": 90,
       "title": "Anti-Degenerate Design",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "partial",
+      "evidence": [
+        "src/data/stat-limits.json",
+        "tests/modifiers.test.ts"
+      ],
+      "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
     },
     {
       "section": 91,
@@ -1100,9 +1098,10 @@
         "capacitor.config.ts",
         "android/",
         "ios/",
-        "docs/native-delivery.md"
+        "docs/native-delivery.md",
+        "scripts/android-smoke.mjs"
       ],
-      "remaining": "Native projects generated and synchronized; physical-device matrix not completed. Android build validation in progress; iOS build requires macOS/Xcode."
+      "remaining": "Android SDK 36/JDK 21 debug build succeeded; an isolated API 36 Pixel 7 emulator passed gameplay and process-death/native-save recovery. Physical device matrix and iOS build remain external."
     },
     {
       "section": 96,

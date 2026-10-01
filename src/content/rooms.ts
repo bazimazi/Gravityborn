@@ -3,7 +3,7 @@ import type { EntityKind } from '../physics/world';
 import type { GravityField } from '../physics/gravity';
 import type { EliteModifier } from './enemies';
 import { Random } from '../core/random';
-import { bossDefinitions, type BossKind } from './bosses';
+import { regionGuardians } from './bosses';
 
 export type RoomType =
   | 'combat'
@@ -228,7 +228,7 @@ export function buildRoom(
   room.spawns.push({ kind: biome % 2 ? 'ice' : 'energy_cell', x: 150, y: 650 });
   if (type === 'boss') {
     room.spawns.push({
-      kind: (Object.keys(bossDefinitions) as BossKind[])[biome % 5],
+      kind: regionGuardians[biome],
       x: 860,
       y: 400,
     });
