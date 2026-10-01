@@ -41,6 +41,7 @@ export interface RoomDefinition {
   fields: Omit<GravityField, 'id'>[];
   puzzle?: { switch: Vec2; exit: Vec2 };
   waves?: { kind: EntityKind; x: number; y: number; elite?: EliteModifier }[][];
+  manualCompletion?: boolean;
 }
 export const biomes = [
   {

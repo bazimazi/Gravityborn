@@ -215,6 +215,27 @@ test('largest text and joystick remain usable on a 320 pixel viewport', async ({
   await expect(page.locator('#gravity-name')).toHaveText('RIGHT');
 });
 
+test('playable training advances from movement to a gravity flip', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Learn by playing', exact: true }).click();
+  await expect(page.locator('#tutorial-title')).toContainText('1 / 7');
+  await expect(page.locator('#tutorial-next')).toBeDisabled();
+  await page.keyboard.down('d');
+  await expect(page.locator('#tutorial-next')).toBeEnabled({ timeout: 5000 });
+  await page.keyboard.up('d');
+  await page.locator('#tutorial-next').click();
+  await expect(page.locator('#tutorial-title')).toContainText('2 / 7');
+  await page.getByRole('button', { name: 'Gravity right', exact: true }).click();
+  await expect(page.locator('#tutorial-next')).toBeEnabled();
+  await page.locator('#tutorial-next').click();
+  await expect(page.locator('#tutorial-title')).toContainText('3 / 7');
+  await page.getByRole('button', { name: 'Pause game', exact: true }).click();
+  await expect(page.locator('#tutorial-guide')).toBeHidden();
+  await page.getByRole('button', { name: 'Restart training', exact: true }).click();
+  await expect(page.locator('#tutorial-title')).toContainText('1 / 7');
+  await expect(page.locator('#tutorial-next')).toBeDisabled();
+});
+
 test('clears held input when focus is lost and supports inspector frame stepping', async ({
   page,
 }) => {

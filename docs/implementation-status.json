@@ -930,24 +930,26 @@
     {
       "section": 75,
       "title": "First-Time User Experience",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
-        "src/progression/expedition.ts",
-        "src/progression/build.ts",
-        "src/gameplay/bosses.ts",
-        "src/core/save.ts",
-        "tests/progression.test.ts",
-        "tests/save.test.ts",
-        "tests/rooms.test.ts"
+        "src/gameplay/tutorial.ts",
+        "src/main.ts",
+        "tests/tutorial.test.ts",
+        "tests/browser/game.spec.ts"
       ],
-      "remaining": "Playable foundation verified. Full content breadth, balancing, and section-specific audit remain."
+      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing."
     },
     {
       "section": 76,
       "title": "Tutorial Philosophy",
-      "status": "pending",
-      "evidence": [],
-      "remaining": "Implement and verify against the specification."
+      "status": "implemented",
+      "evidence": [
+        "src/gameplay/tutorial.ts",
+        "src/main.ts",
+        "tests/tutorial.test.ts",
+        "tests/browser/game.spec.ts"
+      ],
+      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing."
     },
     {
       "section": 77,

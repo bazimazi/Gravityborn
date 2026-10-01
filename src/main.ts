@@ -34,6 +34,7 @@ import { objectDefinitions } from './content/objects';
 import { installAccessibility, joystickInput } from './presentation/accessibility';
 import { installPlatform } from './core/platform';
 import { openStorage } from './core/storage';
+import { Tutorial } from './gameplay/tutorial';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -109,6 +110,20 @@ const feedback = new Feedback(game.events);
 const audio = new GameAudio(game.events, settings);
 const canvas = element<HTMLCanvasElement>('#game');
 const renderer = new Renderer(canvas, settings);
+const tutorial = new Tutorial(game, () => {
+  profile.tutorialCompleted = true;
+  persist();
+  restart();
+  toast('Training complete. Begin an expedition when you are ready.');
+});
+element('#stage').insertAdjacentHTML(
+  'beforebegin',
+  '<section id="tutorial-guide" class="tutorial-guide" aria-label="Playable training" hidden><strong id="tutorial-title"></strong><p id="tutorial-instruction"></p><small>Your training core is protected.</small><button id="tutorial-next" data-training="next">Next experiment →</button></section>',
+);
+element('#start').insertAdjacentHTML(
+  'beforebegin',
+  '<button class="text-button" data-training="start">Learn by playing</button>',
+);
 const overlay = element('#overlay');
 const initialOverlay = overlay.innerHTML;
 const keys = new Set<string>();
@@ -244,6 +259,17 @@ function refreshRun(): void {
 document.addEventListener('click', (event) => {
   const button = (event.target as HTMLElement).closest<HTMLButtonElement>('button');
   if (!button || button.disabled) return;
+  if (button.dataset.training === 'start') {
+    startTraining();
+    return;
+  }
+  if (button.dataset.training === 'next') {
+    tutorial.advance();
+    feedback.clear();
+    renderer.clear();
+    clearInput();
+    return;
+  }
   if (button.dataset.research || button.dataset.craft || button.dataset.upgradeEquipment) {
     if (button.dataset.research) purchaseResearch(profile, button.dataset.research);
     if (button.dataset.craft) craftEquipment(profile, button.dataset.craft);
@@ -276,6 +302,7 @@ document.addEventListener('click', (event) => {
     return;
   }
   if (button.dataset.runAction === 'new') {
+    tutorial.stop();
     const seed = document.querySelector<HTMLInputElement>('#run-seed')?.value;
     resumeAfterDialog = false;
     element<HTMLDialogElement>('#profile-dialog').close();
@@ -300,6 +327,7 @@ document.addEventListener('click', (event) => {
     clearInput();
     void audio.unlock();
   } else if (button.dataset.runAction === 'resume') {
+    tutorial.stop();
     if (!checkpoint || !run.restore(checkpoint)) {
       toast('The checkpoint could not be restored. Your profile is still available.');
       return;
@@ -349,6 +377,7 @@ function clearInput(): void {
   game.move = { x: 0, y: 0 };
 }
 function begin(): void {
+  tutorial.stop();
   void audio.unlock();
   clearInput();
   game.start();
@@ -357,7 +386,20 @@ function begin(): void {
   canvas.focus({ preventScroll: true });
   toast('Flip gravity to launch objects into hostiles.');
 }
+function startTraining(): void {
+  run.abandon();
+  tutorial.start();
+  feedback.clear();
+  renderer.clear();
+  clearInput();
+  armedWell = false;
+  overlay.hidden = true;
+  overlay.classList.remove('run-overlay', 'summary');
+  void audio.unlock();
+  canvas.focus({ preventScroll: true });
+}
 function restart(): void {
+  tutorial.stop();
   if (run.active) run.abandon();
   overlay.classList.remove('run-overlay');
   game.reset();
@@ -636,7 +678,10 @@ function showState(): void {
       begin();
     }
   };
-  if (paused) element('#restart').onclick = restart;
+  if (paused) {
+    element('#restart').textContent = tutorial.active ? 'Restart training' : 'Restart';
+    element('#restart').onclick = tutorial.active ? startTraining : restart;
+  }
   if (!document.querySelector('dialog[open]')) element('#continue').focus({ preventScroll: true });
 }
 
@@ -739,10 +784,34 @@ function frame(now: number): void {
     accumulator += elapsed;
     while (accumulator >= balance.physics.stepMs) {
       game.step();
+      tutorial.tick();
       accumulator -= balance.physics.stepMs;
     }
   } else accumulator = 0;
   feedback.update(elapsed / 1000);
+  renderer.tutorialTarget = tutorial.active ? (tutorial.beacon ?? null) : null;
+  const guide = element('#tutorial-guide');
+  guide.hidden = !tutorial.active || game.state !== 'playing';
+  if (tutorial.active) {
+    element('#tutorial-title').textContent =
+      `${tutorial.index + 1} / 7 · ${tutorial.lesson.name}${tutorial.complete ? ' · Complete' : ''}`;
+    element('#tutorial-instruction').textContent = tutorial.lesson.text;
+    element<HTMLButtonElement>('#tutorial-next').disabled = !tutorial.complete;
+    element('#tutorial-next').textContent =
+      tutorial.index === 6 ? 'Finish training →' : 'Next experiment →';
+  }
+  element('#well').classList.toggle(
+    'training-focus',
+    tutorial.active && !tutorial.complete && tutorial.lesson.hint === 'well',
+  );
+  element('.dpad').classList.toggle(
+    'training-focus',
+    tutorial.active && !tutorial.complete && tutorial.lesson.hint === 'gravity',
+  );
+  element('#joystick').classList.toggle(
+    'training-focus',
+    tutorial.active && !tutorial.complete && tutorial.lesson.hint === 'joystick',
+  );
   if (now - lastDraw >= 1000 / settings.frameRate - 1) {
     if (lastDraw) fps = fps * 0.94 + (1000 / Math.max(now - lastDraw, 1)) * 0.06;
     renderer.draw(game, feedback, now);

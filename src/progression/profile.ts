@@ -7,6 +7,7 @@ import { readMastery, mergeMastery, type MasteryProgress } from './mastery';
 import { challenges } from '../content/challenges';
 import { challengeProgress } from './challenges';
 export interface Profile {
+  tutorialCompleted: boolean;
   shards: number;
   research: number;
   runs: number;
@@ -28,6 +29,7 @@ export interface Profile {
 }
 export function newProfile(): Profile {
   return {
+    tutorialCompleted: false,
     shards: 0,
     research: 0,
     runs: 0,
@@ -52,6 +54,7 @@ export function readProfile(value: unknown): Profile {
   try {
     const data = record(value);
     const profile = newProfile();
+    profile.tutorialCompleted = data.tutorialCompleted === true;
     for (const key of ['shards', 'research', 'runs', 'wins', 'kills'] as const)
       profile[key] = Math.floor(finite(data[key], 0, 100000000));
     profile.classes = strings(data.classes, 8).filter((id) => classById.has(id));

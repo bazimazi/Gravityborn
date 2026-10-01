@@ -321,6 +321,33 @@ kbd {
   padding: 5%;
   background: linear-gradient(90deg, #0a1425f5 0%, #0a1425ec 36%, #0a142558 68%, #0a142514 100%);
 }
+.tutorial-guide {
+  flex-shrink: 0;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #94e8d8;
+  border-radius: 8px;
+  background: #0b1929ed;
+  font-size: calc(12px * var(--ui-scale, 1));
+}
+.tutorial-guide p {
+  margin: 8px 0;
+  line-height: 1.5;
+}
+.tutorial-guide small {
+  display: block;
+  color: #bacad9;
+}
+.tutorial-guide button {
+  pointer-events: auto;
+  min-height: 44px;
+  padding: 8px 14px;
+  margin-top: 8px;
+}
+.training-focus {
+  outline: 3px solid #fff1aa;
+  outline-offset: 3px;
+}
 .intro-content {
   max-width: 430px;
   min-width: 0;

@@ -9,6 +9,9 @@ for (const [name, options] of [
   const context = await browser.newContext(options);
   const page = await context.newPage();
   await page.goto('http://127.0.0.1:5180');
+  await page.getByRole('button', { name: 'Learn by playing', exact: true }).click();
+  await page.screenshot({ path: `artifacts/${name}-tutorial.png`, fullPage: true });
+  await page.reload();
   await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
   await page.screenshot({ path: `artifacts/${name}-map.png`, fullPage: true });
   await page.locator('[data-room]:enabled').click();

@@ -19,6 +19,7 @@ export class Renderer {
   private readonly trails = new Map<number, Vec2[]>();
   debug = false;
   aim: Vec2 | null = null;
+  tutorialTarget: Vec2 | null = null;
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -77,6 +78,18 @@ export class Renderer {
     if (!this.settings.reducedMotion && feedback.shake > 0)
       ctx.translate(Math.sin(now * 0.07) * feedback.shake, Math.cos(now * 0.09) * feedback.shake);
     this.drawArena(game, now);
+    if (this.tutorialTarget) {
+      ctx.strokeStyle = '#94e8d8';
+      ctx.fillStyle = '#94e8d8';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([8, 8]);
+      this.circle(this.tutorialTarget.x, this.tutorialTarget.y, 60);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 16px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('REACH HERE', this.tutorialTarget.x, this.tutorialTarget.y - 78);
+    }
     if (game.nextWaveAt !== undefined) {
       ctx.strokeStyle = '#f4a994';
       ctx.fillStyle = '#f4a994';

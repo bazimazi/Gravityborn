@@ -407,7 +407,10 @@ export class Game {
     for (const collision of this.world.collisions) this.resolveCollision(collision);
     this.resolveExplosions();
     if (this.player.health <= 0) this.end(false);
-    else if (this.room.puzzle ? this.environment.puzzleComplete : this.enemyCount === 0) {
+    else if (
+      !this.room.manualCompletion &&
+      (this.room.puzzle ? this.environment.puzzleComplete : this.enemyCount === 0)
+    ) {
       for (const entity of [...this.world.entities.values()])
         if (entity.kind === 'xp' || entity.kind === 'shard') this.collect(entity);
       if (this.waveIndex < (this.room.waves?.length ?? 0)) {
