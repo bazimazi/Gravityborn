@@ -89,11 +89,18 @@ export class AbilitySystem {
     if (current >= definition.maxLevel) {
       if (definition.evolution && !this.levels.has(definition.evolution)) {
         this.levels.set(definition.evolution, 1);
+        this.host.events.emit('abilityUpgraded', {
+          id: definition.evolution,
+          level: 1,
+          previousLevel: 0,
+          evolvedFrom: id,
+        });
         return definition.evolution;
       }
       return null;
     }
     this.levels.set(id, current + 1);
+    this.host.events.emit('abilityUpgraded', { id, level: current + 1, previousLevel: current });
     return id;
   }
 

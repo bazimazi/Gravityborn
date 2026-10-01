@@ -33,6 +33,12 @@ export class EnemySystem {
     if (modifier === 'heavy')
       Matter.Body.setMass(entity.body, entity.body.mass * tuning.heavyMultiplier);
     if (modifier === 'inverted') entity.gravityScale = -1;
+    this.host.events.emit('eliteSpawned', {
+      entityId: entity.id,
+      kind: entity.kind,
+      modifier,
+      position: { ...entity.body.position },
+    });
   }
 
   update(entity: Entity): boolean {

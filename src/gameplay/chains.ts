@@ -1,4 +1,5 @@
 import balance from '../data/balance.json';
+import type { EventBus } from '../core/events';
 
 interface Chain {
   id: number;
@@ -12,6 +13,7 @@ export class ChainTracker {
   private readonly chains = new Map<number, Chain>();
   best = 0;
   current = 0;
+  constructor(private readonly events?: EventBus) {}
 
   start(time: number, source = 'environment'): number {
     const id = this.nextId++;
@@ -22,6 +24,7 @@ export class ChainTracker {
       source,
       created: time,
     });
+    this.events?.emit('chainStarted', { id, source });
     return id;
   }
 
@@ -29,16 +32,27 @@ export class ChainTracker {
     if (id === null || depth > balance.combat.maxChainDepth) return 0;
     const chain = this.chains.get(id);
     if (!chain || chain.expires < time) return 0;
-    if (chain.effects.size < balance.combat.maxChainEffects) chain.effects.add(effect);
+    const extended =
+      !chain.effects.has(effect) && chain.effects.size < balance.combat.maxChainEffects;
+    if (extended) chain.effects.add(effect);
     const length = Math.min(chain.effects.size, balance.combat.maxChainEffects);
     this.current = Math.max(this.current, length);
     this.best = Math.max(this.best, length);
+    if (extended) this.events?.emit('chainExtended', { id, source: chain.source, length, effect });
     return length;
   }
 
   tick(time: number): void {
     for (const chain of this.chains.values())
-      if (chain.expires < time) this.chains.delete(chain.id);
+      if (chain.expires < time) {
+        this.chains.delete(chain.id);
+        this.events?.emit('chainEnded', {
+          id: chain.id,
+          source: chain.source,
+          length: chain.effects.size,
+          reason: 'expired',
+        });
+      }
     this.current = 0;
     for (const chain of this.chains.values())
       this.current = Math.max(
@@ -59,6 +73,13 @@ export class ChainTracker {
   }
 
   clear(): void {
+    for (const chain of this.chains.values())
+      this.events?.emit('chainEnded', {
+        id: chain.id,
+        source: chain.source,
+        length: chain.effects.size,
+        reason: 'reset',
+      });
     this.chains.clear();
     this.best = 0;
     this.current = 0;

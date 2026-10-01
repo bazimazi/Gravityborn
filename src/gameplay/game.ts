@@ -44,7 +44,7 @@ interface Cause {
 
 export class Game {
   readonly events = new EventBus();
-  readonly chains = new ChainTracker();
+  readonly chains = new ChainTracker(this.events);
   gravity!: GravitySystem;
   world!: PhysicsWorld;
   player!: Entity;
@@ -69,6 +69,7 @@ export class Game {
   stats: RunStats = { kills: 0, flips: 0, wells: 0, redirectedKills: 0, score: 0, zeroSeconds: 0 };
   private readonly explosions: { entity: Entity; cause: Cause }[] = [];
   private readonly wellChains = new Map<number, number>();
+  private readonly launched = new Map<number, number>();
   private nextWellCompression = 0;
   private readonly echoes: { id: string; position: Vec2; time: number }[] = [];
   private random = new Random('laboratory');
@@ -160,6 +161,7 @@ export class Game {
     this.chains.clear();
     this.explosions.length = 0;
     this.wellChains.clear();
+    this.launched.clear();
     this.time = 0;
     this.lastDamage = 'Unknown';
     this.wellCooldown = 0;
@@ -378,6 +380,8 @@ export class Game {
     for (const id of this.wellChains.keys())
       if (!this.gravity.fields.has(id)) this.wellChains.delete(id);
     this.chains.tick(this.time);
+    for (const id of this.launched.keys())
+      if (!this.world.entities.has(id)) this.launched.delete(id);
     const movement = length(this.move) > 1 ? normalize(this.move) : this.move;
     this.world.accelerate(
       this.player,
@@ -389,6 +393,22 @@ export class Game {
       if (entity.chainExpires < this.time) {
         entity.chainId = null;
         entity.chainDepth = 0;
+      }
+      if (
+        entity.definition.faction === 'enemy' &&
+        entity.kind !== 'projectile' &&
+        entity.chainId !== null &&
+        this.launched.get(entity.id) !== entity.chainId &&
+        length(Matter.Body.getVelocity(entity.body)) > balance.combat.impactThreshold
+      ) {
+        this.launched.set(entity.id, entity.chainId);
+        this.events.emit('enemyLaunched', {
+          entityId: entity.id,
+          kind: entity.kind,
+          velocity: Matter.Body.getVelocity(entity.body),
+          chainId: entity.chainId,
+          source: this.chains.source(entity.chainId),
+        });
       }
       for (const field of this.gravity.fields.values()) {
         if (
@@ -507,8 +527,15 @@ export class Game {
     }
   }
 
-  private resolveCollision({ a, b, speed, position }: CollisionFact): void {
+  private resolveCollision({ a, b, speed, position, normal }: CollisionFact): void {
     if ((a && !a.alive) || (b && !b.alive)) return;
+    this.events.emit('collisionOccurred', {
+      a: a?.id,
+      b: b?.id,
+      speed,
+      position: { ...position },
+      normal: { ...normal },
+    });
     const pickup =
       a?.kind === 'xp' || a?.kind === 'shard'
         ? a
@@ -672,6 +699,12 @@ export class Game {
     this.world.remove(entity);
     this.enemies.onDeath(entity);
     this.bosses.onDeath(entity);
+    if (entity.kind in bossDefinitions)
+      this.events.emit('bossDefeated', {
+        entityId: entity.id,
+        kind: entity.kind,
+        position: { ...entity.body.position },
+      });
     this.objects.onDeath(entity);
     this.materials.onDeath(entity);
     if (

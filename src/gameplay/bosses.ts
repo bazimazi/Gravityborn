@@ -49,6 +49,11 @@ export class BossSystem {
         frozen: [],
       };
       this.states.set(entity.id, state);
+      this.host.events.emit('bossStarted', {
+        entityId: entity.id,
+        kind: entity.kind,
+        position: { ...entity.body.position },
+      });
     }
     state.phase =
       entity.health > (entity.maxHealth * 2) / 3 ? 1 : entity.health > entity.maxHealth / 3 ? 2 : 3;

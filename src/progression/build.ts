@@ -176,6 +176,11 @@ export class RunBuild {
     if (choice.kind === 'well') {
       if (this.wellLevel >= wellEvolutions.length) return false;
       this.wellLevel++;
+      this.game.events.emit('abilityUpgraded', {
+        id: 'well',
+        level: this.wellLevel,
+        previousLevel: this.wellLevel - 1,
+      });
     } else if (choice.kind === 'ability') this.game.abilities.learn(choice.target);
     else if (choice.kind === 'relic') this.relics.push(choice.target);
     else this.passives.push(choice.target);

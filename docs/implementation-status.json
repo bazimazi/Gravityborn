@@ -812,15 +812,15 @@
     {
       "section": 64,
       "title": "Event Bus",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
+        "src/core/events.ts",
         "src/gameplay/game.ts",
-        "src/gameplay/abilities.ts",
-        "src/gameplay/enemies.ts",
-        "tests/abilities.test.ts",
-        "tests/enemies.test.ts"
+        "src/gameplay/chains.ts",
+        "src/progression/expedition.ts",
+        "tests/events.test.ts"
       ],
-      "remaining": "Core mechanics implemented and tested; complete content integration, balancing, and specification audit remain."
+      "remaining": "Typed combat, pickup, gravity, power, upgrade, run, elite, boss, launch, contact and chain lifecycle events are emitted after gameplay facts occur. Tests cover duplicate suppression and reset/abandon boundaries."
     },
     {
       "section": 65,

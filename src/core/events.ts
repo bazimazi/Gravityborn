@@ -2,6 +2,29 @@ import type { Vec2 } from './vector';
 import type { DiagnosticSample } from './diagnostics';
 
 export interface GameEvents {
+  runStarted: { id: string; mode: string; classId: string; difficulty: number };
+  runEnded: {
+    id: string;
+    outcome: 'victory' | 'defeat' | 'abandoned';
+    elapsed: number;
+    score: number;
+    assisted: boolean;
+  };
+  abilityUpgraded: { id: string; level: number; previousLevel: number; evolvedFrom?: string };
+  eliteSpawned: { entityId: number; kind: string; modifier: string; position: Vec2 };
+  bossStarted: { entityId: number; kind: string; position: Vec2 };
+  bossDefeated: { entityId: number; kind: string; position: Vec2 };
+  collisionOccurred: { a?: number; b?: number; speed: number; position: Vec2; normal: Vec2 };
+  enemyLaunched: {
+    entityId: number;
+    kind: string;
+    velocity: Vec2;
+    chainId: number;
+    source: string;
+  };
+  chainStarted: { id: number; source: string };
+  chainExtended: { id: number; source: string; length: number; effect: string };
+  chainEnded: { id: number; source: string; length: number; reason: 'expired' | 'reset' };
   diagnostic: DiagnosticSample;
   materialReaction: { kind: 'ignite' | 'quench' | 'arc'; position: Vec2; from?: Vec2 };
   gravityChanged: { direction: Vec2; source?: 'player' | 'enemy' };

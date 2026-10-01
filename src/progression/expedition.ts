@@ -210,6 +210,12 @@ export class Expedition {
     this.current = undefined;
     this.phase = 'map';
     this.message = 'Choose a route. Health and your build carry between rooms.';
+    this.game.events.emit('runStarted', {
+      id: this.id,
+      mode: this.mode,
+      classId: this.classId,
+      difficulty: this.difficulty,
+    });
     this.game.events.emit('diagnostic', { event: 'RunStarted', subject: this.mode });
     this.game.events.emit('diagnostic', { event: 'DifficultySelected', value: this.difficulty });
   }
@@ -401,6 +407,13 @@ export class Expedition {
   }
   abandon(): void {
     if (this.active && this.phase !== 'summary') {
+      this.game.events.emit('runEnded', {
+        id: this.id,
+        outcome: 'abandoned',
+        elapsed: this.elapsed + (this.phase === 'room' ? this.game.time : 0),
+        score: this.score + (this.phase === 'room' ? this.game.stats.score : 0),
+        assisted: Boolean(this.metrics.assisted),
+      });
       this.game.events.emit('diagnostic', { event: 'RunAbandoned', subject: this.mode });
       this.game.events.emit('diagnostic', {
         event: 'RunDuration',
@@ -412,6 +425,13 @@ export class Expedition {
     this.phase = 'inactive';
   }
   private recordEnd(outcome: 'victory' | 'defeat'): void {
+    this.game.events.emit('runEnded', {
+      id: this.id,
+      outcome,
+      elapsed: this.elapsed,
+      score: this.score,
+      assisted: Boolean(this.metrics.assisted),
+    });
     this.game.events.emit('diagnostic', {
       event: 'RunEnded',
       subject: this.metrics.assisted ? `assisted:${outcome}` : outcome,
