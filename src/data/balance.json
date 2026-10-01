@@ -11,6 +11,7 @@
     "maxImpulse": 16,
     "maxBodies": 220,
     "maxFields": 50,
+    "maxTethers": 12,
     "positionIterations": 8,
     "velocityIterations": 8
   },

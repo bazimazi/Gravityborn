@@ -40,7 +40,7 @@ interface Status {
   entity: Entity;
   generation: number;
   until: number;
-  kind: 'lock' | 'theft' | 'transfer';
+  kind: 'lock' | 'theft' | 'transfer' | 'response';
   factor?: string;
 }
 export interface AbilitySnapshot {
@@ -60,6 +60,14 @@ export class AbilitySystem {
   private readonly statuses: Status[] = [];
   private readonly resistance = new Map<number, { until: number; generation: number }>();
   private readonly constructs: { entity: Entity; expires: number }[] = [];
+  readonly tethers: {
+    body: Matter.Constraint;
+    a: Entity;
+    b: Entity;
+    generations: number[];
+    expires: number;
+    chain: number;
+  }[] = [];
   private rotation?: { original: Vec2; start: number; duration: number; chain: number };
 
   constructor(private readonly host: AbilityHost) {}
@@ -180,6 +188,23 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
+    const responseTargets =
+      definition.effect === 'response' ? targets.filter((entity) => !entity.body.isStatic) : [];
+    if (definition.effect === 'response' && !responseTargets.length) return false;
+    const tetherTargets =
+      definition.effect === 'tether'
+        ? targets
+            .filter(
+              (entity) => !entity.body.isStatic && entity.kind !== 'xp' && entity.kind !== 'shard',
+            )
+            .slice(0, parameters.chainTargets ?? 2)
+        : [];
+    if (
+      definition.effect === 'tether' &&
+      (tetherTargets.length < 2 ||
+        this.tethers.length + tetherTargets.length - 1 > balance.physics.maxTethers)
+    )
+      return false;
     const victim =
       definition.effect === 'theft'
         ? targets.find(
@@ -223,11 +248,21 @@ export class AbilitySystem {
       this.host.markCause(entity, chain);
       if (entity.kind === 'projectile') entity.redirected = true;
     };
-    const impulse = (entity: Entity, direction: Vec2, power: number): void => {
+    const impulse = (
+      entity: Entity,
+      direction: Vec2,
+      power: number,
+      momentumScale?: number,
+    ): void => {
       if (entity.body.isStatic) return;
-      this.host.markCause(entity, chain);
-      if (entity.kind === 'projectile') entity.redirected = true;
+      const before = Matter.Body.getVelocity(entity.body);
+      if (momentumScale !== undefined)
+        Matter.Body.setVelocity(entity.body, scale(before, momentumScale));
       this.host.world.impulse(entity, scale(direction, power / Math.sqrt(entity.body.mass)));
+      if (length(subtract(Matter.Body.getVelocity(entity.body), before)) >= 1e-8) {
+        this.host.markCause(entity, chain);
+        if (entity.kind === 'projectile') entity.redirected = true;
+      }
     };
     const field = (
       mode: GravityField['mode'],
@@ -262,6 +297,66 @@ export class AbilitySystem {
       return fieldId;
     };
     switch (definition.effect) {
+      case 'response': {
+        const key = `response:${id}`;
+        for (const entity of responseTargets) {
+          const previous = this.statuses.find(
+            (status) =>
+              status.entity === entity &&
+              status.generation === entity.generation &&
+              status.factor === key,
+          );
+          if (previous) previous.until = this.host.time + duration;
+          else
+            this.statuses.push({
+              entity,
+              generation: entity.generation,
+              until: this.host.time + duration,
+              kind: 'response',
+              factor: key,
+            });
+          const tags = [entity.definition.material, ...entity.definition.tags];
+          const before = this.host.gravity.sample(
+            entity.body.position,
+            entity.definition.gravityResponse * entity.gravityScale,
+            tags,
+          );
+          entity.gravityFactors.set(key, Math.max(-4, Math.min(4, strength)));
+          const after = this.host.gravity.sample(
+            entity.body.position,
+            entity.definition.gravityResponse * entity.gravityScale,
+            tags,
+          );
+          if (length(subtract(after, before)) >= 1e-8) {
+            this.host.markCause(entity, chain);
+            if (entity.kind === 'projectile') entity.redirected = true;
+          }
+        }
+        break;
+      }
+      case 'tether':
+        for (let index = 1; index < tetherTargets.length; index++) {
+          const a = tetherTargets[index - 1];
+          const b = tetherTargets[index];
+          const body = Matter.Constraint.create({
+            bodyA: a.body,
+            bodyB: b.body,
+            length: parameters.tetherLength,
+            stiffness: Math.max(0.001, Math.min(0.1, strength)),
+            damping: 0.05,
+            label: `ability:${id}`,
+          });
+          Matter.Composite.add(this.host.world.engine.world, body);
+          this.tethers.push({
+            body,
+            a,
+            b,
+            generations: [a.generation, b.generation],
+            expires: this.host.time + duration,
+            chain,
+          });
+        }
+        break;
       case 'field':
         field(
           definition.mode!,
@@ -276,11 +371,6 @@ export class AbilitySystem {
       case 'burst': {
         const extra = definition.effect === 'burst' ? this.stored * tuning.burstStoredRatio : 0;
         for (const entity of targets) {
-          if (parameters.momentumScale !== undefined && !entity.body.isStatic)
-            Matter.Body.setVelocity(
-              entity.body,
-              scale(Matter.Body.getVelocity(entity.body), parameters.momentumScale),
-            );
           impulse(
             entity,
             normalize(subtract(entity.body.position, point)),
@@ -288,6 +378,7 @@ export class AbilitySystem {
               (1 -
                 length(subtract(entity.body.position, point)) /
                   (radius * tuning.impulseFalloffRadius)),
+            parameters.momentumScale,
           );
         }
         if (definition.effect === 'burst') this.stored = 0;
@@ -454,18 +545,25 @@ export class AbilitySystem {
           chain,
         };
         break;
-      case 'reflect':
-        field('vortex', point, strength, this.host.player);
+      case 'reflect': {
+        const fieldId = field('vortex', point, strength, this.host.player);
         for (const entity of targets)
           if (
             entity.kind === 'projectile' &&
             !entity.body.isStatic &&
-            entity.definition.gravityResponse * entity.gravityScale !== 0
+            this.host.gravity
+              .influencingFields(
+                entity.body.position,
+                entity.definition.gravityResponse * entity.gravityScale,
+                [entity.definition.material, ...entity.definition.tags],
+              )
+              .has(fieldId)
           ) {
             entity.redirected = true;
             this.host.markCause(entity, chain);
           }
         break;
+      }
     }
     if (!repeated) this.energy -= cost;
     if (!repeated)
@@ -486,6 +584,29 @@ export class AbilitySystem {
   }
 
   tick(dt: number): void {
+    for (let index = this.tethers.length - 1; index >= 0; index--) {
+      const tether = this.tethers[index];
+      if (
+        tether.expires <= this.host.time ||
+        !tether.a.alive ||
+        !tether.b.alive ||
+        tether.a.generation !== tether.generations[0] ||
+        tether.b.generation !== tether.generations[1] ||
+        tether.a.body !== tether.body.bodyA ||
+        tether.b.body !== tether.body.bodyB
+      ) {
+        Matter.Composite.remove(this.host.world.engine.world, tether.body);
+        this.tethers.splice(index, 1);
+        continue;
+      }
+      const distance = length(subtract(tether.a.body.position, tether.b.body.position));
+      if (Math.abs(distance - tether.body.length) > 0.1)
+        for (const entity of [tether.a, tether.b])
+          if (!entity.body.isStatic) {
+            this.host.markCause(entity, tether.chain);
+            if (entity.kind === 'projectile') entity.redirected = true;
+          }
+    }
     this.modifiers.tick(this.host.time);
     this.energy = Math.min(
       this.maxEnergy,

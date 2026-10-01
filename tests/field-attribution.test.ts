@@ -3,6 +3,28 @@ import { Game } from '../src/gameplay/game';
 import { GravitySystem, type GravityField } from '../src/physics/gravity';
 
 const point = { x: 600, y: 400 };
+it('Orbital Guard does not preemptively redirect a shot inside a fully suppressed field', () => {
+  const game = new Game(false);
+  const shot = game.world.spawn('projectile', {
+    x: game.player.body.position.x + 60,
+    y: game.player.body.position.y,
+  })!;
+  game.gravity.addField({
+    source: 'test',
+    mode: 'zero',
+    position: shot.body.position,
+    direction: { x: 0, y: 1 },
+    strength: 1,
+    radius: 500,
+    falloff: 'constant',
+    remaining: 10,
+  });
+  game.abilities.learn('reflect');
+  game.abilities.cast('reflect', shot.body.position);
+  expect(shot.redirected).toBe(false);
+  expect(shot.chainId).toBeNull();
+  game.world.dispose();
+});
 function suppressor(
   mode: 'zero' | 'directional',
   direction = { x: 1, y: 0 },

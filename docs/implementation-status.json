@@ -341,7 +341,7 @@
         "tests/modifiers.test.ts",
         "tests/events.test.ts"
       ],
-      "remaining": "Twenty-three authored relics change mass, gravity randomness, echo casting, wells, momentum, resource generation, survival and conditional behavior. Catalog breadth and balance targets remain in sections 82–84 and 88."
+      "remaining": "Thirty-five authored relics change mass, gravity randomness, echo casting, wells, momentum, resource generation, survival and conditional behavior. Catalog breadth and balance targets remain in sections 82–84 and 88."
     },
     {
       "section": 27,
@@ -1088,7 +1088,7 @@
         "src/content/classes.ts",
         "scripts/validate-content.ts"
       ],
-      "remaining": "Current catalog: eight biomes, ten bosses, sixteen base enemies plus 72 curated variants, 24 powers, 23 relics, eight classes and 138 challenges. The alpha 50-power/50-relic targets are not met. Further content must introduce worthwhile mechanics and receive balance review, not filler."
+      "remaining": "Current catalog: eight biomes, ten bosses, sixteen base enemies plus 72 curated variants, 31 powers, 35 relics, ten classes and 173 challenges. The alpha 50-power/50-relic targets are not met. Further content must introduce worthwhile mechanics and receive balance review, not filler."
     },
     {
       "section": 83,
@@ -1101,7 +1101,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Equipment, mutations, endless and daily/weekly modes exist; environments/bosses/variant targets are covered. The suggested 100-plus combined power/relic catalog and ten-class beta target are not met. Eight classes meet the separate launch class target."
+      "remaining": "Ten classes now meet the beta class-count target. The current 31 powers plus 35 relics do not yet meet 100+ combined. Balance, UX polish and device coverage remain open."
     },
     {
       "section": 84,
@@ -1112,7 +1112,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 72 variants, fifty equipment designs and eight classes. Powers/relics remain 24/23 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 72 variants, fifty equipment designs and ten classes. Powers/relics remain 31/35 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,
@@ -1390,7 +1390,7 @@
         "tests/mastery.test.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Relics, eight classes, equipment, permanent progression, challenges, codex, multiple regions/bosses, story and endless are implemented as the third-prototype foundation. This is not a commercial release claim."
+      "remaining": "Relics, ten classes, equipment, permanent progression, challenges, codex, multiple regions/bosses, story and endless are implemented as the third-prototype foundation. This is not a commercial release claim."
     },
     {
       "section": 106,

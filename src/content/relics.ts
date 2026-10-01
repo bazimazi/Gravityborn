@@ -1,4 +1,5 @@
 import type { Modifier, TriggerRule } from '../progression/modifiers';
+import { advancedRelics } from './advanced-relics';
 export interface RelicDefinition {
   id: string;
   name: string;
@@ -281,6 +282,7 @@ export const relics: RelicDefinition[] = [
     rarity: 'legendary',
     triggers: [{ trigger: 'OnDeath', effect: 'revive', value: 30, cooldown: 36000 }],
   },
+  ...advancedRelics,
 ];
 export const relicById = new Map(relics.map((relic) => [relic.id, relic]));
 
@@ -294,6 +296,31 @@ export interface SynergyDefinition {
   triggers?: Omit<TriggerRule, 'id'>[];
 }
 export const synergies: SynergyDefinition[] = [
+  {
+    id: 'tension_wave',
+    name: 'Tension Wave',
+    description:
+      'A Tether-family power and Gravity Wave extend Gravity effects by 25%, giving linked matter more time to travel.',
+    requires: ['tether', 'wave'],
+    modifiers: [{ stat: 'duration', operation: 'multiply', value: 1.25, tags: ['Gravity'] }],
+  },
+  {
+    id: 'kinetic_reflex',
+    name: 'Kinetic Reflex',
+    description:
+      'A Brake-family power and Orbital Guard grant a 0.5-second shield when a Projectile cast leaves you below 35% energy, once every eight seconds.',
+    requires: ['kinetic_brake', 'reflect'],
+    triggers: [
+      {
+        trigger: 'OnAbilityCast',
+        effect: 'shield',
+        value: 0.5,
+        cooldown: 8,
+        tags: ['Projectile'],
+        conditions: [{ stat: 'energyRatio', comparison: 'lt', value: 0.35 }],
+      },
+    ],
+  },
   {
     id: 'tidal_cannon',
     name: 'Tidal Cannon',

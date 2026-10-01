@@ -83,6 +83,23 @@ export class Renderer {
     if (!this.settings.reducedMotion && feedback.shake > 0)
       ctx.translate(Math.sin(now * 0.07) * feedback.shake, Math.cos(now * 0.09) * feedback.shake);
     this.drawArena(game, now);
+    ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#8effdc';
+    ctx.lineWidth = 2;
+    for (const tether of game.abilities.tethers) {
+      if (!tether.a.alive || !tether.b.alive) continue;
+      ctx.setLineDash([7, 4]);
+      this.line(
+        tether.a.body.position.x,
+        tether.a.body.position.y,
+        tether.b.body.position.x,
+        tether.b.body.position.y,
+      );
+      ctx.setLineDash([]);
+      for (const entity of [tether.a, tether.b]) {
+        this.circle(entity.body.position.x, entity.body.position.y, entity.definition.radius + 5);
+        ctx.stroke();
+      }
+    }
     if (this.ghost) {
       ctx.save();
       ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#a5b8e8';
@@ -719,6 +736,23 @@ export class Renderer {
       ctx.font = '11px monospace';
       ctx.textAlign = 'center';
       ctx.fillText('FRACTURED SEAL', x, y - radius - 14);
+    }
+    if ([...entity.gravityFactors.keys()].some((key) => key.startsWith('response:'))) {
+      const response = entity.gravityScale * entity.definition.gravityResponse;
+      ctx.strokeStyle = this.settings.highContrast
+        ? '#ffffff'
+        : response === 0
+          ? '#c3c7ff'
+          : '#eeb3ff';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash(response === 0 ? [3, 4] : [9, 3]);
+      this.circle(x, y, radius + 10);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(response === 0 ? 'PHASED' : `G ${response.toFixed(1)}×`, x, y + radius + 16);
     }
     if (game.materials.isBurning(entity)) {
       ctx.strokeStyle = '#ffb978';

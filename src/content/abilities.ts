@@ -1,4 +1,8 @@
+import { advancedAbilities } from './advanced-abilities';
+
 export type EffectKind =
+  | 'response'
+  | 'tether'
   | 'field'
   | 'impulse'
   | 'lock'
@@ -39,6 +43,7 @@ export interface AbilityDefinition {
     affects?: string[];
     falloff?: 'constant' | 'linear' | 'inverseSquare';
     travelSpeed?: number;
+    tetherLength?: number;
   };
   feedback?: {
     color?: string;
@@ -434,6 +439,7 @@ export const abilities: AbilityDefinition[] = [
     target: 'point',
     maxLevel: 3,
   },
+  ...advancedAbilities,
 ];
 
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));

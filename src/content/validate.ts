@@ -28,6 +28,8 @@ export interface ContentIssue {
   message: string;
 }
 const effects = [
+  'response',
+  'tether',
   'field',
   'impulse',
   'lock',
@@ -199,6 +201,22 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
         item.strength > 0 && item.strength <= 1,
         'strength',
         'Theft response must be in (0, 1].',
+      );
+    if (item.effect === 'response')
+      check(
+        isNumber(item.strength, -4, 4) && item.duration > 0 && item.radius > 0,
+        'strength',
+        'Response effects need a bounded factor, radius and duration.',
+      );
+    if (item.effect === 'tether')
+      check(
+        isNumber(item.strength, 0.001, 0.1) &&
+          item.duration > 0 &&
+          item.radius > 0 &&
+          isNumber(item.parameters?.chainTargets ?? 0, 2, 6) &&
+          isNumber(item.parameters?.tetherLength ?? 0, 20, 200),
+        'parameters',
+        'Tethers require two to six targets, length 20–200 and stiffness 0.001–0.1.',
       );
     const chain = new Set([item.id]);
     let parent = item;

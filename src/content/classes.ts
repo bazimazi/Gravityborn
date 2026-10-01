@@ -99,5 +99,29 @@ export const classes: ClassDefinition[] = [
       { stat: 'energyRegen', operation: 'add', value: 2 },
     ],
   },
+  {
+    id: 'conductor',
+    name: 'The Conductor',
+    description:
+      'Link bodies with Gravity Tether, then drive the chain with Gravity Wave. Control powers last 40% longer, but core movement is 15% slower.',
+    cost: 55,
+    powers: ['tether', 'wave'],
+    modifiers: [
+      { stat: 'duration', operation: 'multiply', value: 1.4, tags: ['Control'] },
+      { stat: 'movement', operation: 'multiply', value: 0.85 },
+    ],
+  },
+  {
+    id: 'kineticist',
+    name: 'The Kineticist',
+    description:
+      'Brake incoming matter and relaunch it with Gravity Beam. Redirected shots deal 50% more damage; your energy reserve is 15 smaller.',
+    cost: 55,
+    powers: ['kinetic_brake', 'beam'],
+    modifiers: [
+      { stat: 'projectileDamage', operation: 'multiply', value: 1.5 },
+      { stat: 'maxEnergy', operation: 'add', value: -15 },
+    ],
+  },
 ];
 export const classById = new Map(classes.map((definition) => [definition.id, definition]));
