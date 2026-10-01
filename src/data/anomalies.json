@@ -1,0 +1,122 @@
+{
+  "denseMass": 10,
+  "heavyContractMass": 5,
+  "maxMass": 500,
+  "elasticity": 0.98,
+  "difficultyHealth": 0.12,
+  "fieldReserve": 2,
+  "rotationSpeed": 0.6,
+  "unstable": {
+    "baseStrength": 0.0007,
+    "interval": 10,
+    "stages": 3,
+    "stepStrength": 0.00055
+  },
+  "interval": 2,
+  "initialFields": {
+    "zero": [
+      {
+        "mode": "zero",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "strength": 1,
+        "radius": 350,
+        "duration": 36000,
+        "direction": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ],
+    "collapse": [
+      {
+        "mode": "vortex",
+        "position": {
+          "x": 600,
+          "y": 400
+        },
+        "strength": 0.006,
+        "radius": 450,
+        "duration": 36000,
+        "direction": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ],
+    "rift": [
+      {
+        "mode": "directional",
+        "position": {
+          "x": 400,
+          "y": 400
+        },
+        "strength": 0.004,
+        "radius": 280,
+        "duration": 36000,
+        "direction": {
+          "x": 0,
+          "y": -1
+        }
+      },
+      {
+        "mode": "directional",
+        "position": {
+          "x": 800,
+          "y": 400
+        },
+        "strength": 0.004,
+        "radius": 280,
+        "duration": 36000,
+        "direction": {
+          "x": 0,
+          "y": 1
+        }
+      }
+    ]
+  },
+  "planets": {
+    "positions": [
+      {
+        "x": 350,
+        "y": 400
+      },
+      {
+        "x": 850,
+        "y": 400
+      }
+    ],
+    "mass": 35,
+    "response": 0.1,
+    "speed": 2,
+    "strength": 0.006,
+    "radius": 260,
+    "duration": 36000
+  },
+  "singularity": {
+    "position": {
+      "x": 600,
+      "y": 400
+    },
+    "strength": 0.009,
+    "radius": 350,
+    "duration": 1.4
+  },
+  "rain": {
+    "minX": 180,
+    "minY": 140,
+    "width": 840,
+    "height": 520,
+    "strength": -0.008,
+    "radius": 180,
+    "duration": 1.2
+  },
+  "pulse": {
+    "cooldown": 0.5,
+    "strength": -0.009,
+    "radius": 180,
+    "duration": 0.5
+  }
+}

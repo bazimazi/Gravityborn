@@ -1155,7 +1155,7 @@
     {
       "section": 98,
       "title": "Data-Driven Content",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/abilities.ts",
         "src/content/ability-feedback.ts",
@@ -1166,7 +1166,7 @@
         "tests/content.test.ts",
         "docs/architecture.md"
       ],
-      "remaining": "Power tuning and evolution behavior are authored data; content references and values are validated. Remaining legacy boss/enemy/environment tuning constants need consolidation."
+      "remaining": "Power tuning, evolutions, enemy/boss behaviors, environmental hazards, object fields and anomaly tuning are authored data. References and power values are validated; new behavior kinds require code and focused tests."
     },
     {
       "section": 99,

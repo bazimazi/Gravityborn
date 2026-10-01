@@ -6,7 +6,7 @@ The TypeScript simulation runs in the browser and in Capacitor Android/iOS proje
 
 `PhysicsWorld` owns the Matter.js engine, body lifecycle, projectile pool, collision facts, and finite-value/velocity limits. It advances at 120 Hz. Incoming velocities are recorded before collision resolution. Physics callbacks record collision facts; gameplay consumes them after the solver finishes. Local fields are indexed by covered spatial cells. Matter.js handles collision broad-phase and rigid body resolution. Both new and sustained contacts produce facts, allowing contact damage to repeat after the player's immunity window.
 
-Balance, entity definitions and derived-stat limits live in `src/data`; authored abilities, relics, equipment, classes, rooms and progression content live in `src/content`. Renderers and audio subscribe to typed gameplay events; presentation never determines damage. Seeded runs compose authored chambers, multiwave encounters and branching maps.
+Balance, entity definitions and derived-stat limits live in `src/data`; enemy and boss behaviors, environment hazards, physical-object fields and run anomalies have separate JSON tuning catalogs. Authored abilities, relics, equipment, classes, rooms and progression content live in `src/content`. Renderers and audio subscribe to typed gameplay events; presentation never determines damage. Seeded runs compose authored chambers, multiwave encounters and branching maps.
 
 Reference APIs: [Matter.Engine](https://brm.io/matter-js/docs/classes/Engine.html), [Matter.Body](https://brm.io/matter-js/docs/classes/Body.html).
 

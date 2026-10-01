@@ -4,6 +4,7 @@ import { length, normalize, scale, subtract, type Vec2 } from '../core/vector';
 import type { Entity } from '../physics/world';
 import type { AbilityHost } from './abilities';
 import balance from '../data/balance.json';
+import behavior from '../data/boss-behavior.json';
 import type { GravityField } from '../physics/gravity';
 
 interface BossState {
@@ -30,7 +31,7 @@ export class BossSystem {
           name: bossDefinitions[entity.kind as BossKind].name,
           phase: state.phase,
           aim: state.aim,
-          telegraph: Math.max(0, 1 - (state.next - this.host.time) / 1.1),
+          telegraph: Math.max(0, 1 - (state.next - this.host.time) / behavior.telegraph),
         };
     }
     return undefined;
@@ -40,7 +41,7 @@ export class BossSystem {
     let state = this.states.get(entity.id);
     if (!state) {
       state = {
-        next: this.host.time + 2,
+        next: this.host.time + behavior.initialDelay,
         phase: 1,
         cycle: 0,
         satellites: [],
@@ -51,7 +52,7 @@ export class BossSystem {
     }
     state.phase =
       entity.health > (entity.maxHealth * 2) / 3 ? 1 : entity.health > entity.maxHealth / 3 ? 2 : 3;
-    entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / 1.1);
+    entity.telegraph = Math.max(0, 1 - (state.next - this.host.time) / behavior.telegraph);
     if (entity.telegraph > 0 && !state.aim) state.aim = { ...this.host.player.body.position };
     for (let index = state.frozen.length - 1; index >= 0; index--) {
       const frozen = state.frozen[index];
@@ -63,7 +64,7 @@ export class BossSystem {
       state.frozen.splice(index, 1);
     }
     const toward = normalize(subtract(this.host.player.body.position, entity.body.position));
-    this.host.world.accelerate(entity, scale(toward, 0.00018));
+    this.host.world.accelerate(entity, scale(toward, behavior.acceleration));
     for (const satellite of state.satellites) {
       if (satellite.entity.alive)
         this.host.gravity.moveField(satellite.field, satellite.entity.body.position);
@@ -77,14 +78,17 @@ export class BossSystem {
       }
     if (entity.kind === 'singularity_boss') {
       let field = state.field ? this.host.gravity.fields.get(state.field) : undefined;
-      if (!field && this.host.gravity.fields.size < 48) {
+      if (
+        !field &&
+        this.host.gravity.fields.size < balance.physics.maxFields - behavior.fieldReserve
+      ) {
         state.field = this.host.gravity.addField({
           source: `boss:${entity.id}`,
           mode: 'radial',
           position: entity.body.position,
           direction: toward,
-          strength: 0.002,
-          radius: 400,
+          strength: behavior.singularity.baseStrength,
+          radius: behavior.singularity.baseRadius,
           falloff: 'linear',
           remaining: 1,
         });
@@ -93,20 +97,22 @@ export class BossSystem {
       if (field) {
         this.host.gravity.moveField(field.id, entity.body.position);
         field.remaining = 1;
-        field.strength = 0.002 + state.phase * 0.0015;
-        field.radius = 350 + state.phase * 80;
+        field.strength =
+          behavior.singularity.baseStrength + state.phase * behavior.singularity.phaseStrength;
+        field.radius =
+          behavior.singularity.baseRadius + state.phase * behavior.singularity.phaseRadius;
       }
     }
     if (this.host.time < state.next) return true;
     state.cycle++;
-    state.next = this.host.time + 5 - state.phase * 0.7;
+    state.next = this.host.time + behavior.cooldown - state.phase * behavior.phaseCooldownReduction;
     const field = (
       mode: 'radial' | 'vortex',
       strength: number,
       radius: number,
       remaining: number,
     ): void => {
-      if (this.host.gravity.fields.size < 48)
+      if (this.host.gravity.fields.size < balance.physics.maxFields - behavior.fieldReserve)
         this.host.gravity.addField({
           source: `boss:${entity.id}`,
           mode,
@@ -130,29 +136,53 @@ export class BossSystem {
         direction: this.host.gravity.direction,
         source: 'enemy',
       });
-      field(state.phase === 3 ? 'vortex' : 'radial', -0.003, 280, 1.5);
+      field(
+        state.phase === 3 ? 'vortex' : 'radial',
+        behavior.inverter.strength,
+        behavior.inverter.radius,
+        behavior.inverter.duration,
+      );
     }
-    if (entity.kind === 'planet_eater' && state.satellites.length < 3)
+    if (entity.kind === 'planet_eater' && state.satellites.length < behavior.satellites.limit)
       for (let i = 0; i < state.phase; i++) {
-        if (this.host.gravity.fields.size >= 48 || state.satellites.length >= 3) break;
-        const angle = (state.cycle + i) * 2.1;
+        if (
+          this.host.gravity.fields.size >= balance.physics.maxFields - behavior.fieldReserve ||
+          state.satellites.length >= behavior.satellites.limit
+        )
+          break;
+        const angle = (state.cycle + i) * behavior.satellites.orbitStep;
         const satellite = this.host.world.spawn('crate', {
-          x: Math.max(100, Math.min(1100, entity.body.position.x + Math.cos(angle) * 120)),
-          y: Math.max(100, Math.min(700, entity.body.position.y + Math.sin(angle) * 120)),
+          x: Math.max(
+            behavior.placement.minX,
+            Math.min(
+              behavior.placement.maxX,
+              entity.body.position.x + Math.cos(angle) * behavior.satellites.distance,
+            ),
+          ),
+          y: Math.max(
+            behavior.placement.minY,
+            Math.min(
+              behavior.placement.maxY,
+              entity.body.position.y + Math.sin(angle) * behavior.satellites.distance,
+            ),
+          ),
         });
         if (!satellite) break;
-        satellite.health = 70;
-        satellite.gravityScale = 0.1;
-        this.host.world.impulse(satellite, { x: -Math.sin(angle) * 6, y: Math.cos(angle) * 6 });
+        satellite.health = satellite.maxHealth = behavior.satellites.health;
+        satellite.gravityScale = behavior.satellites.response;
+        this.host.world.impulse(satellite, {
+          x: -Math.sin(angle) * behavior.satellites.impulse,
+          y: Math.cos(angle) * behavior.satellites.impulse,
+        });
         const id = this.host.gravity.addField({
           source: `boss:${entity.id}`,
           mode: 'radial',
           position: satellite.body.position,
           direction: toward,
-          strength: 0.006,
-          radius: 210,
+          strength: behavior.satellites.strength,
+          radius: behavior.satellites.radius,
           falloff: 'linear',
-          remaining: 36000,
+          remaining: behavior.placement.persistentDuration,
         });
         state.satellites.push({ entity: satellite, field: id });
       }
@@ -160,16 +190,33 @@ export class BossSystem {
       const player = this.host.player.body.position;
       const horizontal = state.cycle % 2 === 0;
       this.host.world.addWall(
-        Math.max(160, Math.min(1040, player.x + (horizontal ? 0 : 150))),
-        Math.max(160, Math.min(640, player.y + (horizontal ? 150 : 0))),
-        horizontal ? 220 : 25,
-        horizontal ? 25 : 220,
+        Math.max(
+          behavior.placement.wallMinX,
+          Math.min(
+            behavior.placement.wallMaxX,
+            player.x + (horizontal ? 0 : behavior.architect.offset),
+          ),
+        ),
+        Math.max(
+          behavior.placement.wallMinY,
+          Math.min(
+            behavior.placement.wallMaxY,
+            player.y + (horizontal ? behavior.architect.offset : 0),
+          ),
+        ),
+        horizontal ? behavior.architect.length : behavior.architect.width,
+        horizontal ? behavior.architect.width : behavior.architect.length,
       );
       state.walls.push({
         body: this.host.world.walls[this.host.world.walls.length - 1],
-        expires: this.host.time + 6,
+        expires: this.host.time + behavior.architect.duration,
       });
-      field('vortex', 0.003 * state.phase, 270, 2);
+      field(
+        'vortex',
+        behavior.architect.strength * state.phase,
+        behavior.architect.radius,
+        behavior.architect.fieldDuration,
+      );
     }
     if (entity.kind === 'star' || entity.kind === 'singularity_boss') {
       const cause = this.host.createCause();
@@ -177,17 +224,24 @@ export class BossSystem {
       for (const target of this.host.world.entities.values()) {
         if (target === entity) continue;
         const delta = subtract(target.body.position, entity.body.position);
-        if (length(delta) > 500) continue;
+        if (length(delta) > behavior.pulse.reach) continue;
         this.host.world.impulse(
           target,
           scale(
             normalize(delta),
-            ((inward ? -1 : 1) * (6 + state.phase * 2)) / Math.sqrt(target.body.mass),
+            ((inward ? -1 : 1) *
+              (behavior.pulse.impulse + state.phase * behavior.pulse.phaseImpulse)) /
+              Math.sqrt(target.body.mass),
           ),
         );
         if (target.kind !== 'player') this.host.markCause(target, cause);
       }
-      field('radial', inward ? 0.004 : -0.006, 450, 1.2);
+      field(
+        'radial',
+        inward ? behavior.pulse.inwardStrength : behavior.pulse.outwardStrength,
+        behavior.pulse.radius,
+        behavior.pulse.duration,
+      );
     }
     this.advancedAttack(entity, state);
     state.aim = undefined;
@@ -203,7 +257,8 @@ export class BossSystem {
       duration: number,
       affects?: string[],
     ) => {
-      if (this.host.gravity.fields.size >= 48) return;
+      if (this.host.gravity.fields.size >= balance.physics.maxFields - behavior.fieldReserve)
+        return;
       this.host.gravity.addField({
         source: `boss:${entity.id}`,
         mode,
@@ -220,12 +275,22 @@ export class BossSystem {
       place(
         entity.body.position,
         'radial',
-        (state.cycle % 2 ? 1 : -1) * tuning.magnetStrength * (1 + state.phase * 0.2),
+        (state.cycle % 2 ? 1 : -1) *
+          tuning.magnetStrength *
+          (1 + state.phase * behavior.magnetar.phaseStrength),
         tuning.magnetRadius,
-        2.5,
+        behavior.magnetar.duration,
         ['metal'],
       );
-      if (state.phase > 1) place(entity.body.position, 'vortex', 0.003, 220, 1.5, ['metal']);
+      if (state.phase > 1)
+        place(
+          entity.body.position,
+          'vortex',
+          behavior.magnetar.vortexStrength,
+          behavior.magnetar.vortexRadius,
+          behavior.magnetar.vortexDuration,
+          ['metal'],
+        );
     }
     if (entity.kind === 'chronarch') {
       for (const target of this.host.world.entities.values()) {
@@ -248,17 +313,28 @@ export class BossSystem {
         });
         Matter.Body.setStatic(target.body, true);
       }
-      place(entity.body.position, 'zero', 1, 270, 1.2);
+      place(
+        entity.body.position,
+        'zero',
+        1,
+        behavior.chronarch.zeroRadius,
+        behavior.chronarch.zeroDuration,
+      );
     }
     if (entity.kind === 'tidal') {
       const horizontal = state.cycle % 2 === 0;
       for (const sign of [-1, 1])
         place(
-          { x: horizontal ? 600 + sign * 330 : 600, y: horizontal ? 400 : 400 + sign * 220 },
+          {
+            x:
+              behavior.placement.centerX +
+              (horizontal ? sign * behavior.tidal.horizontalOffset : 0),
+            y: behavior.placement.centerY + (horizontal ? 0 : sign * behavior.tidal.verticalOffset),
+          },
           'radial',
-          sign * tuning.tidalStrength * (1 + state.phase * 0.2),
+          sign * tuning.tidalStrength * (1 + state.phase * behavior.tidal.phaseStrength),
           tuning.tidalRadius,
-          2.7,
+          behavior.tidal.duration,
         );
     }
     if (entity.kind === 'comet') {
@@ -269,8 +345,21 @@ export class BossSystem {
           tuning.cometImpulse,
         ),
       );
-      place(entity.body.position, 'radial', -0.005, 180, 1);
-      if (state.phase === 3) place(entity.body.position, 'vortex', 0.003, 280, 1.5);
+      place(
+        entity.body.position,
+        'radial',
+        behavior.comet.wakeStrength,
+        behavior.comet.wakeRadius,
+        behavior.comet.wakeDuration,
+      );
+      if (state.phase === 3)
+        place(
+          entity.body.position,
+          'vortex',
+          behavior.comet.vortexStrength,
+          behavior.comet.vortexRadius,
+          behavior.comet.vortexDuration,
+        );
     }
     if (entity.kind === 'weaver') {
       const center = state.aim ?? this.host.player.body.position;
@@ -278,8 +367,20 @@ export class BossSystem {
         const angle = (index * Math.PI * 2) / (state.phase + 1) + state.cycle;
         place(
           {
-            x: Math.max(100, Math.min(1100, center.x + Math.cos(angle) * 180)),
-            y: Math.max(100, Math.min(700, center.y + Math.sin(angle) * 180)),
+            x: Math.max(
+              behavior.placement.minX,
+              Math.min(
+                behavior.placement.maxX,
+                center.x + Math.cos(angle) * behavior.weaver.offset,
+              ),
+            ),
+            y: Math.max(
+              behavior.placement.minY,
+              Math.min(
+                behavior.placement.maxY,
+                center.y + Math.sin(angle) * behavior.weaver.offset,
+              ),
+            ),
           },
           index % 2 ? 'zero' : 'vortex',
           index % 2 ? 1 : tuning.voidStrength,

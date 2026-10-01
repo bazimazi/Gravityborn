@@ -1,0 +1,13 @@
+{
+  "fields": {
+    "crystal": { "strength": 0.0025, "radius": 190, "affects": [] },
+    "generator": { "strength": 0.004, "radius": 190, "affects": [] },
+    "gravity_core": { "strength": 0.0025, "radius": 190, "affects": [] },
+    "fragment": { "strength": 0.0025, "radius": 260, "affects": [] },
+    "magnet": { "strength": 0.005, "radius": 190, "affects": ["metal"] }
+  },
+  "mineArmTime": 1,
+  "mineTriggerRadius": 65,
+  "energyCollectionRadius": 240,
+  "energyRecovery": 35
+}

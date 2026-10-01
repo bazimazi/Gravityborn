@@ -1,0 +1,88 @@
+{
+  "initialDelay": 2,
+  "telegraph": 1.1,
+  "acceleration": 0.00018,
+  "cooldown": 5,
+  "phaseCooldownReduction": 0.7,
+  "fieldReserve": 2,
+  "inverter": {
+    "strength": -0.003,
+    "radius": 280,
+    "duration": 1.5
+  },
+  "singularity": {
+    "baseStrength": 0.002,
+    "phaseStrength": 0.0015,
+    "baseRadius": 350,
+    "phaseRadius": 80
+  },
+  "satellites": {
+    "limit": 3,
+    "orbitStep": 2.1,
+    "distance": 120,
+    "health": 70,
+    "response": 0.1,
+    "impulse": 6,
+    "strength": 0.006,
+    "radius": 210
+  },
+  "architect": {
+    "offset": 150,
+    "length": 220,
+    "width": 25,
+    "duration": 6,
+    "strength": 0.003,
+    "radius": 270,
+    "fieldDuration": 2
+  },
+  "pulse": {
+    "reach": 500,
+    "impulse": 6,
+    "phaseImpulse": 2,
+    "inwardStrength": 0.004,
+    "outwardStrength": -0.006,
+    "radius": 450,
+    "duration": 1.2
+  },
+  "magnetar": {
+    "phaseStrength": 0.2,
+    "duration": 2.5,
+    "vortexStrength": 0.003,
+    "vortexRadius": 220,
+    "vortexDuration": 1.5
+  },
+  "chronarch": {
+    "zeroRadius": 270,
+    "zeroDuration": 1.2
+  },
+  "tidal": {
+    "horizontalOffset": 330,
+    "verticalOffset": 220,
+    "phaseStrength": 0.2,
+    "duration": 2.7
+  },
+  "comet": {
+    "wakeStrength": -0.005,
+    "wakeRadius": 180,
+    "wakeDuration": 1,
+    "vortexStrength": 0.003,
+    "vortexRadius": 280,
+    "vortexDuration": 1.5
+  },
+  "weaver": {
+    "offset": 180
+  },
+  "placement": {
+    "centerX": 600,
+    "centerY": 400,
+    "minX": 100,
+    "maxX": 1100,
+    "minY": 100,
+    "maxY": 700,
+    "wallMinX": 160,
+    "wallMaxX": 1040,
+    "wallMinY": 160,
+    "wallMaxY": 640,
+    "persistentDuration": 36000
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "hazardWarmupRatio": 0.45,
+  "wallAngularSpeed": 0.35,
+  "wallFrequency": 0.6,
+  "wallHorizontalTravel": 100,
+  "wallVerticalTravel": 80,
+  "windHorizontal": 0.001,
+  "windVertical": -0.0015,
+  "hazardCooldown": 0.6,
+  "laserDamage": 18,
+  "spikeDamage": 24,
+  "switchMass": 3,
+  "switchRadius": 50,
+  "exitRadius": 55
+}

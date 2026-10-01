@@ -2,6 +2,7 @@ import Matter from 'matter-js';
 import type { RoomDefinition } from '../content/rooms';
 import { length, subtract } from '../core/vector';
 import type { AbilityHost } from './abilities';
+import tuning from '../data/environment.json';
 // Matter 0.20 supports updateVelocity; the bundled DefinitelyTyped signatures omit it.
 const movingBody: {
   setAngle(body: Matter.Body, angle: number, updateVelocity?: boolean): void;
@@ -21,7 +22,7 @@ export class EnvironmentSystem {
     return (
       hazard.kind === 'wind' ||
       hazard.kind === 'spikes' ||
-      (this.host.time + hazard.phase) % hazard.period > hazard.period * 0.45
+      (this.host.time + hazard.phase) % hazard.period > hazard.period * tuning.hazardWarmupRatio
     );
   }
   tick(): void {
@@ -29,13 +30,22 @@ export class EnvironmentSystem {
       if (!wall.motion) continue;
       const body = this.host.world.walls[index];
       if (!body) continue;
-      if (wall.motion === 'rotate') movingBody.setAngle(body, this.host.time * 0.35, true);
+      if (wall.motion === 'rotate')
+        movingBody.setAngle(body, this.host.time * tuning.wallAngularSpeed, true);
       else
         movingBody.setPosition(
           body,
           {
-            x: wall.x + (wall.motion === 'horizontal' ? Math.sin(this.host.time * 0.6) * 100 : 0),
-            y: wall.y + (wall.motion === 'vertical' ? Math.sin(this.host.time * 0.6) * 80 : 0),
+            x:
+              wall.x +
+              (wall.motion === 'horizontal'
+                ? Math.sin(this.host.time * tuning.wallFrequency) * tuning.wallHorizontalTravel
+                : 0),
+            y:
+              wall.y +
+              (wall.motion === 'vertical'
+                ? Math.sin(this.host.time * tuning.wallFrequency) * tuning.wallVerticalTravel
+                : 0),
           },
           true,
         );
@@ -50,12 +60,15 @@ export class EnvironmentSystem {
         )
           continue;
         if (hazard.kind === 'wind')
-          this.host.world.accelerate(entity, { x: Math.sin(this.host.time) * 0.001, y: -0.0015 });
-        else if (this.host.time - entity.lastImpact > 0.6) {
+          this.host.world.accelerate(entity, {
+            x: Math.sin(this.host.time) * tuning.windHorizontal,
+            y: tuning.windVertical,
+          });
+        else if (this.host.time - entity.lastImpact > tuning.hazardCooldown) {
           entity.lastImpact = this.host.time;
           this.host.applyDamage(
             entity,
-            hazard.kind === 'laser' ? 18 : 24,
+            hazard.kind === 'laser' ? tuning.laserDamage : tuning.spikeDamage,
             entity.chainId ?? this.host.createCause(),
             'Environmental',
           );
@@ -67,12 +80,12 @@ export class EnvironmentSystem {
         this.switchActive = [...this.host.world.entities.values()].some(
           (entity) =>
             entity.kind !== 'player' &&
-            entity.body.mass >= 3 &&
-            length(subtract(entity.body.position, this.room.puzzle!.switch)) < 50,
+            entity.body.mass >= tuning.switchMass &&
+            length(subtract(entity.body.position, this.room.puzzle!.switch)) < tuning.switchRadius,
         );
       this.puzzleComplete =
         this.switchActive &&
-        length(subtract(this.host.player.body.position, this.room.puzzle.exit)) < 55;
+        length(subtract(this.host.player.body.position, this.room.puzzle.exit)) < tuning.exitRadius;
     }
   }
 }

@@ -5,6 +5,8 @@ import { Random } from '../core/random';
 import type { GravityField } from '../physics/gravity';
 import type { Entity } from '../physics/world';
 import type { Vec2 } from '../core/vector';
+import tuning from '../data/anomalies.json';
+import balance from '../data/balance.json';
 
 export class RuleSystem {
   phenomenon: Phenomenon | '' = '';
@@ -39,7 +41,7 @@ export class RuleSystem {
     remaining: number,
     direction = { x: 0, y: 1 },
   ): number | undefined {
-    if (this.host.gravity.fields.size >= 48) return;
+    if (this.host.gravity.fields.size >= balance.physics.maxFields - tuning.fieldReserve) return;
     return this.host.gravity.addField({
       source: 'phenomenon',
       mode,
@@ -57,33 +59,46 @@ export class RuleSystem {
         this.seen.add(entity.id);
         if (!entity.body.isStatic && entity.kind !== 'player') {
           const mass =
-            (this.phenomenon === 'dense' ? 10 : 1) *
-            (this.contract === 'heavy' && entity.definition.faction === 'enemy' ? 5 : 1);
-          if (mass !== 1) Matter.Body.setMass(entity.body, Math.min(500, entity.body.mass * mass));
+            (this.phenomenon === 'dense' ? tuning.denseMass : 1) *
+            (this.contract === 'heavy' && entity.definition.faction === 'enemy'
+              ? tuning.heavyContractMass
+              : 1);
+          if (mass !== 1)
+            Matter.Body.setMass(entity.body, Math.min(tuning.maxMass, entity.body.mass * mass));
         }
-        if (this.phenomenon === 'elastic') entity.body.restitution = 0.98;
+        if (this.phenomenon === 'elastic') entity.body.restitution = tuning.elasticity;
         if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile') {
-          entity.health *= 1 + this.difficulty * 0.12;
+          entity.health *= 1 + this.difficulty * tuning.difficultyHealth;
           entity.maxHealth = entity.health;
         }
       }
     if (!this.initialized) {
       if (this.phenomenon === 'reverse') this.host.gravity.setDirection({ x: 0, y: -1 });
-      if (this.phenomenon === 'zero') this.field('zero', { x: 600, y: 400 }, 1, 350, 36000);
-      if (this.phenomenon === 'collapse')
-        this.field('vortex', { x: 600, y: 400 }, 0.006, 450, 36000);
-      if (this.phenomenon === 'rift') {
-        this.field('directional', { x: 400, y: 400 }, 0.004, 280, 36000, { x: 0, y: -1 });
-        this.field('directional', { x: 800, y: 400 }, 0.004, 280, 36000, { x: 0, y: 1 });
-      }
+      const initial =
+        tuning.initialFields[this.phenomenon as keyof typeof tuning.initialFields] ?? [];
+      for (const field of initial)
+        this.field(
+          field.mode as GravityField['mode'],
+          field.position,
+          field.strength,
+          field.radius,
+          field.duration,
+          field.direction,
+        );
       if (this.phenomenon === 'collision')
-        for (const x of [350, 850]) {
-          const entity = this.host.world.spawn('rock', { x, y: 400 });
+        for (const [index, position] of tuning.planets.positions.entries()) {
+          const entity = this.host.world.spawn('rock', position);
           if (!entity) continue;
-          Matter.Body.setMass(entity.body, 35);
-          entity.gravityScale = 0.1;
-          this.host.world.impulse(entity, { x: x < 600 ? 2 : -2, y: 0 });
-          const field = this.field('radial', entity.body.position, 0.006, 260, 36000);
+          Matter.Body.setMass(entity.body, tuning.planets.mass);
+          entity.gravityScale = tuning.planets.response;
+          this.host.world.impulse(entity, { x: (index % 2 ? -1 : 1) * tuning.planets.speed, y: 0 });
+          const field = this.field(
+            'radial',
+            entity.body.position,
+            tuning.planets.strength,
+            tuning.planets.radius,
+            tuning.planets.duration,
+          );
           if (field) this.planets.push({ entity, field });
         }
       this.initialized = true;
@@ -93,13 +108,16 @@ export class RuleSystem {
         this.host.gravity.moveField(planet.field, planet.entity.body.position);
     if (this.phenomenon === 'rotating')
       this.host.gravity.setDirection({
-        x: Math.sin(this.host.time * 0.6),
-        y: Math.cos(this.host.time * 0.6),
+        x: Math.sin(this.host.time * tuning.rotationSpeed),
+        y: Math.cos(this.host.time * tuning.rotationSpeed),
       });
     if (this.contract === 'unstable')
-      this.host.gravity.strength = 0.0007 + (Math.floor(this.host.time / 10) % 3) * 0.00055;
+      this.host.gravity.strength =
+        tuning.unstable.baseStrength +
+        (Math.floor(this.host.time / tuning.unstable.interval) % tuning.unstable.stages) *
+          tuning.unstable.stepStrength;
     if (this.host.time < this.next) return;
-    this.next = this.host.time + 2;
+    this.next = this.host.time + tuning.interval;
     if (this.phenomenon === 'storm')
       this.host.gravity.setDirection(
         this.random.pick([
@@ -110,19 +128,34 @@ export class RuleSystem {
         ]),
       );
     if (this.phenomenon === 'singularity')
-      this.field('radial', { x: 600, y: 400 }, 0.009, 350, 1.4);
+      this.field(
+        'radial',
+        tuning.singularity.position,
+        tuning.singularity.strength,
+        tuning.singularity.radius,
+        tuning.singularity.duration,
+      );
     if (this.phenomenon === 'rain')
       this.field(
         'radial',
-        { x: 180 + this.random.next() * 840, y: 140 + this.random.next() * 520 },
-        -0.008,
-        180,
-        1.2,
+        {
+          x: tuning.rain.minX + this.random.next() * tuning.rain.width,
+          y: tuning.rain.minY + this.random.next() * tuning.rain.height,
+        },
+        tuning.rain.strength,
+        tuning.rain.radius,
+        tuning.rain.duration,
       );
   }
   impact(position: Vec2): void {
     if (this.contract !== 'pulse' || this.nextPulse > this.host.time) return;
-    this.nextPulse = this.host.time + 0.5;
-    this.field('radial', position, -0.009, 180, 0.5);
+    this.nextPulse = this.host.time + tuning.pulse.cooldown;
+    this.field(
+      'radial',
+      position,
+      tuning.pulse.strength,
+      tuning.pulse.radius,
+      tuning.pulse.duration,
+    );
   }
 }
