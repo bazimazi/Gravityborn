@@ -1,0 +1,53 @@
+{
+  "physics": {
+    "stepMs": 8.333333333333334,
+    "maxFrameMs": 100,
+    "maxVelocity": 18,
+    "maxAngularVelocity": 0.3,
+    "maxAcceleration": 0.009,
+    "maxImpulse": 16,
+    "maxBodies": 220,
+    "maxFields": 50,
+    "positionIterations": 8,
+    "velocityIterations": 8
+  },
+  "gravity": {
+    "strength": 0.00125,
+    "wellStrength": 0.007,
+    "wellRadius": 265,
+    "wellDuration": 4.2,
+    "wellCooldown": 5.5,
+    "maxWells": 2
+  },
+  "player": { "acceleration": 0.0028, "invulnerability": 0.8, "contactDamage": 9 },
+  "combat": {
+    "impactThreshold": 3.8,
+    "impactCoefficient": 1.1,
+    "impactCooldown": 0.25,
+    "maxDamage": 85,
+    "explosionRadius": 175,
+    "explosionDamage": 62,
+    "explosionImpulse": 14,
+    "projectileDamage": 17,
+    "projectileSpeedCoefficient": 1.4,
+    "projectileOwnerGrace": 0.25,
+    "playerExplosionMultiplier": 0.45,
+    "impactFeedbackThreshold": 1.8,
+    "maxChainDepth": 12,
+    "chainTimeout": 6
+  },
+  "enemies": {
+    "chaserAcceleration": 0.00048,
+    "heavyAcceleration": 0.00028,
+    "shooterAcceleration": 0.0003,
+    "shooterRange": 290,
+    "shooterRetreatRatio": 0.7,
+    "projectileSpawnOffset": 38,
+    "shooterCooldown": 2.9,
+    "projectileSpeed": 12,
+    "projectileLife": 7,
+    "maxProjectiles": 36,
+    "telegraph": 0.6
+  },
+  "presentation": { "maxParticles": 200, "maxPixelRatio": 2, "shake": 5 }
+}
