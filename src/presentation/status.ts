@@ -1,6 +1,7 @@
 import type { Game } from '../gameplay/game';
 import { relicById } from '../content/relics';
 import { conditionsMatch } from '../progression/modifiers';
+import { phenomena } from '../content/phenomena';
 
 export interface StatusBadge {
   label: string;
@@ -9,6 +10,16 @@ export interface StatusBadge {
 export function statusBadges(game: Game): StatusBadge[] {
   if (!['playing', 'paused'].includes(game.state)) return [];
   const badges: StatusBadge[] = [];
+  if (game.rules.endlessStage > 0)
+    badges.push({
+      label: `Frontier ${game.rules.endlessStage}`,
+      description:
+        'Endless chambers add gravity rules at stages 10, 20, 30, 40, 50, 100, 200 and 500.',
+    });
+  for (const id of game.rules.activePhenomena) {
+    const definition = phenomena.find((item) => item.id === id)!;
+    badges.push({ label: definition.name, description: definition.description });
+  }
   if (game.player.invulnerability > 0)
     badges.push({
       label:

@@ -60,6 +60,8 @@ Use `npm run validate:content` to check unique IDs, numeric limits, evolution/pr
 
 ## Safety budgets and limits
 
+Endless pressure is authored in `src/data/endless.json`. Chamber count determines the stage; catalog tiers layer environmental fields while the latest directional program replaces earlier rotation/reversal/storm programs. The room generator enables moving geometry at stage 500, and collision pulses keep their existing cooldown and field cap. Depth-based health pressure grows to a finite safety ceiling of 10,000 difficulty units. Active rules appear as status badges. Room rules track entity generations, so pooled projectiles receive mass and restitution changes on every incarnation without compounding. Destroyed planetary sources remove their fields. Replay revision `gravityborn-0.4-r4` includes these changes.
+
 - 120 Hz solver; maximum linear velocity 18 Matter units (1080 px/s), angular velocity 0.3 rad/base-frame.
 - Maximum acceleration 0.009 px/ms², maximum impulse delta 16 Matter units.
 - 220 live bodies, 50 indexed fields, 36 fired projectiles, 200 particle slots.

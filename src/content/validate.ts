@@ -21,6 +21,7 @@ import { eliteModifiers } from './enemies';
 import { phenomena } from './phenomena';
 import { coreCosmetics, challengeMemories } from './cosmetics';
 import { regions, type RegionDefinition } from './regions';
+import { endlessTuning } from './endless';
 
 export interface ContentIssue {
   path: string;
@@ -281,6 +282,26 @@ export function validateContent(): ContentIssue[] {
     if (!valid) issues.push({ path, message });
   };
   const powerIds = new Set(abilities.map((item) => item.id));
+  let priorStage = 0;
+  for (const tier of endlessTuning.tiers) {
+    check(
+      Number.isInteger(tier.stage) && tier.stage > priorStage && tier.stage <= 100000,
+      'endless.tiers',
+      'Endless stages must increase and remain bounded.',
+    );
+    check(
+      tier.add.every((id) => phenomena.some((item) => item.id === id)) &&
+        (!tier.direction || ['rotating', 'reverse', 'storm'].includes(tier.direction)),
+      'endless.tiers',
+      'Unknown endless phenomenon or direction program.',
+    );
+    priorStage = tier.stage;
+  }
+  check(
+    isNumber(endlessTuning.maxDifficulty, 12, 10000),
+    'endless.maxDifficulty',
+    'Endless health pressure must remain bounded.',
+  );
   issues.push(...identities(coreCosmetics, 'cosmetics'));
   for (const reward of [...coreCosmetics, ...challengeMemories])
     check(

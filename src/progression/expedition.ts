@@ -20,6 +20,7 @@ import { abilityById } from '../content/abilities';
 import { shopInventory, shopDescription, purchase, type ShopItem } from './shop';
 import { eliteCompatibility, type VariantKind } from '../content/variants';
 import type { EliteModifier } from '../content/enemies';
+import { endlessTuning } from '../content/endless';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -272,6 +273,11 @@ export class Expedition {
         period: 4,
         phase: 0,
       });
+    const endlessStage = this.mode === 'endless' ? this.rooms + 1 : 0;
+    if (endlessStage >= endlessTuning.movingWallsAt)
+      room.walls.slice(4).forEach((wall, index) => {
+        wall.motion = index % 2 ? 'horizontal' : 'vertical';
+      });
     this.game.reset(true, room);
     for (const spawn of room.spawns)
       if (entityDefinitions[spawn.kind].faction === 'enemy')
@@ -294,9 +300,13 @@ export class Expedition {
       `${this.seed}:${node.id}`,
       phenomenon,
       this.contract,
-      Math.min(12, this.difficulty + this.depth),
+      Math.min(
+        this.mode === 'endless' ? endlessTuning.maxDifficulty : 12,
+        this.difficulty + this.depth,
+      ),
+      endlessStage,
     );
-    if (phenomenon) this.discoveries.add(`phenomenon:${phenomenon}`);
+    for (const id of this.game.rules.activePhenomena) this.discoveries.add(`phenomenon:${id}`);
     if (['combat', 'elite', 'challenge', 'boss', 'puzzle', 'secret'].includes(node.type)) {
       this.phase = 'room';
       this.message =

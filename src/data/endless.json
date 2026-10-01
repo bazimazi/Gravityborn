@@ -1,0 +1,15 @@
+{
+  "maxDifficulty": 10000,
+  "movingWallsAt": 500,
+  "collisionPulsesAt": 500,
+  "tiers": [
+    { "stage": 10, "add": ["rift"] },
+    { "stage": 20, "add": [], "direction": "rotating" },
+    { "stage": 30, "add": [], "direction": "reverse" },
+    { "stage": 40, "add": ["zero"] },
+    { "stage": 50, "add": ["singularity"] },
+    { "stage": 100, "add": ["collision"] },
+    { "stage": 200, "add": [], "direction": "storm" },
+    { "stage": 500, "add": ["rain", "collapse"] }
+  ]
+}
