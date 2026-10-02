@@ -24,7 +24,7 @@ const services = new Map([
     {
       name: 'Gravity charge',
       description:
-        'Bank 50 compressed energy for Gravity Burst. Persists between chambers until discharged.',
+        'Bank 50 compressed energy for Stored Burst. Persists between chambers until discharged.',
       price: 20,
     },
   ],

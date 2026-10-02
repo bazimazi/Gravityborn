@@ -1,5 +1,11 @@
 import { _android as android, expect } from '@playwright/test';
-import { writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
+// An unavailable/crashed WebView can otherwise leave discovery waiting forever.
+const deadline = setTimeout(() => {
+  console.error('Native smoke exceeded three minutes; inspect emulator logcat and window focus.');
+  process.exit(1);
+}, 180_000);
+await rm('artifacts/android-native-result.json', { force: true });
 const devices = await android.devices();
 const device = devices.find((device) => device.serial() === 'emulator-5556');
 if (!device) throw new Error('Expected isolated emulator-5556. No physical devices will be used.');
@@ -10,6 +16,11 @@ const page = await webview.page();
 const errors = [];
 page.on('pageerror', (error) => errors.push(error.message));
 await expect(page.getByRole('button', { name: /Enter the chamber/ })).toBeVisible();
+if (
+  (await page.locator('#debug-ability option').count()) < 100 ||
+  (await page.locator('#debug-relic option').count()) < 100
+)
+  throw new Error('The installed APK does not contain the complete launch catalogs.');
 await page.getByRole('button', { name: 'Settings', exact: true }).click();
 await page.getByLabel('Reduced flashing').check();
 await page.getByRole('button', { name: 'Close settings' }).click();
@@ -17,9 +28,12 @@ await page.getByRole('button', { name: 'Progression hub' }).click();
 await page.locator('#run-archive summary').click();
 await page.locator('#ghost-enabled').uncheck();
 await page.getByRole('button', { name: 'Export save', exact: true }).click();
-await expect
-  .poll(async () => (await device.shell('dumpsys activity activities')).toString())
-  .toContain('ChooserActivity');
+const focusedWindow = async () =>
+  (await device.shell('dumpsys window'))
+    .toString()
+    .split('\n')
+    .find((line) => line.includes('mCurrentFocus=')) ?? '';
+await expect.poll(focusedWindow).toContain('ChooserActivity');
 const exported = JSON.parse(
   (
     await device.shell('run-as com.bazimazi.gravityborn cat cache/gravityborn-save.json')
@@ -28,6 +42,8 @@ const exported = JSON.parse(
 if (exported.version !== 2 || !exported.payload.profile)
   throw new Error('Native JSON export was not written');
 await device.shell('input keyevent 4');
+await expect.poll(focusedWindow).toContain('com.bazimazi.gravityborn');
+await expect(page.locator('#run-seed')).toBeVisible();
 await page.locator('#run-seed').fill('offline-recovery');
 await page.getByRole('button', { name: 'Start selected class', exact: true }).click();
 await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
@@ -58,6 +74,7 @@ await writeFile(
       success: true,
       checks: [
         'native startup',
+        '100-power and 100-relic packaged catalogs',
         'input',
         'physics time',
         'pause',
@@ -75,3 +92,4 @@ await writeFile(
 );
 console.log('Native emulator smoke passed, including process-death save recovery.');
 await device.close();
+clearTimeout(deadline);

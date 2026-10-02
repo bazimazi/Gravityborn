@@ -57,17 +57,17 @@ Beyond the original laboratory, the current implementation includes:
 
 - 100 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 100 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
 - 22 additional enemy behaviors, eight elite modifiers forming 99 curated variants, ten bosses, and nine biome definitions.
-- Seeded authored-room composition, branching routes, puzzles, hazards, shops, six events, and three-choice XP upgrades.
+- Seeded authored-room composition, branching routes, puzzles, hazards, shops, ten events, and three-choice XP upgrades with a guaranteed eligible owned-power or well upgrade.
 - Ten classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and nine mutations.
-- Quick, standard, long, campaign, endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
-- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 393 reward-bearing challenges.
+- Quick, standard, long, campaign, endless, planetary endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
+- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 518 reward-bearing challenges.
 - Physical XP/shard pickups, nine material definitions, contact fire/quenching, conductive discharge, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Seven shop purchase categories with build-aware power selection, equipment replacement, and persistent sold inventory.
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.
 - Installable offline web build and generated Android/iOS native projects with platform lifecycle and native preferences storage. See [native delivery](docs/native-delivery.md).
 - Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. A reload restarts from the last saved route rather than restoring every moving body.
 
-Content counts describe implemented definitions, not independently balanced or externally playtested content. Full launch breadth, interaction audits, run pacing, visual polish, and native/release validation remain in progress.
+Content counts describe implemented definitions, not independently balanced or externally playtested content. The launch catalog targets are met; interaction audits, run pacing, human polish review, and native/release validation remain open.
 
 ## Verify
 
@@ -86,6 +86,6 @@ Browser tests launch their own server at 127.0.0.1:5187 and cover Chromium deskt
 
 With the dev server running, `npm run playtest` performs a longer input-driven browser attempt and saves screenshots to `artifacts/`. Tests and screenshots never ship in the production bundle. Read-only development diagnostics are stripped from production builds.
 
-See [architecture](docs/architecture.md), [milestone review](docs/prototype-review.md), and the [roadmap](docs/roadmap.md) for implementation boundaries and the next validation gate.
+See [architecture](docs/architecture.md), [launch-content review](docs/release-review.md), [original prototype review](docs/prototype-review.md), and the [roadmap](docs/roadmap.md) for implementation boundaries and the next validation gate.
 
 Compact challenge sharing is available in **Observatory → Run archive & ghosts**. Copy a recorded run's challenge code or paste someone else's code to select its seed and rules. Ordinary runs use your own progression; daily/weekly challenges use their fixed starting build. Full JSON exports also include build/results and any saved ghost. Native JSON exports open the OS share sheet.

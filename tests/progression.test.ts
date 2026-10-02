@@ -3,6 +3,8 @@ import { Game } from '../src/gameplay/game';
 import { Expedition } from '../src/progression/expedition';
 import { RunBuild } from '../src/progression/build';
 import { bossDefinitions, type BossKind } from '../src/content/bosses';
+import { abilities } from '../src/content/abilities';
+import { relics } from '../src/content/relics';
 
 it('offers deterministic distinct choices, validates selection, and advances one level at a time', () => {
   const a = new RunBuild(new Game(false), 'same');
@@ -16,6 +18,65 @@ it('offers deterministic distinct choices, validates selection, and advances one
   expect(a.pending).toBe(2);
   expect(a.choose(a.choices[0].id)).toBe(true);
   expect(a.pending).toBe(1);
+});
+
+it('large catalogs retain an owned-power or well upgrade in every eligible offer', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'develop-current-build');
+  for (let draw = 0; draw < 100; draw++) {
+    build.choices = [];
+    const choices = build.offer();
+    expect(choices).toHaveLength(3);
+    expect(new Set(choices.map((choice) => choice.id)).size).toBe(3);
+    expect(
+      choices.some(
+        (choice) =>
+          choice.kind === 'well' ||
+          (choice.kind === 'ability' && game.abilities.levels.has(choice.target)),
+      ),
+    ).toBe(true);
+  }
+  game.world.dispose();
+});
+
+it('eligible evolutions remain offered and exhausted catalogs fall back to distinct passives', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'exhausted-offers');
+  build.wellLevel = 4;
+  game.abilities.learn('pulse');
+  game.abilities.learn('pulse');
+  for (let draw = 0; draw < 10; draw++) {
+    build.choices = [];
+    expect(
+      build
+        .offer()
+        .some((choice) => choice.target === 'pulse' && choice.name.startsWith('Evolve:')),
+    ).toBe(true);
+  }
+  for (const definition of abilities) game.abilities.levels.set(definition.id, definition.maxLevel);
+  build.relics.push(...relics.map((relic) => relic.id));
+  build.choices = [];
+  expect(build.offer()).toHaveLength(3);
+  expect(build.choices.every((choice) => choice.kind === 'passive')).toBe(true);
+  expect(new Set(build.choices.map((choice) => choice.id)).size).toBe(3);
+  game.world.dispose();
+});
+
+it('guaranteed development choices and subsequent draws survive checkpoint restoration', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'offer-save');
+  build.gainXP(160);
+  build.offer();
+  const restoredGame = new Game(false);
+  const restored = new RunBuild(restoredGame, 'different');
+  restored.restore(JSON.parse(JSON.stringify(build.snapshot())));
+  restoredGame.abilities.restore(game.abilities.snapshot());
+  expect(restored.offer()).toEqual(build.offer());
+  expect(restored.choose(restored.choices[0].id)).toBe(true);
+  expect(build.choose(build.choices[0].id)).toBe(true);
+  expect(restored.offer()).toEqual(build.offer());
+  game.world.dispose();
+  restoredGame.world.dispose();
 });
 it('rebuilds mass modifiers without compounding and activates tag synergies', () => {
   const game = new Game(false);

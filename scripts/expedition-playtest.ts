@@ -3,17 +3,20 @@ import { Expedition } from '../src/progression/expedition';
 import { normalize, subtract } from '../src/core/vector';
 import { modes, type RunMode } from '../src/content/modes';
 import { classById } from '../src/content/classes';
+import { canBuy } from '../src/progression/shop';
 const option = (name: string, fallback: string): string => {
   const index = process.argv.indexOf(name);
   return index < 0 ? fallback : (process.argv[index + 1] ?? '');
 };
 const mode = option('--mode', 'quick') as RunMode;
 const classId = option('--class', 'manipulator');
+const strategy = option('--strategy', 'baseline');
 const samples = Number(option('--runs', '12'));
 const maxSeconds = Number(option('--seconds', mode === 'quick' ? '360' : '1800'));
 if (
   !modes.some((item) => item.id === mode) ||
   !classById.has(classId) ||
+  !['baseline', 'well'].includes(strategy) ||
   !Number.isInteger(samples) ||
   samples < 1 ||
   samples > 100 ||
@@ -21,7 +24,9 @@ if (
   maxSeconds < 1 ||
   maxSeconds > 7200
 )
-  throw new Error('Use a known --mode and --class, --runs 1–100 and --seconds 1–7200.');
+  throw new Error(
+    'Use a known --mode and --class, --strategy baseline|well, --runs 1–100 and --seconds 1–7200.',
+  );
 const results = [];
 for (let seed = 0; seed < samples; seed++) {
   const game = new Game(false);
@@ -33,9 +38,20 @@ for (let seed = 0; seed < samples; seed++) {
     if (run.build.pending) {
       run.build.offer();
       const choice =
+        (strategy === 'well'
+          ? (run.build.choices.find(
+              (choice) =>
+                choice.target === 'integrity' && game.player.health < game.maxHealth * 0.5,
+            ) ??
+            run.build.choices.find((choice) => choice.kind === 'well') ??
+            run.build.choices.find((choice) =>
+              ['repair', 'aegis', 'integrity', 'recovery'].includes(choice.target),
+            ))
+          : undefined) ??
         run.build.choices.find((choice) =>
           ['collapse', 'pulse', 'repair', 'aegis', 'newton'].includes(choice.target),
-        ) ?? run.build.choices[0];
+        ) ??
+        run.build.choices[0];
       run.build.choose(choice.id);
     }
     if (run.phase === 'map') {
@@ -55,6 +71,10 @@ for (let seed = 0; seed < samples; seed++) {
       continue;
     }
     if (run.phase === 'shop') {
+      if (strategy === 'well') {
+        const repair = run.shop.find((item) => item.id === 'healing' && canBuy(run.build, item));
+        if (repair) run.buy(repair.id);
+      }
       const item = run.shop.find((item) => !item.sold && item.price <= run.build.currency);
       if (item) run.buy(item.id);
       run.leaveShop();
@@ -100,6 +120,7 @@ for (let seed = 0; seed < samples; seed++) {
     seed,
     mode,
     classId,
+    strategy,
     won: run.won,
     phase: run.phase,
     rooms: run.rooms,

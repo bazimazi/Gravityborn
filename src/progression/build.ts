@@ -168,7 +168,17 @@ export class RunBuild {
         name: passive.name,
         description: passive.description,
       });
-    this.choices = this.random.shuffle(pool).slice(0, 3);
+    const shuffled = this.random.shuffle(pool);
+    // Catalog growth must not crowd upgrades to the player's chosen tools out
+    // of the reward pool. Reserve one slot for an eligible owned power or well.
+    const developing = shuffled.find(
+      (choice) =>
+        choice.kind === 'well' ||
+        (choice.kind === 'ability' && this.game.abilities.levels.has(choice.target)),
+    );
+    this.choices = developing
+      ? [developing, ...shuffled.filter((choice) => choice !== developing).slice(0, 2)]
+      : shuffled.slice(0, 3);
     return this.choices;
   }
   choose(id: string): boolean {

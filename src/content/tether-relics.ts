@@ -76,7 +76,7 @@ export const tetherRelics: RelicDefinition[] = [
     rarity: 'rare',
     tags: ['Tether', 'Gravity'],
     description:
-      'Impact kills credited to a tether store twelve gravity charge, at most once per second. Spend the reserve with Gravity Burst.',
+      'Impact kills credited to a tether store twelve gravity charge, at most once per second. Spend the reserve with Stored Burst.',
     triggers: [{ trigger: 'OnKill', effect: 'store', value: 12, cooldown: 1, tags: ['Tether'] }],
   },
   {

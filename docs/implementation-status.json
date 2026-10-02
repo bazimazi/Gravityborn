@@ -168,9 +168,7 @@
         "src/gameplay/enemies.ts",
         "src/content/rooms.ts",
         "tests/enemies.test.ts",
-        "tests/variants.test.ts",
-        "tests/manipulation-abilities.test.ts",
-        "tests/catalog-stress.test.ts"
+        "tests/variants.test.ts"
       ],
       "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
@@ -184,9 +182,7 @@
         "src/gameplay/enemies.ts",
         "src/content/rooms.ts",
         "tests/enemies.test.ts",
-        "tests/variants.test.ts",
-        "tests/manipulation-abilities.test.ts",
-        "tests/catalog-stress.test.ts"
+        "tests/variants.test.ts"
       ],
       "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
@@ -280,9 +276,10 @@
         "tests/equipment.test.ts",
         "tests/modes.test.ts",
         "scripts/expedition-playtest.ts",
-        "tests/rooms.test.ts"
+        "tests/rooms.test.ts",
+        "docs/release-review.md"
       ],
-      "remaining": "All run modes and multiwave encounters are implemented. The latest twelve input-only quick seeds produced seven wins, five defeats and no stalls; successful runs took 54–127 simulated seconds with instant bot decisions. These quick runs do not establish the specified standard-expedition pacing. Human pacing and balance validation remain open."
+      "remaining": "All run modes and multiwave encounters are implemented. Twelve input-only seeds per policy produced seven quick victories (47–93 simulated seconds), two standard victories with well-focused choices (176–192 seconds), and no campaign victories with the same policy and no permanent loadout. All batches had zero timeouts. Instant bot decisions do not establish the specified human pacing; balance and pacing remain open."
     },
     {
       "section": 22,
@@ -309,7 +306,8 @@
         "src/progression/build.ts",
         "tests/synergies.test.ts",
         "tests/manipulation-abilities.test.ts",
-        "tests/catalog-stress.test.ts"
+        "tests/catalog-stress.test.ts",
+        "docs/release-review.md"
       ],
       "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Twelve cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
     },
@@ -1191,7 +1189,8 @@
         "src/data/balance.json",
         "src/core/diagnostics.ts",
         "scripts/expedition-playtest.ts",
-        "docs/roadmap.md"
+        "docs/roadmap.md",
+        "docs/release-review.md"
       ],
       "remaining": "Balance tuning is authored, bounded and instrumented. Input-only bots demonstrate routes can be won without stalls, but quick victories remain much shorter than target pacing. Human build viability, win rates and risk/reward evaluation remain open."
     },
@@ -1203,9 +1202,10 @@
         "src/content/relics.ts",
         "src/content/equipment.ts",
         "src/content/research.ts",
-        "tests/synergies.test.ts"
+        "tests/synergies.test.ts",
+        "docs/release-review.md"
       ],
-      "remaining": "Mechanical trade-offs, density mutations, cast/flip/kill triggers, deployable fields and generic tag synergies provide build variety beyond percentage bonuses. Human evidence that offers create consistently meaningful choices remains open."
+      "remaining": "Mechanical trade-offs, density mutations, cast/flip/kill triggers, deployable fields and generic tag synergies provide build variety. Level-up offers reserve an eligible owned-power or well upgrade so the full catalog does not crowd out build development; exhausted builds retain three distinct fallback options. Seeded offers and restoration are tested. Human choice quality and archetype viability remain open."
     },
     {
       "section": 90,
@@ -1451,7 +1451,8 @@
       "status": "partial",
       "evidence": [
         "docs/prototype-review.md",
-        "docs/implementation-status.json"
+        "docs/implementation-status.json",
+        "docs/release-review.md"
       ],
       "remaining": "Historical review passes and current section-by-section audits are recorded. New failures have resulted in checkpoint, combat, native export, content and discovery fixes. Human/mobile review gates remain open."
     },
@@ -1461,9 +1462,10 @@
       "status": "partial",
       "evidence": [
         "docs/prototype-review.md",
-        "docs/implementation-status.json"
+        "docs/implementation-status.json",
+        "docs/release-review.md"
       ],
-      "remaining": "The first playable milestone has ten documented review passes. Current continuation audits cover correctness, physics, architecture, host performance, UX, accessibility, extensibility and native emulator delivery; human balance/device/final polish gates remain open."
+      "remaining": "The prototype and current launch-content milestone each have documented ten-pass reviews. The current review records gameplay/physics regressions, architecture, host performance, browser UX/accessibility, input-only balance attempts, content extensibility and native delivery evidence. Human balance, physical-device and final release gates remain open."
     },
     {
       "section": 110,
@@ -1472,7 +1474,8 @@
       "evidence": [
         "docs/implementation-status.json",
         "docs/native-delivery.md",
-        "docs/roadmap.md"
+        "docs/roadmap.md",
+        "docs/release-review.md"
       ],
       "remaining": "Launch content breadth and repository systems are implemented with simulation, browser, save, integration, host-performance and Android-emulator evidence. Observed fun/pacing, human polish review, physical-device performance, signed iOS builds and store readiness remain unverified; the whole product is not marked complete."
     },
