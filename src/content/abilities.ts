@@ -2,8 +2,11 @@ import { advancedAbilities } from './advanced-abilities';
 import { specialistAbilities } from './specialist-abilities';
 import { kineticAbilities } from './kinetic-abilities';
 import { dynamicFieldAbilities } from './dynamic-field-abilities';
+import { surfaceAbilities } from './surface-abilities';
+import type { SurfaceValues } from '../core/surface';
 
 export type EffectKind =
+  | 'surface'
   | 'split'
   | 'mass'
   | 'orbit_impulse'
@@ -43,6 +46,7 @@ export interface AbilityDefinition {
   maxLevel: number;
   evolution?: string;
   parameters?: {
+    surface?: Partial<SurfaceValues>;
     momentumScale?: number;
     planetCount?: number;
     collapseMultiplier?: number;
@@ -73,6 +77,7 @@ export interface AbilityDefinition {
 }
 
 export const abilities: AbilityDefinition[] = [
+  ...surfaceAbilities,
   {
     id: 'beacon',
     name: 'Gravity Beacon',

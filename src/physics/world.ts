@@ -3,6 +3,7 @@ import { entityDefinitions as definitions, type EliteModifier } from '../content
 import balance from '../data/balance.json';
 import { clampVector, type Vec2 } from '../core/vector';
 import { GravitySystem } from './gravity';
+import { surfaceLimits, type SurfaceProperty, type SurfaceValues } from '../core/surface';
 
 const { Bodies, Body, Composite, Engine, Events, Sleeping } = Matter;
 export type EntityKind = keyof typeof definitions;
@@ -32,6 +33,9 @@ export interface Entity {
   massBase: number;
   massFactors: Map<string, number>;
   massPending: boolean;
+  surfaceBase: SurfaceValues;
+  surfaceOverrides: Map<string, Partial<SurfaceValues>>;
+  surfacePending: boolean;
   elite?: EliteModifier;
   telegraph?: number;
   attackAim?: Vec2;
@@ -198,11 +202,20 @@ export class PhysicsWorld {
       massBase: definition.mass,
       massFactors: new Map<string, number>(),
       massPending: false,
+      surfaceBase: {
+        restitution: definition.restitution,
+        frictionAir: definition.frictionAir,
+        friction: definition.material === 'ice' ? 0.001 : 0.05,
+        frictionStatic: 0.5,
+      },
+      surfaceOverrides: new Map<string, Partial<SurfaceValues>>(),
+      surfacePending: false,
       gravityScale: 1,
       elite: undefined,
       telegraph: undefined,
       attackAim: undefined,
     });
+    this.refreshSurface(entity);
     this.entities.set(entity.id, entity);
     this.safePositions.set(entity.id, { ...position });
     Composite.add(this.engine.world, entity.body);
@@ -234,6 +247,25 @@ export class PhysicsWorld {
     if (!Number.isFinite(mass) || mass <= 0) return;
     entity.massBase = mass;
     this.refreshMass(entity);
+  }
+
+  setSurface(entity: Entity, property: SurfaceProperty, value: number): void {
+    if (!Number.isFinite(value)) return;
+    const [minimum, maximum] = surfaceLimits[property];
+    entity.surfaceBase[property] = Math.max(minimum, Math.min(maximum, value));
+    this.refreshSurface(entity);
+  }
+
+  refreshSurface(entity: Entity): void {
+    // Matter restores its saved contact properties on unlock; defer writes until then.
+    entity.surfacePending = entity.body.isStatic;
+    if (entity.surfacePending) return;
+    const values = { ...entity.surfaceBase };
+    for (const override of entity.surfaceOverrides.values()) Object.assign(values, override);
+    for (const property of Object.keys(surfaceLimits) as SurfaceProperty[]) {
+      const [minimum, maximum] = surfaceLimits[property];
+      entity.body[property] = Math.max(minimum, Math.min(maximum, values[property]));
+    }
   }
 
   refreshMass(entity: Entity): void {
@@ -288,6 +320,7 @@ export class PhysicsWorld {
       this.repairIfInvalid(entity);
       if (entity.body.isStatic) continue;
       if (entity.massPending) this.refreshMass(entity);
+      if (entity.surfacePending || entity.surfaceOverrides.size) this.refreshSurface(entity);
       const velocity = Body.getVelocity(entity.body);
       if (
         Math.hypot(velocity.x, velocity.y) > balance.physics.maxVelocity ||

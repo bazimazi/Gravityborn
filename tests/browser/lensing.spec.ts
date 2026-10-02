@@ -9,6 +9,7 @@ for (const power of [
   'planet_split',
   'quadrupole',
   'orbital_lantern',
+  'glass_spring',
 ])
   test(`${power} renders and remains usable with visual accessibility settings`, async ({
     page,

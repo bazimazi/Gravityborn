@@ -3,6 +3,7 @@ import { advancedRelics } from './advanced-relics';
 import { specialistRelics } from './specialist-relics';
 import { kineticRelics } from './kinetic-relics';
 import { fieldRelics } from './field-relics';
+import { surfaceRelics } from './surface-relics';
 export interface RelicDefinition {
   id: string;
   name: string;
@@ -13,6 +14,7 @@ export interface RelicDefinition {
   triggers?: Omit<TriggerRule, 'id'>[];
 }
 export const relics: RelicDefinition[] = [
+  ...surfaceRelics,
   {
     id: 'redshift',
     name: 'Redshift Lens',

@@ -775,6 +775,26 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText(`M ${entity.body.mass.toFixed(1)}`, x, y - radius - 12);
     }
+    if (entity.surfaceOverrides.size && !entity.body.isStatic) {
+      ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#97e0d0';
+      ctx.fillStyle = ctx.strokeStyle;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([2, 4]);
+      this.circle(x, y, radius + 14);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        entity.body.frictionAir >= 0.08
+          ? 'DRAG'
+          : entity.body.restitution >= 1
+            ? 'ELASTIC'
+            : 'GLIDE',
+        x,
+        y - radius - 25,
+      );
+    }
     if (game.materials.isBurning(entity)) {
       ctx.strokeStyle = '#ffb978';
       ctx.lineWidth = 2;

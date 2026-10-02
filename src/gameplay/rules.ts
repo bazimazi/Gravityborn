@@ -75,7 +75,8 @@ export class RuleSystem {
           if (mass !== 1)
             this.host.world.setMass(entity, Math.min(tuning.maxMass, entity.massBase * mass));
         }
-        if (this.activePhenomena.includes('elastic')) entity.body.restitution = tuning.elasticity;
+        if (this.activePhenomena.includes('elastic'))
+          this.host.world.setSurface(entity, 'restitution', tuning.elasticity);
         if (entity.definition.faction === 'enemy' && entity.kind !== 'projectile') {
           entity.health *= 1 + this.difficulty * tuning.difficultyHealth;
           entity.maxHealth = entity.health;

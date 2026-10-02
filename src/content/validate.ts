@@ -22,12 +22,14 @@ import { phenomena } from './phenomena';
 import { coreCosmetics, challengeMemories } from './cosmetics';
 import { regions, type RegionDefinition } from './regions';
 import { endlessTuning } from './endless';
+import { surfaceLimits, type SurfaceProperty } from '../core/surface';
 
 export interface ContentIssue {
   path: string;
   message: string;
 }
 const effects = [
+  'surface',
   'split',
   'mass',
   'orbit_impulse',
@@ -247,6 +249,25 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (item.effect === 'surface' || p?.surface !== undefined) {
+      check(
+        item.effect === 'surface' &&
+          item.radius > 0 &&
+          item.duration > 0 &&
+          !!p?.surface &&
+          Object.keys(p.surface).length > 0,
+        'parameters.surface',
+        'Surface powers require contact properties, positive radius and duration.',
+      );
+      for (const [key, value] of Object.entries(p?.surface ?? {})) {
+        const bounds = surfaceLimits[key as SurfaceProperty];
+        check(
+          !!bounds && isNumber(value, bounds[0], bounds[1]),
+          `parameters.surface.${key}`,
+          'Use a known, bounded physical surface property.',
+        );
+      }
+    }
     if (p) {
       const programKeys = [
         'attach',
@@ -317,10 +338,10 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
     if (p?.selfOnly !== undefined)
       check(
         typeof p.selfOnly === 'boolean' &&
-          ['response', 'mass'].includes(item.effect) &&
+          ['response', 'mass', 'surface'].includes(item.effect) &&
           item.target === 'player',
         'parameters.selfOnly',
-        'Self-only effects must be player-targeted response or mass powers.',
+        'Self-only effects must be player-targeted response, mass or surface powers.',
       );
     if (p?.travelSpeed !== undefined)
       check(

@@ -62,6 +62,19 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       primary.duration = 0.35;
       secondary = { ...primary, start: primary.end, end: primary.start, gain: 0.045, delay: 0.08 };
       break;
+    case 'surface':
+      primary.waveform = 'sine';
+      primary.start = ability.parameters?.surface?.restitution ? 220 : 620;
+      primary.end = ability.parameters?.surface?.restitution ? 660 : 140;
+      primary.duration = 0.2;
+      secondary = {
+        ...primary,
+        start: primary.start * 1.5,
+        end: primary.end * 1.5,
+        gain: 0.04,
+        delay: 0.09,
+      };
+      break;
     case 'dash':
       primary.start = ability.strength < 0 ? 650 : 180;
       primary.end = ability.strength < 0 ? 120 : 720;

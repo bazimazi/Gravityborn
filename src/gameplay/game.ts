@@ -767,6 +767,7 @@ export class Game {
       if (sourceTags.includes('Void')) tags.push('Void');
       if (sourceTags.includes('Mass')) tags.push('Mass');
       if (sourceTags.includes('Field')) tags.push('Field');
+      if (sourceTags.includes('Surface')) tags.push('Surface');
       this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
     }

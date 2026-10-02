@@ -8,6 +8,7 @@ import type { GravityField, GravitySystem } from '../physics/gravity';
 import type { Entity, PhysicsWorld } from '../physics/world';
 import { ModifierSet, type ModifierContext } from '../progression/modifiers';
 import { fieldMotionAt, type FieldMotion } from './field-motion';
+import type { SurfaceProperty } from '../core/surface';
 
 export interface AbilityHost {
   world: PhysicsWorld;
@@ -43,7 +44,7 @@ interface Status {
   entity: Entity;
   generation: number;
   until: number;
-  kind: 'lock' | 'theft' | 'transfer' | 'response' | 'mass';
+  kind: 'lock' | 'theft' | 'transfer' | 'response' | 'mass' | 'surface';
   factor?: string;
 }
 export interface AbilitySnapshot {
@@ -264,12 +265,13 @@ export class AbilitySystem {
       )
         return false;
     }
-    const responseTargets = ['response', 'mass'].includes(definition.effect)
+    const responseTargets = ['response', 'mass', 'surface'].includes(definition.effect)
       ? (parameters.selfOnly ? [this.host.player] : targets).filter(
           (entity) => !entity.body.isStatic,
         )
       : [];
-    if (['response', 'mass'].includes(definition.effect) && !responseTargets.length) return false;
+    if (['response', 'mass', 'surface'].includes(definition.effect) && !responseTargets.length)
+      return false;
     const tetherTargets =
       definition.effect === 'tether'
         ? targets
@@ -431,6 +433,9 @@ export class AbilitySystem {
             child.definition.gravityResponse;
           child.gravityFactors = new Map(parent.gravityFactors);
           child.massFactors = new Map(parent.massFactors);
+          child.surfaceBase = { ...parent.surfaceBase };
+          child.surfaceOverrides = new Map(parent.surfaceOverrides);
+          this.host.world.refreshSurface(child);
           this.host.world.setMass(child, parent.massBase / 2);
           for (const status of inheritedStatuses)
             this.statuses.push({ ...status, entity: child, generation: child.generation });
@@ -449,6 +454,44 @@ export class AbilitySystem {
             child,
             lifespan,
           );
+        }
+        break;
+      }
+      case 'surface': {
+        const key = `surface:${id}`;
+        const coating = { ...parameters.surface };
+        for (const property of Object.keys(coating) as SurfaceProperty[])
+          coating[property] = this.modifiers.evaluate(
+            `surface_${property}`,
+            coating[property]!,
+            definition.tags,
+            context,
+          );
+        for (const entity of responseTargets) {
+          const previous = this.statuses.find(
+            (status) =>
+              status.entity === entity &&
+              status.generation === entity.generation &&
+              status.factor === key,
+          );
+          if (previous) previous.until = this.host.time + duration;
+          else
+            this.statuses.push({
+              entity,
+              generation: entity.generation,
+              until: this.host.time + duration,
+              kind: 'surface',
+              factor: key,
+            });
+          const properties = Object.keys(coating) as SurfaceProperty[];
+          const changed = properties.some(
+            (property) => entity.body[property] !== coating[property],
+          );
+          // Refreshing a coating makes it the latest owner of only its authored properties.
+          entity.surfaceOverrides.delete(key);
+          entity.surfaceOverrides.set(key, coating);
+          this.host.world.refreshSurface(entity);
+          if (changed) this.host.markCause(entity, chain);
         }
         break;
       }
@@ -840,10 +883,14 @@ export class AbilitySystem {
       if (status.kind === 'lock') {
         Matter.Body.setStatic(status.entity.body, false);
         this.host.world.refreshMass(status.entity);
+        this.host.world.refreshSurface(status.entity);
         this.resistance.set(status.entity.id, {
           until: this.host.time + balance.abilities.lockResistance,
           generation: status.generation,
         });
+      } else if (status.kind === 'surface') {
+        status.entity.surfaceOverrides.delete(status.factor!);
+        this.host.world.refreshSurface(status.entity);
       } else if (status.kind === 'mass') {
         status.entity.massFactors.delete(status.factor!);
         this.host.world.refreshMass(status.entity);

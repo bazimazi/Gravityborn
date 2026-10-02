@@ -55,7 +55,7 @@ Choose **Learn by playing** for seven training lessons, **Enter the chamber** fo
 
 Beyond the original laboratory, the current implementation includes:
 
-- 75 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 75 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
+- 82 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 82 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
 - 22 additional enemy behaviors, eight elite modifiers forming 99 curated variants, ten bosses, and nine biome definitions.
 - Seeded authored-room composition, branching routes, puzzles, hazards, shops, six events, and three-choice XP upgrades.
 - Ten classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and nine mutations.

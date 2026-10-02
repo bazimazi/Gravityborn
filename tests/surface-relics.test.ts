@@ -1,0 +1,74 @@
+import Matter from 'matter-js';
+import { expect, it } from 'vitest';
+import { Game } from '../src/gameplay/game';
+import { RunBuild } from '../src/progression/build';
+import { abilityById } from '../src/content/abilities';
+
+it('surface relics bound cast snapshots without modifying authored contact properties', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'surface-snapshots');
+  const point = { x: 700, y: 400 };
+  const rock = game.world.spawn('rock', point)!;
+  game.abilities.learn('elastic_coat');
+  game.abilities.learn('deadening_foam');
+  build.addRelic('coil_lacquer');
+  game.abilities.cast('elastic_coat', point, true);
+  expect(rock.body.restitution).toBe(1.2);
+  expect(abilityById.get('elastic_coat')!.parameters!.surface!.restitution).toBe(1.05);
+  build.addRelic('viscous_resin');
+  build.addRelic('antistatic_film');
+  game.abilities.cast('deadening_foam', point, true);
+  expect(rock.body.restitution).toBe(0);
+  expect(rock.body.friction).toBe(0);
+  expect(rock.body.frictionAir).toBe(0.12);
+  game.time = 3.3;
+  game.abilities.tick(0);
+  expect(rock.body.restitution).toBe(1.2);
+  expect(rock.body.frictionAir).toBe(0);
+  game.time = 4.1;
+  game.abilities.tick(0);
+  expect(rock.surfaceOverrides.size).toBe(0);
+  game.world.dispose();
+});
+
+it('varnish and solvent compose duration, cost and cooldown without altering non-surface powers', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'surface-timing');
+  build.addRelic('lasting_varnish');
+  build.addRelic('flash_solvent');
+  game.abilities.learn('glass_spring');
+  game.abilities.cast('glass_spring', game.player.body.position);
+  expect(game.abilities.energy).toBe(86);
+  expect(game.abilities.cooldowns.get('glass_spring')).toBeCloseTo(4.9);
+  expect(game.abilities.modifiers.evaluate('cooldown', 10, ['Gravity'])).toBe(10);
+  game.time = 3.9;
+  game.abilities.tick(0);
+  expect(game.player.body.restitution).toBe(1.05);
+  game.time = 4.1;
+  game.abilities.tick(0);
+  expect(game.player.surfaceOverrides.size).toBe(0);
+  game.world.dispose();
+});
+
+it('actual surface-attributed impacts pay Rebound Dividend once through the kill pipeline', () => {
+  const game = new Game(false);
+  const build = new RunBuild(game, 'surface-kill');
+  build.addRelic('rebound_dividend');
+  game.gravity.strength = 0;
+  const rock = game.world.spawn('rock', { x: 700, y: 350 })!;
+  const enemy = game.world.spawn('chaser', { x: 750, y: 350 })!;
+  enemy.health = 1;
+  Matter.Body.setVelocity(rock.body, { x: 12, y: 0 });
+  game.abilities.learn('elastic_coat');
+  game.abilities.cast('elastic_coat', rock.body.position, true);
+  game.abilities.energy = 0;
+  const kills: string[][] = [];
+  game.events.on('killed', (event) => kills.push(event.damageTags));
+  game.start();
+  for (let step = 0; step < 12 && enemy.alive; step++) game.step();
+  expect(enemy.alive).toBe(false);
+  expect(kills[0]).toContain('Surface');
+  expect(game.abilities.energy).toBeGreaterThanOrEqual(8);
+  expect(game.abilities.modifiers.fire('OnKill', game.time, ['Surface'])).toEqual([]);
+  game.world.dispose();
+});
