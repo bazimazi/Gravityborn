@@ -232,10 +232,19 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
         isNumber(item.strength, 0.001, 0.1) &&
           item.duration > 0 &&
           item.radius > 0 &&
-          isNumber(item.parameters?.chainTargets ?? 0, 2, 6) &&
+          Number.isInteger(item.parameters?.chainTargets) &&
+          isNumber(
+            item.parameters?.chainTargets ?? 0,
+            item.parameters?.tetherTopology === 'anchor'
+              ? 1
+              : item.parameters?.tetherTopology === 'ring'
+                ? 3
+                : 2,
+            6,
+          ) &&
           isNumber(item.parameters?.tetherLength ?? 0, 20, 200),
         'parameters',
-        'Tethers require two to six targets, length 20–200 and stiffness 0.001–0.1.',
+        'Tethers require bounded target counts (anchors 1–6, rings 3–6, others 2–6), length 20–200 and stiffness 0.001–0.1.',
       );
     const chain = new Set([item.id]);
     let parent = item;
@@ -249,6 +258,38 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (p) {
+      if (
+        ['tetherEndLength', 'tetherTopology', 'tetherPlayer', 'tetherDamping'].some(
+          (key) => key in p,
+        )
+      )
+        check(item.effect === 'tether', 'parameters', 'Tether options require a tether effect.');
+      if (p.tetherEndLength !== undefined)
+        check(
+          isNumber(p.tetherEndLength, 20, 200),
+          'parameters.tetherEndLength',
+          'Final spring length must be 20–200.',
+        );
+      if (p.tetherTopology !== undefined)
+        check(
+          ['chain', 'star', 'ring', 'anchor'].includes(p.tetherTopology),
+          'parameters.tetherTopology',
+          'Use a supported tether topology.',
+        );
+      if (p.tetherPlayer !== undefined)
+        check(
+          typeof p.tetherPlayer === 'boolean',
+          'parameters.tetherPlayer',
+          'Use a boolean player endpoint option.',
+        );
+      if (p.tetherDamping !== undefined)
+        check(
+          isNumber(p.tetherDamping, 0, 0.3),
+          'parameters.tetherDamping',
+          'Tether damping must be 0–0.3.',
+        );
+    }
     if (item.effect === 'surface' || p?.surface !== undefined) {
       check(
         item.effect === 'surface' &&

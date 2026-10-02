@@ -86,18 +86,20 @@ export class Renderer {
     ctx.strokeStyle = this.settings.highContrast ? '#ffffff' : '#8effdc';
     ctx.lineWidth = 2;
     for (const tether of game.abilities.tethers) {
-      if (!tether.a.alive || !tether.b.alive) continue;
+      if (!tether.a.alive || (tether.b && !tether.b.alive)) continue;
+      const endpoint = tether.b?.body.position ?? tether.anchor!;
       ctx.setLineDash([7, 4]);
-      this.line(
-        tether.a.body.position.x,
-        tether.a.body.position.y,
-        tether.b.body.position.x,
-        tether.b.body.position.y,
-      );
+      this.line(tether.a.body.position.x, tether.a.body.position.y, endpoint.x, endpoint.y);
       ctx.setLineDash([]);
       for (const entity of [tether.a, tether.b]) {
+        if (!entity) continue;
         this.circle(entity.body.position.x, entity.body.position.y, entity.definition.radius + 5);
         ctx.stroke();
+      }
+      if (tether.anchor) {
+        ctx.strokeRect(endpoint.x - 6, endpoint.y - 6, 12, 12);
+        this.line(endpoint.x - 10, endpoint.y, endpoint.x + 10, endpoint.y);
+        this.line(endpoint.x, endpoint.y - 10, endpoint.x, endpoint.y + 10);
       }
     }
     if (this.ghost) {

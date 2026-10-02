@@ -67,7 +67,11 @@ export class AbilitySystem {
   readonly tethers: {
     body: Matter.Constraint;
     a: Entity;
-    b: Entity;
+    b?: Entity;
+    anchor?: Vec2;
+    start: number;
+    startLength: number;
+    endLength: number;
     generations: number[];
     expires: number;
     chain: number;
@@ -272,18 +276,79 @@ export class AbilitySystem {
       : [];
     if (['response', 'mass', 'surface'].includes(definition.effect) && !responseTargets.length)
       return false;
+    const topology = parameters.tetherTopology ?? 'chain';
+    if (definition.effect === 'tether') {
+      if (parameters.tetherPlayer && this.host.player.body.isStatic) return false;
+      parameters.chainTargets = Math.max(
+        topology === 'anchor' ? 1 : topology === 'ring' ? 3 : 2,
+        Math.floor(
+          this.modifiers.evaluate(
+            'tetherTargets',
+            parameters.chainTargets ?? 2,
+            definition.tags,
+            context,
+          ),
+        ),
+      );
+      parameters.tetherLength = this.modifiers.evaluate(
+        'tetherLength',
+        parameters.tetherLength ?? 70,
+        definition.tags,
+        context,
+      );
+      if (parameters.tetherEndLength !== undefined)
+        parameters.tetherEndLength = this.modifiers.evaluate(
+          'tetherLength',
+          parameters.tetherEndLength,
+          definition.tags,
+          context,
+        );
+      parameters.tetherDamping = this.modifiers.evaluate(
+        'tetherDamping',
+        parameters.tetherDamping ?? 0.05,
+        definition.tags,
+        context,
+      );
+    }
     const tetherTargets =
       definition.effect === 'tether'
-        ? targets
-            .filter(
+        ? [
+            ...(parameters.tetherPlayer && !this.host.player.body.isStatic
+              ? [this.host.player]
+              : []),
+            ...targets.filter(
               (entity) => !entity.body.isStatic && entity.kind !== 'xp' && entity.kind !== 'shard',
-            )
-            .slice(0, parameters.chainTargets ?? 2)
+            ),
+          ].slice(0, parameters.chainTargets ?? 2)
         : [];
+    const tetherPairs: { a: Entity; b?: Entity; anchor?: Vec2 }[] = [];
+    if (definition.effect === 'tether') {
+      if (topology === 'anchor') {
+        if (
+          point.x < 3 ||
+          point.y < 3 ||
+          point.x > this.host.room.width - 3 ||
+          point.y > this.host.room.height - 3 ||
+          !this.host.world.circleClear(point, 3) ||
+          (parameters.tetherPlayer &&
+            length(subtract(point, this.host.player.body.position)) > radius)
+        )
+          return false;
+        for (const a of tetherTargets) tetherPairs.push({ a, anchor: { ...point } });
+      } else {
+        for (let i = 1; i < tetherTargets.length; i++)
+          tetherPairs.push({
+            a: tetherTargets[topology === 'star' ? 0 : i - 1],
+            b: tetherTargets[i],
+          });
+        if (topology === 'ring' && tetherTargets.length >= 3)
+          tetherPairs.push({ a: tetherTargets[tetherTargets.length - 1], b: tetherTargets[0] });
+      }
+    }
     if (
       definition.effect === 'tether' &&
-      (tetherTargets.length < 2 ||
-        this.tethers.length + tetherTargets.length - 1 > balance.physics.maxTethers)
+      (tetherTargets.length < (topology === 'anchor' ? 1 : topology === 'ring' ? 3 : 2) ||
+        this.tethers.length + tetherPairs.length > balance.physics.maxTethers)
     )
       return false;
     const victim =
@@ -586,15 +651,14 @@ export class AbilitySystem {
         break;
       }
       case 'tether':
-        for (let index = 1; index < tetherTargets.length; index++) {
-          const a = tetherTargets[index - 1];
-          const b = tetherTargets[index];
+        for (const { a, b, anchor } of tetherPairs) {
           const body = Matter.Constraint.create({
             bodyA: a.body,
-            bodyB: b.body,
+            bodyB: b?.body,
+            pointB: anchor,
             length: parameters.tetherLength,
             stiffness: Math.max(0.001, Math.min(0.1, strength)),
-            damping: 0.05,
+            damping: parameters.tetherDamping ?? 0.05,
             label: `ability:${id}`,
           });
           Matter.Composite.add(this.host.world.engine.world, body);
@@ -602,7 +666,11 @@ export class AbilitySystem {
             body,
             a,
             b,
-            generations: [a.generation, b.generation],
+            anchor,
+            start: this.host.time,
+            startLength: body.length,
+            endLength: parameters.tetherEndLength ?? body.length,
+            generations: [a.generation, b?.generation ?? 0],
             expires: this.host.time + duration,
             chain,
           });
@@ -848,20 +916,27 @@ export class AbilitySystem {
       if (
         tether.expires <= this.host.time ||
         !tether.a.alive ||
-        !tether.b.alive ||
+        (tether.b && !tether.b.alive) ||
         tether.a.generation !== tether.generations[0] ||
-        tether.b.generation !== tether.generations[1] ||
+        (tether.b && tether.b.generation !== tether.generations[1]) ||
         tether.a.body !== tether.body.bodyA ||
-        tether.b.body !== tether.body.bodyB
+        tether.b?.body !== tether.body.bodyB
       ) {
         Matter.Composite.remove(this.host.world.engine.world, tether.body);
         this.tethers.splice(index, 1);
         continue;
       }
-      const distance = length(subtract(tether.a.body.position, tether.b.body.position));
+      const progress = Math.max(
+        0,
+        Math.min(1, (this.host.time - tether.start) / (tether.expires - tether.start)),
+      );
+      tether.body.length = tether.startLength + (tether.endLength - tether.startLength) * progress;
+      const distance = length(
+        subtract(tether.a.body.position, tether.b?.body.position ?? tether.anchor!),
+      );
       if (Math.abs(distance - tether.body.length) > 0.1)
         for (const entity of [tether.a, tether.b])
-          if (!entity.body.isStatic) {
+          if (entity && !entity.body.isStatic) {
             this.host.markCause(entity, tether.chain);
             if (entity.kind === 'projectile') entity.redirected = true;
           }

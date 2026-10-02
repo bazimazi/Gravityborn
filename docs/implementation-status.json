@@ -514,7 +514,7 @@
         "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "428 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
+      "remaining": "473 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
     },
     {
       "section": 40,
@@ -1092,7 +1092,7 @@
         "scripts/validate-content.ts",
         "tests/tactical-enemies.test.ts"
       ],
-      "remaining": "Current catalog: nine biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 82 powers, 82 relics, ten classes and 428 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
+      "remaining": "Current catalog: nine biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 91 powers, 91 relics, ten classes and 473 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
     },
     {
       "section": 83,
@@ -1105,7 +1105,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Ten classes, 150 combined powers/relics, nine regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
+      "remaining": "Ten classes, 182 combined powers/relics, nine regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
     },
     {
       "section": 84,
@@ -1116,7 +1116,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with nine regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 75/75 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "Most named launch systems exist, with nine regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 91/91 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,

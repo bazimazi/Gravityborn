@@ -1,4 +1,4 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { Game } from '../src/gameplay/game';
 import { DebugSession } from '../src/gameplay/debug';
 import { Expedition } from '../src/progression/expedition';
@@ -61,14 +61,20 @@ it('upgrade cards expose rarity, current level, tags, and the resulting evolutio
   game.abilities.learn('pulse');
   expect(upgradeMetadata(run, choice)).toContain('LEGENDARY');
   expect(upgradeMetadata(run, choice)).toContain('EVOLVES');
-  // Inspect all deterministic offers until the evolution is drawn.
-  for (let i = 0; i < 100; i++) {
-    run.build.choices = [];
-    const offer = run.build.offer().find((entry) => entry.id === choice.id);
-    if (offer) {
-      expect(offer.description).toBe(abilityById.get('nova')!.description);
-      return;
-    }
-  }
-  throw new Error('Evolution did not appear in the offer pool');
+  // This checks card content. Select the evolution from the actual pool instead
+  // of depending on a lucky draw as the authored catalog grows.
+  const shuffle = vi
+    .spyOn(run.build.random, 'shuffle')
+    .mockImplementation((pool) =>
+      [...pool].sort(
+        (a, b) =>
+          Number((b as { id: string }).id === choice.id) -
+          Number((a as { id: string }).id === choice.id),
+      ),
+    );
+  const offer = run.build.offer().find((entry) => entry.id === choice.id);
+  expect(offer).toBeDefined();
+  expect(offer!.description).toBe(abilityById.get('nova')!.description);
+  shuffle.mockRestore();
+  game.world.dispose();
 });

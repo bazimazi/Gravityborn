@@ -3,6 +3,7 @@ import { specialistAbilities } from './specialist-abilities';
 import { kineticAbilities } from './kinetic-abilities';
 import { dynamicFieldAbilities } from './dynamic-field-abilities';
 import { surfaceAbilities } from './surface-abilities';
+import { tetherAbilities } from './tether-abilities';
 import type { SurfaceValues } from '../core/surface';
 
 export type EffectKind =
@@ -56,6 +57,10 @@ export interface AbilityDefinition {
     falloff?: 'constant' | 'linear' | 'inverseSquare';
     travelSpeed?: number;
     tetherLength?: number;
+    tetherEndLength?: number;
+    tetherTopology?: 'chain' | 'star' | 'ring' | 'anchor';
+    tetherPlayer?: boolean;
+    tetherDamping?: number;
     selfOnly?: boolean;
     attach?: boolean;
     fieldCount?: number;
@@ -78,6 +83,7 @@ export interface AbilityDefinition {
 
 export const abilities: AbilityDefinition[] = [
   ...surfaceAbilities,
+  ...tetherAbilities,
   {
     id: 'beacon',
     name: 'Gravity Beacon',
@@ -486,7 +492,10 @@ export const abilities: AbilityDefinition[] = [
   },
 ];
 
-for (const definition of abilities)
+for (const definition of abilities) {
   if (definition.effect === 'field' && !definition.tags.includes('Field'))
     definition.tags.push('Field');
+  if (definition.effect === 'tether' && !definition.tags.includes('Tether'))
+    definition.tags.push('Tether');
+}
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));
