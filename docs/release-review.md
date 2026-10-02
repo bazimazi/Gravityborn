@@ -30,7 +30,23 @@ The catalog now contains 100 powers, 100 relics, 25 base enemies, 99 curated eli
 | Standard / well | 2 / 10 / 0 | 176–192 seconds, 21 rooms |
 | Campaign / well | 0 / 12 / 0 | No wins; furthest attempt completed 21 rooms |
 
-These limited policies establish some unassisted route reachability and expose pressure points. They do not establish the specification's 10–15, 15–25 or 20–40+ minute human pacing bands. The campaign starts with no permanent progression in this harness. Increasing hit points or inserting mandatory waits merely to lengthen these bot runs would not establish the intended player experience.
+These limited policies establish some unassisted route reachability and expose pressure points. They do not establish the specification's 10–15, 15–25 or 20–40+ minute human pacing bands. The rows above use no permanent progression. Increasing hit points or inserting mandatory waits merely to lengthen these bot runs would not establish the intended player experience.
+
+## Progression and diagnostics continuation
+
+The follow-up audit found that Beyond the Horizon promised a guardian-victory requirement that its purchase handler did not enforce. The research definition now declares that requirement, and purchase validation and the observatory share one eligibility check. A guardian kill from an otherwise defeated expedition qualifies after settlement. Older profiles with completed expedition victories also qualify; already purchased research remains learned. New tests cover costs, prerequisites, failed-purchase atomicity, save recovery and the mobile research UI.
+
+The playtest harness now accepts `--progression earned` and `--details`. Earned mode begins with an empty profile, settles completed attempts through the normal progression code, spends only earned currency/research, and round-trips the profile through its save reader between attempts. It prioritizes survival research, then ordinary research-tree order; equipment purchases prioritize Basalt Shell and five Lattice pieces, followed by legal upgrades. A requested class remains Manipulator until its unlock can be afforded. A locked mode fails explicitly instead of silently being reported as a different mode.
+
+```
+npx tsx scripts/expedition-playtest.ts --mode campaign --strategy well --progression earned --runs 12 --details
+```
+
+This deterministic batch produced **one victory, eleven defeats and zero timeouts**. Seed 4 completed all 63 rooms and nine regions in **602 simulated seconds**. It began with 125.9 maximum integrity, eight purchased research nodes, a level-two Basalt Shell and five level-one Lattice pieces, earned from the preceding four defeated attempts. The harness records this starting build, region, final room, damage categories and optional per-room outcomes. Ten defeats ended in Contact damage and one in Projectile+Velocity damage. This supports full-campaign reachability with earned progression; it does not establish a human win rate or demonstrate that contact damage should be nerfed for a limited movement policy.
+
+The game also now records bounded local RoomStarted, RoomCleared, RoomFailed, RoomAbandoned and RoomDamage counters, grouped by mode, region and encounter type. Started values record entry integrity; end values record combat seconds; damage records the resolved hit amount, including any overkill. Optional event fights use their actual encounter type. Noncombat visits are excluded. An interrupted process may leave an attempt without an outcome. The observatory shows up to six groups ordered by defeats, average damage per attempt and average time per clear. Disable, clear, save recovery and display work in the browser checks. Guardian attempt subjects now match guardian kill IDs; older numeric attempt subjects remain historical records rather than being reinterpreted.
+
+Current verification: **652 unit tests**, **104 browser checks with four platform-specific skips**, content validation and the production offline test pass. Production JavaScript is 460.95 kB (139.40 kB gzip). This continuation changes research eligibility and diagnostics, not active-run physics, so replay revision r24 remains compatible. Native package identity and smoke-test status are recorded in `native-delivery.md`.
 
 ## Completion boundary
 

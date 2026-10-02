@@ -17,6 +17,11 @@ export const diagnosticEvents = [
   'UpgradeRerolls',
   'RunAbandoned',
   'DifficultySelected',
+  'RoomStarted',
+  'RoomCleared',
+  'RoomFailed',
+  'RoomAbandoned',
+  'RoomDamage',
 ] as const;
 export type DiagnosticEvent = (typeof diagnosticEvents)[number];
 export interface DiagnosticSample {

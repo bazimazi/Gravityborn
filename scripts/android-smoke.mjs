@@ -53,6 +53,14 @@ await expect(page.locator('#gravity-name')).toHaveText('LEFT');
 await expect(page.locator('#timer')).not.toHaveText('00:00');
 await page.getByRole('button', { name: 'Pause game', exact: true }).click();
 await device.screenshot({ path: 'artifacts/android-native.png' });
+await page.getByRole('button', { name: 'Progression hub' }).click();
+const diagnostics = page.locator('details').filter({
+  has: page.locator('[data-run-action="diagnostics-clear"]'),
+});
+await diagnostics.locator('summary').click();
+await expect(diagnostics.getByRole('heading', { name: 'Chamber outcomes' })).toBeVisible();
+await expect(diagnostics.locator('article').first()).toContainText('average damage received');
+await page.getByRole('button', { name: 'Close progression' }).click();
 await device.shell('am force-stop com.bazimazi.gravityborn');
 await device.shell('am start -n com.bazimazi.gravityborn/.MainActivity');
 const resumed = await (await device.webView({ pkg: 'com.bazimazi.gravityborn' })).page();
@@ -84,6 +92,7 @@ await writeFile(
         'native JSON file export',
         'OS share chooser and cancellation',
         'native archive setting persistence',
+        'live chamber diagnostics',
       ],
     },
     null,

@@ -86,6 +86,8 @@ Browser tests launch their own server at 127.0.0.1:5187 and cover Chromium deskt
 
 With the dev server running, `npm run playtest` performs a longer input-driven browser attempt and saves screenshots to `artifacts/`. Tests and screenshots never ship in the production bundle. Read-only development diagnostics are stripped from production builds.
 
+For an input-only campaign simulation with progression earned across attempts, run `npx tsx scripts/expedition-playtest.ts --mode campaign --strategy well --progression earned --runs 12 --details`. It prints starting builds, damage categories and room outcomes as JSON. Omit `--progression earned` to start every attempt with no permanent loadout. In the game, **Observatory → Local play diagnostics → Chamber outcomes** shows local encounter results; recording can be disabled and records can be exported or cleared.
+
 See [architecture](docs/architecture.md), [launch-content review](docs/release-review.md), [original prototype review](docs/prototype-review.md), and the [roadmap](docs/roadmap.md) for implementation boundaries and the next validation gate.
 
 Compact challenge sharing is available in **Observatory → Run archive & ghosts**. Copy a recorded run's challenge code or paste someone else's code to select its seed and rules. Ordinary runs use your own progression; daily/weekly challenges use their fixed starting build. Full JSON exports also include build/results and any saved ghost. Native JSON exports open the OS share sheet.

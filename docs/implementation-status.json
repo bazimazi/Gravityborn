@@ -279,7 +279,7 @@
         "tests/rooms.test.ts",
         "docs/release-review.md"
       ],
-      "remaining": "All run modes and multiwave encounters are implemented. Twelve input-only seeds per policy produced seven quick victories (47–93 simulated seconds), two standard victories with well-focused choices (176–192 seconds), and no campaign victories with the same policy and no permanent loadout. All batches had zero timeouts. Instant bot decisions do not establish the specified human pacing; balance and pacing remain open."
+      "remaining": "All run modes and multiwave encounters are implemented. Fresh-profile input-only batches include quick and standard victories. A twelve-attempt campaign batch carrying only earned progression completed all 63 rooms and nine regions once (602 simulated seconds), with eleven defeats and zero timeouts. The full starting build and limitations are documented in the release review. Instant bot decisions do not establish human pacing or balanced win rates."
     },
     {
       "section": 22,
@@ -387,9 +387,10 @@
         "src/progression/profile.ts",
         "src/content/research.ts",
         "tests/save.test.ts",
-        "tests/mastery.test.ts"
+        "tests/mastery.test.ts",
+        "tests/equipment.test.ts"
       ],
-      "remaining": "Two permanent currencies fund classes, research, crafting, equipment upgrades and affixes. Defeats retain earned discoveries and bounded rewards; run settlement and challenges cannot award twice."
+      "remaining": "Two permanent currencies fund classes, research, crafting, equipment upgrades and affixes. Defeats retain earned discoveries and bounded rewards; run settlement and challenges cannot award twice. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible."
     },
     {
       "section": 30,
@@ -401,7 +402,7 @@
         "src/progression/build.ts",
         "tests/equipment.test.ts"
       ],
-      "remaining": "Twelve nodes across Gravity Mastery, Survivor, Research, Technology, Discovery and Mastery unlock choices, equipment tools, regions and endless with modest numerical benefits. Prerequisites and purchases are validated."
+      "remaining": "Twelve nodes across Gravity Mastery, Survivor, Research, Technology, Discovery and Mastery unlock choices, equipment tools, regions and endless with modest numerical benefits. Prerequisites and purchases are validated. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible."
     },
     {
       "section": 31,
@@ -549,7 +550,7 @@
         "tests/equipment.test.ts",
         "tests/modes.test.ts"
       ],
-      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external."
+      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible."
     },
     {
       "section": 42,
@@ -1177,9 +1178,10 @@
         "src/progression/build.ts",
         "src/presentation/diagnostics.ts",
         "tests/diagnostics.test.ts",
-        "tests/browser/game.spec.ts"
+        "tests/browser/game.spec.ts",
+        "tests/browser/diagnostics.spec.ts"
       ],
-      "remaining": "All listed gameplay events record bounded local counts/totals/maxima and a 300-event history. Export, disable and clear are tested across three browsers; no network analytics service is required. Human playtest evidence is still needed for balance decisions."
+      "remaining": "All listed gameplay events record bounded local counts/totals/maxima and a 300-event history. New chamber metrics group attempts, clears, defeats, abandonment and resolved damage by mode/region/encounter type; the observatory shows six groups with separate damage and clear-time averages. Guardian attempts and kills share catalog IDs. Export, disable, clear and recovery are tested; no network service is used. Human playtest evidence is still needed for balance decisions."
     },
     {
       "section": 88,

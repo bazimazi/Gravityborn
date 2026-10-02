@@ -64,7 +64,16 @@ export class Expedition {
   message = '';
   shop: ShopItem[] = [];
   private eventReward?: EventChoice;
+  private roomDiagnostic?: string;
   constructor(readonly game: Game) {
+    game.events.on('damaged', (event) => {
+      if (this.phase === 'room' && this.roomDiagnostic && event.player && event.amount > 0)
+        game.events.emit('diagnostic', {
+          event: 'RoomDamage',
+          subject: this.roomDiagnostic,
+          value: event.amount,
+        });
+    });
     game.events.on('entitySpawned', (event) => {
       if (this.phase === 'room') this.discoverEntity(event.kind as EntityKind);
     });
@@ -129,6 +138,7 @@ export class Expedition {
     });
     game.events.on('ended', (event) => {
       if (this.phase !== 'room') return;
+      this.recordRoomEnd(event.won ? 'RoomCleared' : 'RoomFailed');
       this.elapsed += game.time;
       this.score += game.stats.score;
       this.bestChain = Math.max(this.bestChain, game.chains.best);
@@ -341,13 +351,16 @@ export class Expedition {
             ? 'Defeat the vault keepers to recover a rare relic and a hidden memory.'
             : 'Clear the chamber with gravity.';
       this.game.start();
+      this.roomDiagnostic = `${this.mode}:${biomes[this.biome].id}:${roomType}`;
+      this.game.events.emit('diagnostic', {
+        event: 'RoomStarted',
+        subject: this.roomDiagnostic,
+        value: this.game.player.health,
+      });
       if (node.type === 'boss')
         this.game.events.emit('diagnostic', {
           event: 'BossAttempts',
-          subject:
-            this.mode === 'boss_rush'
-              ? room.spawns.find((spawn) => spawn.kind in bossDefinitions)!.kind
-              : String(this.biome),
+          subject: room.spawns.find((spawn) => spawn.kind in bossDefinitions)!.kind,
         });
     } else if (node.type === 'shop') {
       this.phase = 'shop';
@@ -463,6 +476,7 @@ export class Expedition {
   }
   abandon(): void {
     if (this.active && this.phase !== 'summary') {
+      if (this.phase === 'room') this.recordRoomEnd('RoomAbandoned');
       this.game.events.emit('runEnded', {
         id: this.id,
         outcome: 'abandoned',
@@ -497,6 +511,15 @@ export class Expedition {
       subject: outcome,
       value: this.elapsed,
     });
+  }
+  private recordRoomEnd(event: 'RoomCleared' | 'RoomFailed' | 'RoomAbandoned'): void {
+    if (!this.roomDiagnostic) return;
+    this.game.events.emit('diagnostic', {
+      event,
+      subject: this.roomDiagnostic,
+      value: this.game.time,
+    });
+    this.roomDiagnostic = undefined;
   }
   snapshot(): unknown {
     if (this.phase === 'inactive' || this.phase === 'room') return null;
@@ -590,6 +613,7 @@ export class Expedition {
       }
       this.game.reset(false);
       this.eventReward = undefined;
+      this.roomDiagnostic = undefined;
       this.discoveries = new Set(discoveries);
       this.mastery = mastery;
       this.metrics = metrics;

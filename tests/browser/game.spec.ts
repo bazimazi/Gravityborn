@@ -15,6 +15,36 @@ interface Snapshot {
 const snapshot = (page: Page): Promise<Snapshot> =>
   page.evaluate(() => (window as unknown as { __gravityborn: () => Snapshot }).__gravityborn());
 
+test('Endless research requires a recorded guardian victory in the observatory', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const profile = newProfile();
+  profile.research = 20;
+  profile.skills = ['mastery'];
+  for (const victories of [0, 1]) {
+    profile.metrics.bosses = victories;
+    await page.evaluate((profile) => {
+      localStorage.removeItem('gravityborn.save.backup');
+      localStorage.setItem('gravityborn.save', JSON.stringify({ version: 1, profile }));
+    }, profile);
+    await page.reload();
+    await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+    await page.getByText('Research · six progression trees', { exact: true }).click();
+    const unlock = page.locator('[data-research="endless"]');
+    if (!victories) {
+      await expect(unlock).toBeDisabled();
+      await expect(unlock).toContainText('after a guardian victory');
+    } else {
+      await expect(unlock).toBeEnabled();
+      await unlock.click();
+      await expect(unlock).toBeDisabled();
+      await expect(page.locator('#run-mode option[value="endless"]')).toBeEnabled();
+      await expect(page.locator('#run-mode option[value="planetary"]')).toBeEnabled();
+    }
+  }
+});
+
 test('earned core appearance and titles can be selected and survive reload', async ({
   page,
 }, testInfo) => {

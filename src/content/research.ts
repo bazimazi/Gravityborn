@@ -6,6 +6,7 @@ export interface ResearchNode {
   description: string;
   cost: number;
   requires?: string;
+  requiresGuardian?: boolean;
   modifier?: Omit<Modifier, 'id'>;
 }
 export const researchNodes: ResearchNode[] = [
@@ -102,6 +103,7 @@ export const researchNodes: ResearchNode[] = [
     description: 'Unlock endless expeditions after a guardian victory.',
     cost: 8,
     requires: 'mastery',
+    requiresGuardian: true,
   },
 ];
 export const mutations: {

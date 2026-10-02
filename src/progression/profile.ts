@@ -156,16 +156,20 @@ export function settleRun(profile: Profile, run: Expedition): boolean {
     }
   return true;
 }
-export function purchaseResearch(profile: Profile, id: string): boolean {
+export function canPurchaseResearch(profile: Profile, id: string): boolean {
   const node = researchNodes.find((node) => node.id === id);
-  if (
-    !node ||
-    profile.skills.includes(id) ||
-    profile.research < node.cost ||
-    (node.requires && !profile.skills.includes(node.requires))
-  )
-    return false;
-  profile.research -= node.cost;
+  return Boolean(
+    node &&
+      !profile.skills.includes(id) &&
+      profile.research >= node.cost &&
+      (!node.requires || profile.skills.includes(node.requires)) &&
+      // Older profiles may have expedition wins but no per-boss metrics.
+      (!node.requiresGuardian || profile.wins > 0 || (profile.metrics.bosses ?? 0) > 0),
+  );
+}
+export function purchaseResearch(profile: Profile, id: string): boolean {
+  if (!canPurchaseResearch(profile, id)) return false;
+  profile.research -= researchNodes.find((node) => node.id === id)!.cost;
   profile.skills.push(id);
   return true;
 }

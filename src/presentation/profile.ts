@@ -2,7 +2,7 @@ import { classes } from '../content/classes';
 import { affixes, equipment, equipmentById, equipmentSlots } from '../content/equipment';
 import { mutations, researchNodes } from '../content/research';
 import { biomes } from '../content/rooms';
-import type { Profile } from '../progression/profile';
+import { canPurchaseResearch, type Profile } from '../progression/profile';
 import type { SaveState } from '../core/save';
 import { modes, isEndlessMode } from '../content/modes';
 import { contracts, difficulties, difficultyDescriptions } from '../content/phenomena';
@@ -62,7 +62,7 @@ export function profileView(profile: Profile, state: SaveState, checkpoint: bool
     })
     .join('')}</div>
   <details><summary>Craft equipment · ${equipment.length} designs</summary><div class="class-grid">${equipment.map((item) => `<button class="run-card" data-craft="${item.id}" ${profile.equipment[item.id] || profile.shards < item.cost ? 'disabled' : ''}><small>${profile.equipment[item.id] ? 'OWNED' : `${item.cost} SHARDS · ${item.slot.toUpperCase()}`}</small><strong>${item.name}</strong><span>${item.description}</span></button>`).join('')}</div></details></details>
-  <details><summary>Research · six progression trees</summary><div class="class-grid">${researchNodes.map((node) => `<button class="run-card" data-research="${node.id}" ${profile.skills.includes(node.id) || profile.research < node.cost || (node.requires && !profile.skills.includes(node.requires)) ? 'disabled' : ''}><small>${node.tree.toUpperCase()} · ${profile.skills.includes(node.id) ? 'LEARNED' : `${node.cost} RESEARCH`}</small><strong>${node.name}</strong><span>${node.description}${node.requires ? ` Requires ${researchNodes.find((candidate) => candidate.id === node.requires)!.name}.` : ''}</span></button>`).join('')}</div></details>
+  <details><summary>Research · six progression trees</summary><div class="class-grid">${researchNodes.map((node) => `<button class="run-card" data-research="${node.id}" ${!canPurchaseResearch(profile, node.id) ? 'disabled' : ''}><small>${node.tree.toUpperCase()} · ${profile.skills.includes(node.id) ? 'LEARNED' : `${node.cost} RESEARCH`}</small><strong>${node.name}</strong><span>${node.description}${node.requires ? ` Requires ${researchNodes.find((candidate) => candidate.id === node.requires)!.name}.` : ''}</span></button>`).join('')}</div></details>
   <label class="setting-row">Physics mutation <select id="mutation-select" ${profile.skills.includes('mutations') ? '' : 'disabled'}><option value="">None</option>${mutations.map((mutation) => `<option value="${mutation.id}" ${profile.mutation === mutation.id ? 'selected' : ''}>${mutation.name}</option>`).join('')}</select></label><p class="dialog-copy">${mutations.find((mutation) => mutation.id === profile.mutation)?.description ?? 'Research Mutable Core to select one physics mutation.'}</p>
   ${codexView(profile)}
   ${diagnosticsView(profile.diagnostics)}

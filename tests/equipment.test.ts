@@ -7,10 +7,44 @@ import {
   upgradeEquipment,
   reforgeEquipment,
   purchaseResearch,
+  canPurchaseResearch,
   readProfile,
 } from '../src/progression/profile';
 import { Game } from '../src/gameplay/game';
 import { Expedition } from '../src/progression/expedition';
+
+it('requires a guardian victory before buying Endless research, including after save recovery', () => {
+  const profile = newProfile();
+  profile.research = 20;
+  profile.skills = ['mastery'];
+  expect(canPurchaseResearch(profile, 'endless')).toBe(false);
+  expect(purchaseResearch(profile, 'endless')).toBe(false);
+  expect(profile.research).toBe(20);
+  // A guardian killed in an otherwise defeated expedition still qualifies.
+  profile.metrics.bosses = 1;
+  const restored = readProfile(JSON.parse(JSON.stringify(profile)));
+  expect(canPurchaseResearch(restored, 'endless')).toBe(true);
+  expect(purchaseResearch(restored, 'endless')).toBe(true);
+  expect(restored.research).toBe(12);
+  expect(purchaseResearch(restored, 'endless')).toBe(false);
+  expect(restored.research).toBe(12);
+});
+
+it('accepts legacy expedition victories while retaining research cost and prerequisite gates', () => {
+  const profile = newProfile();
+  profile.wins = 1;
+  profile.research = 20;
+  expect(purchaseResearch(profile, 'endless')).toBe(false);
+  profile.skills = ['mastery'];
+  profile.research = 7;
+  expect(purchaseResearch(profile, 'endless')).toBe(false);
+  profile.research = 8;
+  expect(purchaseResearch(profile, 'endless')).toBe(true);
+  expect(profile.research).toBe(0);
+  // Existing purchases remain learned when reading a pre-gate save.
+  profile.wins = 0;
+  expect(readProfile(profile).skills).toContain('endless');
+});
 
 it('crafts, upgrades, and reforges equipment with bounded spending and requirements', () => {
   const profile = newProfile();
