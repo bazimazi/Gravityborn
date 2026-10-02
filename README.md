@@ -57,10 +57,10 @@ Beyond the original laboratory, the current implementation includes:
 
 - 100 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 100 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
 - 22 additional enemy behaviors, eight elite modifiers forming 99 curated variants, ten bosses, and nine biome definitions.
-- Seeded authored-room composition, branching routes, puzzles, hazards, shops, ten events, and three-choice XP upgrades with a guaranteed eligible owned-power or well upgrade.
+- Seeded authored-room composition, branching routes, puzzles, hazards, shops, ten events, and three-choice XP upgrades with a guaranteed eligible owned-power or well upgrade. Planet/tether manipulation powers require a compatible source power before entering offers.
 - Ten classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and nine mutations.
 - Quick, standard, long, campaign, endless, planetary endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
-- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 518 reward-bearing challenges.
+- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 518 reward-bearing challenges. Cut the Lines and Gyroscopic Brake use control objectives instead of kill requirements; each mastery card lists its objectives and progress.
 - Physical XP/shard pickups, nine material definitions, contact fire/quenching, conductive discharge, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Seven shop purchase categories with build-aware power selection, equipment replacement, and persistent sold inventory.
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.

@@ -45,7 +45,13 @@ export interface GameEvents {
     damageTags: string[];
   };
   ended: { won: boolean };
-  abilityUsed: { id: string; tags: string[]; position: Vec2; level: number };
+  abilityUsed: {
+    id: string;
+    tags: string[];
+    position: Vec2;
+    level: number;
+    controlTargets?: number;
+  };
   collected: { kind: 'xp' | 'shard'; amount: number; position: Vec2 };
 }
 

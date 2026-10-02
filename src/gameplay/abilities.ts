@@ -217,6 +217,7 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
+    let controlTargets = 0;
     const movable = targets.filter(
       (entity) => !entity.body.isStatic && !['xp', 'shard'].includes(entity.kind),
     );
@@ -624,6 +625,7 @@ export class AbilitySystem {
       }
       case 'tether_cut':
       case 'tether_release': {
+        if (definition.effect === 'tether_cut') controlTargets = selectedTethers.length;
         const kicks = new Map<Entity, Vec2>();
         for (const tether of selectedTethers) {
           if (definition.effect === 'tether_release') {
@@ -685,6 +687,7 @@ export class AbilitySystem {
           if (Math.abs(after - before) < 1e-8) continue;
           Matter.Sleeping.set(entity.body, false);
           Matter.Body.setAngularVelocity(entity.body, after);
+          controlTargets++;
           this.host.markCause(entity, chain);
           // Rotation alone does not redirect a projectile's flight.
         }
@@ -1047,6 +1050,7 @@ export class AbilitySystem {
       tags: repeated ? [...definition.tags, 'Echo'] : definition.tags,
       position: point,
       level,
+      ...(definition.mastery === 'control' ? { controlTargets } : {}),
     });
     return true;
   }

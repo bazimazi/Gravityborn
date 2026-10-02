@@ -54,6 +54,8 @@ export interface AbilityDefinition {
   target: 'point' | 'player';
   maxLevel: number;
   evolution?: string;
+  mastery?: 'control';
+  requiresConstruct?: 'planet' | 'tether' | 'anchor';
   parameters?: {
     surface?: Partial<SurfaceValues>;
     momentumScale?: number;
@@ -486,10 +488,11 @@ export const abilities: AbilityDefinition[] = [
   ...dynamicFieldAbilities,
   {
     id: 'planet_split',
+    requiresConstruct: 'planet',
     name: 'Planet Split',
     rarity: 'legendary',
     description:
-      'Split one of your summoned planets into two destructible moons in open space. They share its mass, inherit motion and temporary effects, and keep only its remaining lifetime.',
+      'Split one of your summoned planets into two destructible moons in open space. They share its mass, inherit motion and temporary effects, and keep only its remaining lifetime. Requires a planet-summoning power.',
     tags: ['Gravity', 'Mass', 'Orbit'],
     effect: 'split',
     energy: 28,

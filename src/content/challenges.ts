@@ -1,4 +1,5 @@
 import { abilities } from './abilities';
+import { masteryMilestones } from './mastery';
 export interface ChallengeDefinition {
   id: string;
   name: string;
@@ -95,37 +96,12 @@ export const challenges: ChallengeDefinition[] = [
     research: 6,
   },
 ];
-const milestones = [
-  { id: 'practice', name: 'Practice', metric: 'casts', target: 50, description: 'Cast 50 times.' },
-  { id: 'force', name: 'Force', metric: 'kills', target: 100, description: 'Cause 100 kills.' },
-  {
-    id: 'breaker',
-    name: 'Breaker',
-    metric: 'elites',
-    target: 1,
-    description: 'Defeat an elite with this power.',
-  },
-  {
-    id: 'cascade',
-    name: 'Cascade',
-    metric: 'chain',
-    target: 10,
-    description: 'Cause a kill in a chain of at least 10 effects.',
-  },
-  {
-    id: 'master',
-    name: 'Master',
-    metric: 'wins',
-    target: 1,
-    description: 'Win with at least half of all kills attributed to this power.',
-  },
-];
 for (const ability of [
   { id: 'well', name: 'Gravity Well' },
   { id: 'flip', name: 'Gravity Flip' },
   ...abilities,
 ])
-  for (const milestone of milestones)
+  for (const milestone of masteryMilestones(ability.id))
     challenges.push({
       id: `${ability.id}_${milestone.id}`,
       name: `${ability.name}: ${milestone.name}`,

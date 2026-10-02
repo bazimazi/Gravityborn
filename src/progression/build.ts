@@ -12,6 +12,7 @@ import type { Profile } from './profile';
 import { wellEvolutions } from '../content/well';
 import { matchesSynergy } from './synergies';
 import { collectTags } from '../core/tags';
+import { canDevelopAbility } from './ability-options';
 
 export interface UpgradeChoice {
   id: string;
@@ -103,6 +104,15 @@ export class RunBuild {
     }
   }
   offer(): UpgradeChoice[] {
+    // Older checkpoints can contain an offer generated before prerequisite rules.
+    if (
+      this.choices.some(
+        (choice) =>
+          choice.kind === 'ability' &&
+          !canDevelopAbility(abilityById.get(choice.target)!, this.game.abilities.levels),
+      )
+    )
+      this.choices = [];
     if (this.choices.length) {
       for (const choice of this.choices) {
         if (choice.kind !== 'ability') continue;
@@ -129,6 +139,7 @@ export class RunBuild {
       });
     }
     for (const ability of abilities) {
+      if (!canDevelopAbility(ability, this.game.abilities.levels)) continue;
       const level = this.game.abilities.levels.get(ability.id) ?? 0;
       const isEvolution = abilities.some((parent) => parent.evolution === ability.id);
       if (isEvolution && !level) continue;
@@ -185,6 +196,11 @@ export class RunBuild {
     if (this.pending <= 0) return false;
     const choice = this.choices.find((choice) => choice.id === id);
     if (!choice) return false;
+    if (
+      choice.kind === 'ability' &&
+      !canDevelopAbility(abilityById.get(choice.target)!, this.game.abilities.levels)
+    )
+      return false;
     if (choice.kind === 'well') {
       if (this.wellLevel >= wellEvolutions.length) return false;
       this.wellLevel++;

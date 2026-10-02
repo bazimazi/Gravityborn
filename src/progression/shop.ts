@@ -3,6 +3,7 @@ import { equipment, equipmentById } from '../content/equipment';
 import { mutations } from '../content/research';
 import { relics, relicById } from '../content/relics';
 import type { RunBuild } from './build';
+import { canDevelopAbility } from './ability-options';
 
 export interface ShopItem {
   id: string;
@@ -66,6 +67,7 @@ export function shopInventory(build: RunBuild): ShopItem[] {
   );
   const powers = abilities.filter(
     (ability) =>
+      canDevelopAbility(ability, build.game.abilities.levels) &&
       !abilities.some((parent) => parent.evolution === ability.id) &&
       (build.game.abilities.levels.get(ability.id) ?? 0) < ability.maxLevel,
   );
@@ -92,7 +94,10 @@ export function canBuy(build: RunBuild, item: ShopItem): boolean {
   if (relicById.has(item.id)) return !build.relics.includes(item.id);
   const [kind, target] = item.id.split(':');
   if (kind === 'ability')
-    return (build.game.abilities.levels.get(target) ?? 0) < abilityById.get(target)!.maxLevel;
+    return (
+      canDevelopAbility(abilityById.get(target)!, build.game.abilities.levels) &&
+      (build.game.abilities.levels.get(target) ?? 0) < abilityById.get(target)!.maxLevel
+    );
   if (kind === 'equipment') return !build.equipment.some((entry) => entry.id === target);
   return build.mutation !== target;
 }

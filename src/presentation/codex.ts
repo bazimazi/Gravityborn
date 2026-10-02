@@ -9,6 +9,7 @@ import { challenges } from '../content/challenges';
 import { coreCosmetics, challengeMemories } from '../content/cosmetics';
 import { challengeProgress } from '../progression/challenges';
 import { freshMastery, masteryLevel } from '../progression/mastery';
+import { masteryMilestones } from '../content/mastery';
 import type { Profile } from '../progression/profile';
 import { materialDescriptions } from '../content/objects';
 import { eliteCompatibility, type VariantKind } from '../content/variants';
@@ -181,14 +182,21 @@ export function codexView(profile: Profile): string {
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]!,
     );
   return `<details><summary>Codex & collection</summary><p class="dialog-copy">Discoveries are recorded when an expedition ends, including a defeat. Challenge rewards unlock equipment and research.</p>${sections.map((section) => `<details><summary>${section.name} · ${section.entries.filter((entry) => entry.known).length} / ${section.entries.length}</summary><div class="codex-grid">${section.entries.map((entry) => `<article class="codex-entry ${entry.known ? '' : 'undiscovered'}"><h3>${entry.known ? escape(entry.name) : 'Undiscovered'}</h3><p>${entry.known ? escape(entry.text) : 'Explore further to record this discovery.'}</p></article>`).join('')}</div></details>`).join('')}</details>
-  <details><summary>Ability mastery</summary><p class="dialog-copy">Five milestones for each power: cast 50 times, cause 100 kills, defeat an elite, create a 10-effect chain, and win with at least half your kills attributed to that power.</p><div class="codex-grid">${[
+  <details><summary>Ability mastery</summary><p class="dialog-copy">Each power has five milestones. Combat powers reward causal kills and chains. Control powers reward actual interventions while hostiles remain, successful chamber clears and guardian encounters. Echoes do not count as additional casts or interventions.</p><div class="codex-grid">${[
     { id: 'well', name: 'Gravity Well' },
     { id: 'flip', name: 'Gravity Flip' },
     ...abilities,
   ]
     .map((ability) => {
       const progress = profile.abilityMastery[ability.id] ?? freshMastery();
-      return `<article class="codex-entry"><h3>${ability.name} · ${masteryLevel(progress)} / 5</h3><p>${progress.casts} casts · ${progress.kills} kills · ${progress.elites} elites · ${progress.chain} best chain · ${progress.wins} mastery victories</p></article>`;
+      return `<article class="codex-entry" data-mastery="${ability.id}"><h3>${ability.name} · ${masteryLevel(progress, ability.id)} / 5</h3><p>${masteryMilestones(
+        ability.id,
+      )
+        .map(
+          (item) =>
+            `${escape(item.name)}: ${progress[item.metric] ?? 0} / ${item.target}. ${escape(item.description)}`,
+        )
+        .join('<br>')}</p></article>`;
     })
     .join('')}</div></details>`;
 }

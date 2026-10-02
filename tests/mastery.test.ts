@@ -71,7 +71,15 @@ it('persists discoveries and grants challenge rewards once', () => {
   run.bestChain = 20;
   run.discoveries.add('planet:3');
   run.discoveries.add('lore:3');
-  run.mastery.pulse = { casts: 50, kills: 100, elites: 1, bosses: 1, chain: 10, wins: 1 };
+  run.mastery.pulse = {
+    ...freshMastery(),
+    casts: 50,
+    kills: 100,
+    elites: 1,
+    bosses: 1,
+    chain: 10,
+    wins: 1,
+  };
   expect(settleRun(profile, run)).toBe(true);
   expect(profile.challenges).toContain('chain_twenty');
   expect(profile.challenges).toEqual(

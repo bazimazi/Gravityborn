@@ -279,7 +279,7 @@
         "tests/rooms.test.ts",
         "docs/release-review.md"
       ],
-      "remaining": "All run modes and multiwave encounters are implemented. Fresh-profile input-only batches include quick and standard victories. A twelve-attempt campaign batch carrying only earned progression completed all 63 rooms and nine regions once (602 simulated seconds), with eleven defeats and zero timeouts. The full starting build and limitations are documented in the release review. Instant bot decisions do not establish human pacing or balanced win rates."
+      "remaining": "All run modes and multiwave encounters are implemented. r24 input-only tests reached quick, standard and full earned-progression campaign victories. r25 changes acquisition pools; its 36 earned-progression campaign attempts produced two full 63-room victories, 34 defeats and no timeouts. Revision-specific results and limitations are documented in the release review. Human pacing and balance remain open."
     },
     {
       "section": 22,
@@ -291,9 +291,11 @@
         "src/progression/expedition.ts",
         "tests/progression.test.ts",
         "tests/shop.test.ts",
-        "tests/run-events.test.ts"
+        "tests/run-events.test.ts",
+        "src/progression/ability-options.ts",
+        "tests/ability-options.test.ts"
       ],
-      "remaining": "Physical XP/currency/energy, three-choice level-ups, powers, upgrades, passives, relics, temporary gear, mutations and discoveries integrate with room transitions. Offers, purchases, event rewards and snapshots preserve run state."
+      "remaining": "Physical XP/currency/energy, three-choice level-ups, powers, upgrades, passives, relics, temporary gear, mutations and discoveries integrate with room transitions. Offers, purchases, event rewards and snapshots preserve run state. New acquisition of Planet Split, tether cutting/releasing and anchor relocation requires a compatible learned construct source. Shops and level-ups share eligibility; owned powers remain developable and invalid legacy offers refresh without spending upgrades."
     },
     {
       "section": 23,
@@ -497,9 +499,11 @@
       "status": "implemented",
       "evidence": [
         "src/progression/shop.ts",
-        "tests/shop.test.ts"
+        "tests/shop.test.ts",
+        "src/progression/ability-options.ts",
+        "tests/ability-options.test.ts"
       ],
-      "remaining": "Seven purchase categories implemented with build-aware stock, costs, replacement semantics, single purchases, and saved inventories. Economy balance remains under playtest."
+      "remaining": "Seven purchase categories implemented with build-aware stock, costs, replacement semantics, single purchases, and saved inventories. Economy balance remains under playtest. New acquisition of Planet Split, tether cutting/releasing and anchor relocation requires a compatible learned construct source. Shops and level-ups share eligibility; owned powers remain developable and invalid legacy offers refresh without spending upgrades."
     },
     {
       "section": 38,
@@ -533,9 +537,12 @@
         "src/progression/mastery.ts",
         "src/progression/challenges.ts",
         "src/content/challenges.ts",
-        "tests/mastery.test.ts"
+        "tests/mastery.test.ts",
+        "src/content/mastery.ts",
+        "tests/control-mastery.test.ts",
+        "tests/browser/mastery.spec.ts"
       ],
-      "remaining": "Every catalog power plus well/flip has five mastery milestones based on casts, causal kills, elites, chain size and a victory contribution. New powers derive objectives automatically; human grind/balance review remains separate."
+      "remaining": "Every power plus well/flip has five authored mastery milestones. Combat tracks use casts, causal kills, elites, chains and victory contribution; Cut the Lines and Gyroscopic Brake use actual control targets, successful guardian encounters, multi-target precision and contributing chamber clears. Echo/no-op/post-combat effects cannot inflate interventions. Shared definitions generate challenges, levels and objective cards. Legacy fields and claimed rewards are preserved; human grind/balance review remains open."
     },
     {
       "section": 41,
@@ -1205,9 +1212,11 @@
         "src/content/equipment.ts",
         "src/content/research.ts",
         "tests/synergies.test.ts",
-        "docs/release-review.md"
+        "docs/release-review.md",
+        "src/progression/ability-options.ts",
+        "tests/ability-options.test.ts"
       ],
-      "remaining": "Mechanical trade-offs, density mutations, cast/flip/kill triggers, deployable fields and generic tag synergies provide build variety. Level-up offers reserve an eligible owned-power or well upgrade so the full catalog does not crowd out build development; exhausted builds retain three distinct fallback options. Seeded offers and restoration are tested. Human choice quality and archetype viability remain open."
+      "remaining": "Mechanical trade-offs, density mutations, cast/flip/kill triggers, deployable fields and generic tag synergies provide build variety. Level-up offers reserve an eligible owned-power or well upgrade so the full catalog does not crowd out build development; exhausted builds retain three distinct fallback options. Seeded offers and restoration are tested. Human choice quality and archetype viability remain open. New acquisition of Planet Split, tether cutting/releasing and anchor relocation requires a compatible learned construct source. Shops and level-ups share eligibility; owned powers remain developable and invalid legacy offers refresh without spending upgrades."
     },
     {
       "section": 90,

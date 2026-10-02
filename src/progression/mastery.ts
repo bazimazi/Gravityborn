@@ -1,5 +1,6 @@
 import { abilities } from '../content/abilities';
 import { finite, record } from '../core/save';
+import { masteryMilestones } from '../content/mastery';
 export interface MasteryProgress {
   casts: number;
   kills: number;
@@ -7,6 +8,10 @@ export interface MasteryProgress {
   bosses: number;
   chain: number;
   wins: number;
+  controlTargets: number;
+  controlRooms: number;
+  controlBosses: number;
+  controlPeak: number;
 }
 export const freshMastery = (): MasteryProgress => ({
   casts: 0,
@@ -15,14 +20,15 @@ export const freshMastery = (): MasteryProgress => ({
   bosses: 0,
   chain: 0,
   wins: 0,
+  controlTargets: 0,
+  controlRooms: 0,
+  controlBosses: 0,
+  controlPeak: 0,
 });
-export function masteryLevel(progress: MasteryProgress): number {
-  if (progress.casts < 50) return 0;
-  if (progress.kills < 100) return 1;
-  if (progress.elites < 1) return 2;
-  if (progress.chain < 10) return 3;
-  if (progress.wins < 1) return 4;
-  return 5;
+export function masteryLevel(progress: MasteryProgress, id?: string): number {
+  const milestones = masteryMilestones(id);
+  const incomplete = milestones.findIndex((item) => (progress[item.metric] ?? 0) < item.target);
+  return incomplete < 0 ? milestones.length : incomplete;
 }
 export function readMastery(value: unknown): Record<string, MasteryProgress> {
   const output: Record<string, MasteryProgress> = {};
@@ -44,6 +50,8 @@ export function mergeMastery(
     const progress = (target[id] ??= freshMastery());
     for (const key of Object.keys(progress) as (keyof MasteryProgress)[])
       progress[key] =
-        key === 'chain' ? Math.max(progress[key], value[key]) : progress[key] + value[key];
+        key === 'chain' || key === 'controlPeak'
+          ? Math.max(progress[key] ?? 0, value[key] ?? 0)
+          : (progress[key] ?? 0) + (value[key] ?? 0);
   }
 }

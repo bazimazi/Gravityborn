@@ -7,12 +7,14 @@ const power = (
 export const manipulationAbilities: AbilityDefinition[] = [
   power({
     id: 'tether_cut',
+    requiresConstruct: 'tether',
+    mastery: 'control',
     name: 'Cut the Lines',
     rarity: 'common',
     tags: ['Tether', 'Cut', 'Control'],
     effect: 'tether_cut',
     description:
-      'Sever your live tethers with an endpoint near your aim. Bodies keep their current velocity: release a swinging payload at the right moment.',
+      'Sever your live tethers with an endpoint near your aim. Bodies keep their current velocity: release a swinging payload at the right moment. Requires a tether-creating power.',
     energy: 8,
     cooldown: 2,
     radius: 220,
@@ -20,12 +22,13 @@ export const manipulationAbilities: AbilityDefinition[] = [
   }),
   power({
     id: 'tension_release',
+    requiresConstruct: 'tether',
     name: 'Tension Release',
     rarity: 'epic',
     tags: ['Tether', 'Release', 'Impact'],
     effect: 'tether_release',
     description:
-      'Sever nearby live tethers and turn their current stretch or compression into a final bounded kick. Relaxed links add no motion; fixed anchors push only their attached body.',
+      'Sever nearby live tethers and turn their current stretch or compression into a final bounded kick. Relaxed links add no motion; fixed anchors push only their attached body. Requires a tether-creating power.',
     energy: 25,
     cooldown: 7,
     radius: 240,
@@ -33,12 +36,13 @@ export const manipulationAbilities: AbilityDefinition[] = [
   }),
   power({
     id: 'anchor_recall',
+    requiresConstruct: 'anchor',
     name: 'Anchor Recall',
     rarity: 'rare',
     tags: ['Tether', 'Control', 'Gravity'],
     effect: 'reanchor',
     description:
-      'Move your nearby fixed tether anchors to your aim in open space. Attached bodies travel through the room under spring forces; their existing link lifetimes stay unchanged.',
+      'Move your nearby fixed tether anchors to your aim in open space. Attached bodies travel through the room under spring forces; their existing link lifetimes stay unchanged. Requires a fixed-anchor tether power.',
     energy: 20,
     cooldown: 5,
     radius: 320,
@@ -72,6 +76,7 @@ export const manipulationAbilities: AbilityDefinition[] = [
   }),
   power({
     id: 'gyroscopic_brake',
+    mastery: 'control',
     name: 'Gyroscopic Brake',
     rarity: 'rare',
     tags: ['Spin', 'Control', 'Defense'],

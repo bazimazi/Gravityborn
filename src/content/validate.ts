@@ -220,6 +220,18 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
     );
     check(effects.includes(item.effect), 'effect', 'Unknown effect.');
     check(
+      item.requiresConstruct === undefined ||
+        ['planet', 'tether', 'anchor'].includes(item.requiresConstruct),
+      'requiresConstruct',
+      'Unknown required construct.',
+    );
+    check(
+      item.mastery === undefined ||
+        (item.mastery === 'control' && ['tether_cut', 'spin'].includes(item.effect)),
+      'mastery',
+      'Control mastery requires a tether-cut or spin effect with target reporting.',
+    );
+    check(
       item.tags.length > 0 && new Set(item.tags).size === item.tags.length,
       'tags',
       'Provide distinct synergy tags.',

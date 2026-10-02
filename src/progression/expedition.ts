@@ -65,6 +65,8 @@ export class Expedition {
   shop: ShopItem[] = [];
   private eventReward?: EventChoice;
   private roomDiagnostic?: string;
+  private readonly roomControl = new Set<string>();
+  private readonly guardianControl = new Set<string>();
   constructor(readonly game: Game) {
     game.events.on('damaged', (event) => {
       if (this.phase === 'room' && this.roomDiagnostic && event.player && event.amount > 0)
@@ -84,7 +86,25 @@ export class Expedition {
     });
     game.events.on('abilityUsed', (event) => {
       if (this.phase === 'room' && !event.tags.includes('Echo')) {
-        (this.mastery[event.id] ??= freshMastery()).casts++;
+        const progress = (this.mastery[event.id] ??= freshMastery());
+        progress.casts++;
+        if (
+          abilityById.get(event.id)?.mastery === 'control' &&
+          Number.isFinite(event.controlTargets) &&
+          event.controlTargets! > 0 &&
+          game.enemyCount > 0
+        ) {
+          const count = Math.min(balance.physics.maxBodies, Math.floor(event.controlTargets!));
+          progress.controlTargets += count;
+          progress.controlPeak = Math.max(progress.controlPeak, count);
+          this.roomControl.add(event.id);
+          if (
+            [...game.world.entities.values()].some(
+              (entity) => entity.alive && entity.kind in bossDefinitions,
+            )
+          )
+            this.guardianControl.add(event.id);
+        }
         game.events.emit('diagnostic', { event: 'AbilityUsage', subject: event.id });
         this.discoveries.add(`ability:${event.id}`);
       }
@@ -139,6 +159,13 @@ export class Expedition {
     game.events.on('ended', (event) => {
       if (this.phase !== 'room') return;
       this.recordRoomEnd(event.won ? 'RoomCleared' : 'RoomFailed');
+      if (event.won)
+        for (const id of this.roomControl) {
+          this.mastery[id].controlRooms++;
+          if (this.guardianControl.has(id)) this.mastery[id].controlBosses++;
+        }
+      this.roomControl.clear();
+      this.guardianControl.clear();
       this.elapsed += game.time;
       this.score += game.stats.score;
       this.bestChain = Math.max(this.bestChain, game.chains.best);
@@ -260,6 +287,8 @@ export class Expedition {
     return this.loadNode(node);
   }
   private loadNode(node: MapNode, roomType = node.type): boolean {
+    this.roomControl.clear();
+    this.guardianControl.clear();
     const health = this.game.player.health;
     const powers = this.game.abilities.snapshot();
     this.current = node;
@@ -454,8 +483,13 @@ export class Expedition {
         this.biome >= Math.min(biomes.length - 1, this.startBiome + limit - 1)
       ) {
         this.won = true;
-        for (const progress of Object.values(this.mastery))
-          if (progress.kills >= Math.max(1, this.kills * 0.5)) progress.wins++;
+        for (const [id, progress] of Object.entries(this.mastery))
+          if (
+            abilityById.get(id)?.mastery === 'control'
+              ? progress.controlRooms >= 3
+              : progress.kills >= Math.max(1, this.kills * 0.5)
+          )
+            progress.wins++;
         if ((this.metrics.orbitKills ?? 0) >= Math.max(1, this.kills * 0.75))
           this.metrics.orbitalWins = 1;
         this.phase = 'summary';
@@ -614,6 +648,8 @@ export class Expedition {
       this.game.reset(false);
       this.eventReward = undefined;
       this.roomDiagnostic = undefined;
+      this.roomControl.clear();
+      this.guardianControl.clear();
       this.discoveries = new Set(discoveries);
       this.mastery = mastery;
       this.metrics = metrics;
