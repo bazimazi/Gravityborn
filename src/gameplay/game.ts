@@ -769,6 +769,8 @@ export class Game {
       if (sourceTags.includes('Field')) tags.push('Field');
       if (sourceTags.includes('Surface')) tags.push('Surface');
       if (sourceTags.includes('Tether')) tags.push('Tether');
+      if (sourceTags.includes('Spin')) tags.push('Spin');
+      if (sourceTags.includes('Momentum')) tags.push('Momentum');
       this.damage(target, damage, cause, tags);
       if (attacker && attacker.kind !== 'player') this.attribute(attacker, cause);
     }

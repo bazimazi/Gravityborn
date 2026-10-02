@@ -54,6 +54,19 @@ export interface AbilitySnapshot {
   cooldowns: Record<string, number>;
 }
 
+interface TetherBinding {
+  body: Matter.Constraint;
+  a: Entity;
+  b?: Entity;
+  anchor?: Vec2;
+  start: number;
+  startLength: number;
+  endLength: number;
+  generations: number[];
+  expires: number;
+  chain: number;
+}
+
 export class AbilitySystem {
   readonly modifiers = new ModifierSet(() => this.context());
   readonly levels = new Map<string, number>([['pulse', 1]]);
@@ -64,18 +77,7 @@ export class AbilitySystem {
   private readonly statuses: Status[] = [];
   private readonly resistance = new Map<number, { until: number; generation: number }>();
   private readonly constructs: { entity: Entity; expires: number; planet?: boolean }[] = [];
-  readonly tethers: {
-    body: Matter.Constraint;
-    a: Entity;
-    b?: Entity;
-    anchor?: Vec2;
-    start: number;
-    startLength: number;
-    endLength: number;
-    generations: number[];
-    expires: number;
-    chain: number;
-  }[] = [];
+  readonly tethers: TetherBinding[] = [];
   private rotation?: { original: Vec2; start: number; duration: number; chain: number };
 
   constructor(private readonly host: AbilityHost) {}
@@ -215,6 +217,41 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
+    const movable = targets.filter(
+      (entity) => !entity.body.isStatic && !['xp', 'shard'].includes(entity.kind),
+    );
+    const momentumTargets = definition.effect === 'momentum_swap' ? movable.slice(0, 2) : movable;
+    if (
+      ['momentum_swap', 'momentum_balance'].includes(definition.effect) &&
+      momentumTargets.length < 2
+    )
+      return false;
+    if (definition.effect === 'spin' && !movable.some((entity) => entity.body.inverseInertia > 0))
+      return false;
+    const selectedTethers = ['tether_cut', 'tether_release', 'reanchor'].includes(definition.effect)
+      ? this.tethers.filter(
+          (tether) =>
+            this.validTether(tether) &&
+            (definition.effect !== 'reanchor' || tether.anchor) &&
+            [tether.a.body.position, tether.b?.body.position ?? tether.anchor!].some(
+              (position) => length(subtract(position, point)) < radius,
+            ),
+        )
+      : [];
+    if (
+      ['tether_cut', 'tether_release', 'reanchor'].includes(definition.effect) &&
+      !selectedTethers.length
+    )
+      return false;
+    if (
+      definition.effect === 'reanchor' &&
+      (point.x < 3 ||
+        point.y < 3 ||
+        point.x > this.host.room.width - 3 ||
+        point.y > this.host.room.height - 3 ||
+        !this.host.world.circleClear(point, 3))
+    )
+      return false;
     const attachment = parameters.attach
       ? targets.find((entity) => !entity.body.isStatic && !['xp', 'shard'].includes(entity.kind))
       : undefined;
@@ -585,6 +622,106 @@ export class AbilitySystem {
         }
         break;
       }
+      case 'tether_cut':
+      case 'tether_release': {
+        const kicks = new Map<Entity, Vec2>();
+        for (const tether of selectedTethers) {
+          if (definition.effect === 'tether_release') {
+            const delta = subtract(
+              tether.b?.body.position ?? tether.anchor!,
+              tether.a.body.position,
+            );
+            const distance = length(delta);
+            const rest = this.tetherLengthAt(tether);
+            const kick = scale(
+              normalize(delta),
+              (distance - rest) * tether.body.stiffness * strength,
+            );
+            for (const [entity, sign] of [
+              [tether.a, 1],
+              [tether.b, -1],
+            ] as const) {
+              if (!entity || entity.body.isStatic) continue;
+              const previous = kicks.get(entity) ?? { x: 0, y: 0 };
+              kicks.set(entity, {
+                x: previous.x + (kick.x * sign) / Math.sqrt(entity.body.mass),
+                y: previous.y + (kick.y * sign) / Math.sqrt(entity.body.mass),
+              });
+            }
+          }
+          Matter.Composite.remove(this.host.world.engine.world, tether.body);
+          this.tethers.splice(this.tethers.indexOf(tether), 1);
+        }
+        for (const [entity, kick] of kicks) {
+          const before = Matter.Body.getVelocity(entity.body);
+          this.host.world.impulse(entity, kick);
+          if (length(subtract(Matter.Body.getVelocity(entity.body), before)) < 1e-8) continue;
+          this.host.markCause(entity, chain);
+          if (entity.kind === 'projectile') entity.redirected = true;
+        }
+        break;
+      }
+      case 'reanchor':
+        for (const tether of selectedTethers) {
+          tether.anchor = { ...point };
+          tether.body.pointB = { ...point };
+          tether.chain = chain;
+        }
+        break;
+      case 'spin':
+        for (const entity of movable) {
+          if (entity.body.inverseInertia <= 0) continue;
+          const before = Matter.Body.getAngularVelocity(entity.body);
+          const retention = this.modifiers.evaluate(
+            'angularRetention',
+            parameters.angularScale ?? 1,
+            definition.tags,
+            context,
+          );
+          const after = Math.max(
+            -balance.physics.maxAngularVelocity,
+            Math.min(balance.physics.maxAngularVelocity, before * retention + strength),
+          );
+          if (Math.abs(after - before) < 1e-8) continue;
+          Matter.Sleeping.set(entity.body, false);
+          Matter.Body.setAngularVelocity(entity.body, after);
+          this.host.markCause(entity, chain);
+          // Rotation alone does not redirect a projectile's flight.
+        }
+        break;
+      case 'momentum_swap':
+      case 'momentum_balance': {
+        const momenta = momentumTargets.map((entity) =>
+          scale(Matter.Body.getVelocity(entity.body), entity.body.mass),
+        );
+        const totalMass = momentumTargets.reduce((sum, entity) => sum + entity.body.mass, 0);
+        const average = scale(
+          momenta.reduce((sum, value) => ({ x: sum.x + value.x, y: sum.y + value.y }), {
+            x: 0,
+            y: 0,
+          }),
+          1 / totalMass,
+        );
+        for (const [index, entity] of momentumTargets.entries()) {
+          const before = Matter.Body.getVelocity(entity.body);
+          const after =
+            definition.effect === 'momentum_swap'
+              ? scale(momenta[1 - index], 1 / entity.body.mass)
+              : average;
+          // Exchange momentum, then apply the same global velocity bound as the solver.
+          const speed = length(after);
+          const bounded =
+            speed > balance.physics.maxVelocity
+              ? scale(after, balance.physics.maxVelocity / speed)
+              : after;
+          if (length(subtract(bounded, before)) < 1e-8) continue;
+          Matter.Body.setVelocity(entity.body, bounded);
+          Matter.Sleeping.set(entity.body, false);
+          this.host.markCause(entity, chain);
+          if (entity.kind === 'projectile') entity.redirected = true;
+        }
+        break;
+      }
       case 'orbit_impulse':
         for (const entity of targets) {
           const radial = normalize(subtract(entity.body.position, point));
@@ -593,13 +730,17 @@ export class AbilitySystem {
         break;
       case 'vector_turn':
       case 'steer':
+      case 'radial_turn':
         for (const entity of targets) {
           if (entity.body.isStatic) continue;
           const before = Matter.Body.getVelocity(entity.body);
           const direction =
             definition.effect === 'steer'
               ? normalize(subtract(target, this.host.player.body.position))
-              : undefined;
+              : definition.effect === 'radial_turn'
+                ? scale(normalize(subtract(entity.body.position, point)), Math.sign(strength))
+                : undefined;
+          if (direction && length(direction) < 1e-8) continue;
           const after = direction
             ? scale(direction, length(before))
             : {
@@ -913,24 +1054,12 @@ export class AbilitySystem {
   tick(dt: number): void {
     for (let index = this.tethers.length - 1; index >= 0; index--) {
       const tether = this.tethers[index];
-      if (
-        tether.expires <= this.host.time ||
-        !tether.a.alive ||
-        (tether.b && !tether.b.alive) ||
-        tether.a.generation !== tether.generations[0] ||
-        (tether.b && tether.b.generation !== tether.generations[1]) ||
-        tether.a.body !== tether.body.bodyA ||
-        tether.b?.body !== tether.body.bodyB
-      ) {
+      if (!this.validTether(tether)) {
         Matter.Composite.remove(this.host.world.engine.world, tether.body);
         this.tethers.splice(index, 1);
         continue;
       }
-      const progress = Math.max(
-        0,
-        Math.min(1, (this.host.time - tether.start) / (tether.expires - tether.start)),
-      );
-      tether.body.length = tether.startLength + (tether.endLength - tether.startLength) * progress;
+      tether.body.length = this.tetherLengthAt(tether);
       const distance = length(
         subtract(tether.a.body.position, tether.b?.body.position ?? tether.anchor!),
       );
@@ -1068,6 +1197,26 @@ export class AbilitySystem {
         this.host.world.entities.get(id)?.generation !== expiry.generation
       )
         this.resistance.delete(id);
+  }
+
+  private validTether(tether: TetherBinding): boolean {
+    return (
+      tether.expires > this.host.time &&
+      tether.a.alive &&
+      (!tether.b || tether.b.alive) &&
+      tether.a.generation === tether.generations[0] &&
+      (!tether.b || tether.b.generation === tether.generations[1]) &&
+      tether.a.body === tether.body.bodyA &&
+      tether.b?.body === tether.body.bodyB
+    );
+  }
+
+  private tetherLengthAt(tether: TetherBinding): number {
+    const progress = Math.max(
+      0,
+      Math.min(1, (this.host.time - tether.start) / (tether.expires - tether.start)),
+    );
+    return tether.startLength + (tether.endLength - tether.startLength) * progress;
   }
 
   snapshot(): AbilitySnapshot {

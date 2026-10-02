@@ -12,6 +12,7 @@ import { objectDefinitions } from '../content/objects';
 import { abilityFeedback } from '../content/ability-feedback';
 import { coreCosmetics } from '../content/cosmetics';
 import { isSingularity, lensPoint, selectLenses } from './lensing';
+import { drawScenery } from './scenery';
 
 export class Renderer {
   cosmetic: (typeof coreCosmetics)[number] = coreCosmetics[0];
@@ -370,8 +371,10 @@ export class Renderer {
   private drawArena(game: Game, now: number): void {
     const ctx = this.context;
     const arena = game.room;
-    ctx.fillStyle = biomes[arena.biome].color;
+    const region = biomes[arena.biome];
+    ctx.fillStyle = region.color;
     ctx.fillRect(50, 50, arena.width - 100, arena.height - 100);
+    drawScenery(ctx, region, this.settings.lowQuality, this.settings.highContrast);
     const lenses =
       this.settings.lowQuality || this.settings.reducedMotion
         ? []
@@ -408,27 +411,16 @@ export class Renderer {
     for (let i = 0; i < 48; i++) {
       const x = 55 + ((((i * 137.37 + g.x * drift) % 1090) + 1090) % 1090);
       const y = 55 + ((((i * 83.21 + g.y * drift) % 690) + 690) % 690);
-      ctx.strokeStyle = '#8fdcde20';
+      ctx.strokeStyle = `${region.accent}20`;
       this.line(x, y, x + g.x * 9, y + g.y * 9);
     }
-    ctx.save();
-    ctx.strokeStyle = '#58748c12';
-    ctx.lineWidth = 1;
-    this.circle(600, 400, 180);
-    ctx.stroke();
-    this.circle(600, 400, 192);
-    ctx.stroke();
-    this.line(380, 400, 820, 400);
-    this.line(600, 180, 600, 620);
-    ctx.restore();
     ctx.font = '11px ui-monospace, monospace';
     ctx.textAlign = 'left';
     ctx.fillStyle = '#748a9b62';
-    ctx.fillText('G / 01      GRAVITATIONAL RESEARCH DIVISION', 82, 89);
-    ctx.fillText('CAUTION — UNSTABLE MASS', 803, 720);
-    ctx.font = '600 48px ui-monospace, monospace';
-    ctx.fillStyle = '#8cb0c409';
-    ctx.fillText('THE WEIGHT', 425, 423);
+    ctx.fillText(region.scenery?.inscription ?? region.name.toUpperCase(), 82, 89);
+    ctx.textAlign = 'right';
+    ctx.fillText(region.planet.name.toUpperCase(), arena.width - 82, arena.height - 80);
+    ctx.textAlign = 'left';
     for (const [index, hazard] of arena.hazards.entries()) {
       const active = game.environment.hazardActive(index);
       ctx.fillStyle = hazard.kind === 'wind' ? '#80d9f020' : active ? '#ff82616a' : '#ff826118';

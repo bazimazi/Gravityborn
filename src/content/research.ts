@@ -83,7 +83,7 @@ export const researchNodes: ResearchNode[] = [
     id: 'survey',
     tree: 'Discovery',
     name: 'Long-Range Survey',
-    description: 'All eight regions become selectable starting points.',
+    description: 'Every region becomes a selectable starting point.',
     cost: 8,
     requires: 'navigation',
   },

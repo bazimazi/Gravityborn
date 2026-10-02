@@ -5,6 +5,16 @@ import type { BossKind } from './bosses';
 import type { Hazard } from './rooms';
 import type { Phenomenon } from './phenomena';
 
+export type SceneryMark =
+  | { kind: 'line'; points: { x: number; y: number }[] }
+  | { kind: 'arc'; x: number; y: number; radius: number; start: number; end: number }
+  | { kind: 'ellipse'; x: number; y: number; rx: number; ry: number; rotation: number };
+export interface RegionScenery {
+  inscription: string;
+  watermark: string;
+  marks: SceneryMark[];
+}
+
 export interface RegionDefinition {
   id: string;
   name: string;
@@ -18,6 +28,7 @@ export interface RegionDefinition {
   fields: Omit<GravityField, 'id'>[];
   hazards: Hazard[];
   movingWalls: boolean;
+  scenery?: RegionScenery;
   story: { act: string; title: string; intro: string; memory: string };
   secret: { name: string; text: string };
   planet: {

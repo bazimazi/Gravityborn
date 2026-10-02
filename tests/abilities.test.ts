@@ -16,6 +16,10 @@ describe('physical powers', () => {
         game.abilities.learn('planet');
         game.abilities.cast('planet', { x: 410, y: 450 }, true);
       }
+      if (['tether_cut', 'tether_release', 'reanchor'].includes(definition.effect)) {
+        game.abilities.learn('skyhook');
+        game.abilities.cast('skyhook', { x: 410, y: 450 }, true);
+      }
       game.start();
       expect(game.castAbility(definition.id, { x: 410, y: 450 })).toBe(true);
       expect(game.abilities.energy).toBe(100 - definition.energy);

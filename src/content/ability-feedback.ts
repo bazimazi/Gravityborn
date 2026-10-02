@@ -34,6 +34,7 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       };
       break;
     case 'tether':
+    case 'reanchor':
       primary.duration = 0.14;
       secondary = {
         ...primary,
@@ -41,6 +42,27 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
         end: primary.end * 1.5,
         gain: 0.06,
         delay: 0.06,
+      };
+      break;
+    case 'tether_cut':
+    case 'tether_release':
+      primary.waveform = 'sawtooth';
+      primary.start = ability.effect === 'tether_cut' ? 780 : 340;
+      primary.end = 80;
+      primary.duration = 0.12;
+      primary.gain = 0.045;
+      break;
+    case 'spin':
+      primary.waveform = 'sine';
+      primary.start = ability.strength > 0 ? 170 : 600;
+      primary.end = ability.strength > 0 ? 600 : 170;
+      primary.duration = 0.28;
+      secondary = {
+        ...primary,
+        start: primary.start * 1.1,
+        end: primary.end * 1.1,
+        gain: 0.04,
+        delay: 0.03,
       };
       break;
     case 'planet':
@@ -103,6 +125,9 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       break;
     case 'vector_turn':
     case 'steer':
+    case 'momentum_swap':
+    case 'momentum_balance':
+    case 'radial_turn':
       primary.start = 300;
       primary.end = 620;
       primary.duration = 0.16;

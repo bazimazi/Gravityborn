@@ -11,6 +11,7 @@ for (const power of [
   'orbital_lantern',
   'glass_spring',
   'gravity_grapple',
+  'torque',
 ])
   test(`${power} renders and remains usable with visual accessibility settings`, async ({
     page,

@@ -58,6 +58,7 @@ export class PhysicsWorld {
   readonly walls: Matter.Body[] = [];
   readonly collisions: CollisionFact[] = [];
   private readonly velocities = new Map<number, Vec2>();
+  private readonly angularVelocities = new Map<number, number>();
   private readonly projectilePool: Entity[] = [];
   private readonly safePositions = new Map<number, Vec2>();
   focus?: Vec2;
@@ -69,8 +70,10 @@ export class PhysicsWorld {
   ) {
     this.engine.gravity.scale = 0;
     Events.on(this.engine, 'beforeSolve', () => {
-      for (const entity of this.entities.values())
+      for (const entity of this.entities.values()) {
         this.velocities.set(entity.id, Body.getVelocity(entity.body));
+        this.angularVelocities.set(entity.id, Body.getAngularVelocity(entity.body));
+      }
     });
     const recordCollisions = (event: Matter.IEventCollision<Matter.Engine>): void => {
       // Capture facts only. Gameplay consumes these after the solver finishes.
@@ -86,8 +89,21 @@ export class PhysicsWorld {
         const av = this.velocities.get(pair.bodyA.id) ?? { x: 0, y: 0 };
         const bv = this.velocities.get(pair.bodyB.id) ?? { x: 0, y: 0 };
         const normal = pair.collision.normal;
-        const speed = Math.abs((av.x - bv.x) * normal.x + (av.y - bv.y) * normal.y);
         const point = pair.collision.supports[0] ?? (a ?? b)!.body.position;
+        const aw = this.angularVelocities.get(pair.bodyA.id) ?? 0;
+        const bw = this.angularVelocities.get(pair.bodyB.id) ?? 0;
+        // Contact-point velocity includes a turning plate's edge, not just its center.
+        const relativeX =
+          av.x -
+          aw * (point.y - pair.bodyA.position.y) -
+          bv.x +
+          bw * (point.y - pair.bodyB.position.y);
+        const relativeY =
+          av.y +
+          aw * (point.x - pair.bodyA.position.x) -
+          bv.y -
+          bw * (point.x - pair.bodyB.position.x);
+        const speed = Math.abs(relativeX * normal.x + relativeY * normal.y);
         this.collisions.push({
           a,
           b,
@@ -228,6 +244,7 @@ export class PhysicsWorld {
     entity.alive = false;
     this.entities.delete(entity.id);
     this.velocities.delete(entity.id);
+    this.angularVelocities.delete(entity.id);
     this.safePositions.delete(entity.id);
     Composite.remove(this.engine.world, entity.body);
     if (entity.kind === 'projectile') this.projectilePool.push(entity);
@@ -441,11 +458,15 @@ export class PhysicsWorld {
     // Translating a NaN shape cannot recover its vertices. Rebuild geometry at
     // the last known finite position, preserving the gameplay entity identity.
     const replacement = this.makeBody(entity.kind, this.safePositions.get(entity.id)!);
+    if (body.isStatic) Body.setStatic(replacement, true);
     replacement.id = entity.id;
     Composite.remove(this.engine.world, body);
     entity.body = replacement;
+    this.refreshMass(entity);
+    this.refreshSurface(entity);
     Composite.add(this.engine.world, replacement);
     this.velocities.delete(entity.id);
+    this.angularVelocities.delete(entity.id);
     Engine.clear(this.engine);
     this.collisions.length = 0;
   }
@@ -456,6 +477,7 @@ export class PhysicsWorld {
     Engine.clear(this.engine);
     this.entities.clear();
     this.velocities.clear();
+    this.angularVelocities.clear();
     this.walls.length = 0;
     this.collisions.length = 0;
     this.projectilePool.length = 0;

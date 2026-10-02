@@ -172,3 +172,26 @@ it('content validation rejects unknown, unbounded and misplaced surface properti
   definition.parameters!.surface = { frictionAir: 0 };
   expect(validateAbilities([definition]).length).toBeGreaterThan(0);
 });
+
+it('invalid-geometry recovery preserves static locks, mass factors and surface coatings', () => {
+  for (const frozen of [false, true]) {
+    const game = setup('densify', 'elastic_coat');
+    const rock = game.world.spawn('rock', point)!;
+    game.abilities.cast('densify', point, true);
+    game.abilities.cast('elastic_coat', point, true);
+    if (frozen) Matter.Body.setStatic(rock.body, true);
+    const original = rock.body;
+    rock.body.vertices[0].x = NaN;
+    game.world.step();
+    expect(rock.body).not.toBe(original);
+    expect(rock.body.isStatic).toBe(frozen);
+    if (frozen) {
+      Matter.Body.setStatic(rock.body, false);
+      game.world.step();
+    }
+    expect(rock.body.mass).toBe(rock.massBase * 3);
+    expect(rock.body.restitution).toBe(1.05);
+    expect(rock.body.vertices.every((vertex) => Number.isFinite(vertex.x + vertex.y))).toBe(true);
+    game.world.dispose();
+  }
+});

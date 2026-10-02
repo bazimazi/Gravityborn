@@ -5,6 +5,7 @@ import { kineticRelics } from './kinetic-relics';
 import { fieldRelics } from './field-relics';
 import { surfaceRelics } from './surface-relics';
 import { tetherRelics } from './tether-relics';
+import { manipulationRelics } from './manipulation-relics';
 export interface RelicDefinition {
   id: string;
   name: string;
@@ -17,6 +18,7 @@ export interface RelicDefinition {
 export const relics: RelicDefinition[] = [
   ...surfaceRelics,
   ...tetherRelics,
+  ...manipulationRelics,
   {
     id: 'redshift',
     name: 'Redshift Lens',

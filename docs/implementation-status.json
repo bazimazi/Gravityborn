@@ -138,7 +138,9 @@
         "src/gameplay/environment.ts",
         "src/gameplay/materials.ts",
         "tests/mastery.test.ts",
-        "tests/materials.test.ts"
+        "tests/materials.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Impact/Velocity, Crush/Gravity, Environmental/Explosion, Orbital/Orbit, Compression and Void damage tags feed modifiers, mastery and diagnostics. Thermal/conductive reactions add material damage. Orbital/void classification derives from authored source tags."
     },
@@ -150,7 +152,9 @@
         "src/gameplay/game.ts",
         "src/progression/modifiers.ts",
         "tests/gameplay.test.ts",
-        "tests/objects.test.ts"
+        "tests/objects.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Collision damage uses finite dynamic attacker mass, normal incoming speed, threshold/coefficient, impact modifiers and target mitigation. Static contacts use the moving target mass. Core mass changes now affect direct impacts. Sustained pressure is separately evaluated for crush."
     },
@@ -164,7 +168,9 @@
         "src/gameplay/enemies.ts",
         "src/content/rooms.ts",
         "tests/enemies.test.ts",
-        "tests/variants.test.ts"
+        "tests/variants.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
@@ -178,7 +184,9 @@
         "src/gameplay/enemies.ts",
         "src/content/rooms.ts",
         "tests/enemies.test.ts",
-        "tests/variants.test.ts"
+        "tests/variants.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Sixteen base behaviors and 72 explicitly compatible elite variants are integrated and simulation-tested. Variants combine existing archetype and elite mechanics; these are not 72 separately invented enemies. Human readability and balance testing remain open."
     },
@@ -274,7 +282,7 @@
         "scripts/expedition-playtest.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Multiwave encounters and all run modes are implemented. The latest twelve input-only quick seeds produced ten wins, two defeats and no stalls; successful runs took 40–131 simulated seconds with instant bot decisions. Human pacing/balance validation remains open."
+      "remaining": "All run modes and multiwave encounters are implemented. The latest twelve input-only quick seeds produced seven wins, five defeats and no stalls; successful runs took 54–127 simulated seconds with instant bot decisions. These quick runs do not establish the specified standard-expedition pacing. Human pacing and balance validation remain open."
     },
     {
       "section": 22,
@@ -299,7 +307,9 @@
         "src/content/relics.ts",
         "src/content/equipment.ts",
         "src/progression/build.ts",
-        "tests/synergies.test.ts"
+        "tests/synergies.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Singularity, momentum, orbital, void, crush, control, projectile and chaos mechanics have supported powers, tags and trade-offs. Twelve cross-power/tag synergies are active. Human testing of recognizable, comparably viable archetypes remains open."
     },
@@ -514,7 +524,7 @@
         "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "473 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
+      "remaining": "518 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
     },
     {
       "section": 40,
@@ -597,7 +607,9 @@
         "tests/feedback.test.ts",
         "tests/lensing.test.ts",
         "tests/browser/lensing.spec.ts",
-        "scripts/benchmark.ts"
+        "scripts/benchmark.ts",
+        "src/presentation/scenery.ts",
+        "tests/browser/scenery.spec.ts"
       ],
       "remaining": "Directional chevrons, signed field symbols, expanding pulse rings, curved field particles, motion trails, bounded impact deformation and background lensing are implemented. Void fields have a dark core and bright orbit ring. Lensing selects at most six sources; field motes cap at 64; low-power/reduced-motion disable grid distortion. Browser captures were reviewed. Human instant-readability and physical-device motion/performance review remain open."
     },
@@ -612,7 +624,9 @@
         "tests/feedback.test.ts",
         "tests/lensing.test.ts",
         "tests/browser/lensing.spec.ts",
-        "scripts/benchmark.ts"
+        "scripts/benchmark.ts",
+        "src/presentation/scenery.ts",
+        "tests/browser/scenery.spec.ts"
       ],
       "remaining": "Directional chevrons, signed field symbols, expanding pulse rings, curved field particles, motion trails, bounded impact deformation and background lensing are implemented. Void fields have a dark core and bright orbit ring. Lensing selects at most six sources; field motes cap at 64; low-power/reduced-motion disable grid distortion. Browser captures were reviewed. Human instant-readability and physical-device motion/performance review remain open."
     },
@@ -690,9 +704,11 @@
         "src/data/regions.json",
         "src/content/story.ts",
         "src/content/events.ts",
-        "src/presentation/codex.ts"
+        "src/presentation/codex.ts",
+        "src/presentation/scenery.ts",
+        "tests/browser/scenery.spec.ts"
       ],
-      "remaining": "Nine region chapters, short event encounters, guardian memories, planetary descriptions and hidden archives develop The Weight and the awakened core. Human narrative pacing/coherence and expanded environmental staging remain open."
+      "remaining": "Nine region chapters, encounters, guardian memories, planetary descriptions and hidden archives develop The Weight and the awakened core. Each region now also has authored static environmental motifs, a short inscription and a named planetary setting. Their geometry is validated and browser captures are reviewed; human narrative pacing/coherence remains open."
     },
     {
       "section": 53,
@@ -864,7 +880,9 @@
         "src/gameplay/game.ts",
         "src/gameplay/chains.ts",
         "src/progression/expedition.ts",
-        "tests/events.test.ts"
+        "tests/events.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Typed combat, pickup, gravity, power, upgrade, run, elite, boss, launch, contact and chain lifecycle events are emitted after gameplay facts occur. Tests cover duplicate suppression and reset/abandon boundaries."
     },
@@ -877,7 +895,9 @@
         "src/gameplay/game.ts",
         "src/core/events.ts",
         "src/presentation/feedback.ts",
-        "docs/architecture.md"
+        "docs/architecture.md",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Physics callbacks collect facts; gameplay resolves damage, chains and rewards after the solver. Presentation and audio subscribe to events without deciding damage."
     },
@@ -1092,7 +1112,7 @@
         "scripts/validate-content.ts",
         "tests/tactical-enemies.test.ts"
       ],
-      "remaining": "Current catalog: nine biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 91 powers, 91 relics, ten classes and 473 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
+      "remaining": "Current catalog: nine biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 100 powers, 100 relics, ten classes and 518 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
     },
     {
       "section": 83,
@@ -1105,7 +1125,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Ten classes, 182 combined powers/relics, nine regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
+      "remaining": "Ten classes, 200 combined powers/relics, nine regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
     },
     {
       "section": 84,
@@ -1116,7 +1136,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with nine regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 91/91 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "The named launch content targets are implemented: 100 powers, 100 relics, nine regions, ten bosses, 25 base enemies plus 99 variants, fifty equipment designs, ten classes, 518 challenges and the requested campaign/progression/mode systems. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,
@@ -1193,9 +1213,11 @@
       "status": "partial",
       "evidence": [
         "src/data/stat-limits.json",
-        "tests/modifiers.test.ts"
+        "tests/modifiers.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
-      "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance implemented. Further run/balance stress validation remains."
+      "remaining": "Endless rule escalation, finite stat limits, bounded chains/fields/velocity and crowd-control resistance are implemented. Full-catalog simulations in forward and reverse cast order exercise all powers and relics together, verifying live caps, finite motion and save restoration. Human exploit discovery and balance assessment remain open."
     },
     {
       "section": 91,
@@ -1249,7 +1271,9 @@
         "scripts/benchmark.ts",
         "tests/regressions.test.ts",
         "tests/modifiers.test.ts",
-        "tests/variants.test.ts"
+        "tests/variants.test.ts",
+        "tests/manipulation-abilities.test.ts",
+        "tests/catalog-stress.test.ts"
       ],
       "remaining": "Host stress covers 220 bodies and 50 fields, runaway build multiplication, all elite variants and bounded causal effects. Oversized scenes are constrained by production caps. Sustained phone rendering/thermal stress remains external."
     },
@@ -1450,7 +1474,7 @@
         "docs/native-delivery.md",
         "docs/roadmap.md"
       ],
-      "remaining": "Passing compilation is not treated as completion. Implemented features have simulation/browser/save/integration evidence, but full content, observed fun/pacing, physical-device performance, iOS and store readiness remain incomplete."
+      "remaining": "Launch content breadth and repository systems are implemented with simulation, browser, save, integration, host-performance and Android-emulator evidence. Observed fun/pacing, human polish review, physical-device performance, signed iOS builds and store readiness remain unverified; the whole product is not marked complete."
     },
     {
       "section": 111,

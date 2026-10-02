@@ -17,6 +17,7 @@
   "tetherLength": [20, 200],
   "tetherTargets": [1, 6],
   "tetherDamping": [0, 0.3],
+  "angularRetention": [-1, 1],
   "duration": [0, 20],
   "cooldown": [0.25, 120],
   "energyCost": [0, 500],

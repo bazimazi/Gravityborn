@@ -29,6 +29,13 @@ export interface ContentIssue {
   message: string;
 }
 const effects = [
+  'tether_cut',
+  'tether_release',
+  'reanchor',
+  'spin',
+  'momentum_swap',
+  'momentum_balance',
+  'radial_turn',
   'surface',
   'split',
   'mass',
@@ -76,6 +83,47 @@ export function validateRegions(catalog: readonly RegionDefinition[]): ContentIs
   check(catalog.length > 0 && catalog.length <= 100, 'regions', 'Use one to 100 regions.');
   for (const region of catalog) {
     const path = `regions.${region.id}`;
+    if (region.scenery) {
+      const scene = region.scenery;
+      check(
+        typeof scene.inscription === 'string' &&
+          scene.inscription.length > 0 &&
+          scene.inscription.length <= 80 &&
+          typeof scene.watermark === 'string' &&
+          scene.watermark.length > 0 &&
+          scene.watermark.length <= 24,
+        `${path}.scenery`,
+        'Scenery captions must be short and nonempty.',
+      );
+      check(
+        Array.isArray(scene.marks) && scene.marks.length > 0 && scene.marks.length <= 24,
+        `${path}.scenery`,
+        'Use one to 24 static scenery marks.',
+      );
+      for (const mark of scene.marks) {
+        let valid = false;
+        if (mark.kind === 'line')
+          valid =
+            mark.points.length >= 2 &&
+            mark.points.length <= 12 &&
+            mark.points.every((p) => isNumber(p.x, 0, 1200) && isNumber(p.y, 0, 800));
+        else if (mark.kind === 'arc')
+          valid =
+            isNumber(mark.x, 0, 1200) &&
+            isNumber(mark.y, 0, 800) &&
+            isNumber(mark.radius, 1, 500) &&
+            isNumber(mark.start, -Math.PI * 2, Math.PI * 2) &&
+            isNumber(mark.end, -Math.PI * 2, Math.PI * 2);
+        else if (mark.kind === 'ellipse')
+          valid =
+            isNumber(mark.x, 0, 1200) &&
+            isNumber(mark.y, 0, 800) &&
+            isNumber(mark.rx, 1, 500) &&
+            isNumber(mark.ry, 1, 500) &&
+            isNumber(mark.rotation, -Math.PI * 2, Math.PI * 2);
+        check(valid, `${path}.scenery`, 'Scenery marks must use bounded, finite geometry.');
+      }
+    }
     check(
       /^#[0-9a-f]{6}$/i.test(region.color) && /^#[0-9a-f]{6}$/i.test(region.accent),
       path,
@@ -258,6 +306,18 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (item.effect === 'spin')
+      check(
+        isNumber(item.strength, -0.3, 0.3),
+        'strength',
+        'Spin impulses must respect the angular speed budget.',
+      );
+    if (p?.angularScale !== undefined)
+      check(
+        item.effect === 'spin' && isNumber(p.angularScale, -1, 1),
+        'parameters.angularScale',
+        'Angular retention requires a spin effect and factor within -1–1.',
+      );
     if (p) {
       if (
         ['tetherEndLength', 'tetherTopology', 'tetherPlayer', 'tetherDamping'].some(

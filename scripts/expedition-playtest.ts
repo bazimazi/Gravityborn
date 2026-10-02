@@ -1,14 +1,35 @@
 import { Game } from '../src/gameplay/game';
 import { Expedition } from '../src/progression/expedition';
 import { normalize, subtract } from '../src/core/vector';
+import { modes, type RunMode } from '../src/content/modes';
+import { classById } from '../src/content/classes';
+const option = (name: string, fallback: string): string => {
+  const index = process.argv.indexOf(name);
+  return index < 0 ? fallback : (process.argv[index + 1] ?? '');
+};
+const mode = option('--mode', 'quick') as RunMode;
+const classId = option('--class', 'manipulator');
+const samples = Number(option('--runs', '12'));
+const maxSeconds = Number(option('--seconds', mode === 'quick' ? '360' : '1800'));
+if (
+  !modes.some((item) => item.id === mode) ||
+  !classById.has(classId) ||
+  !Number.isInteger(samples) ||
+  samples < 1 ||
+  samples > 100 ||
+  !Number.isFinite(maxSeconds) ||
+  maxSeconds < 1 ||
+  maxSeconds > 7200
+)
+  throw new Error('Use a known --mode and --class, --runs 1–100 and --seconds 1–7200.');
 const results = [];
-for (let seed = 0; seed < 12; seed++) {
+for (let seed = 0; seed < samples; seed++) {
   const game = new Game(false);
   const run = new Expedition(game);
-  run.start(`input-playtest-${seed}`, 'manipulator', undefined, 0, { mode: 'quick' });
+  run.start(`input-playtest-${seed}`, classId, undefined, 0, { mode });
   let steps = 0;
   let timeout = false;
-  while (run.phase !== 'summary' && steps < 120 * 360) {
+  while (run.phase !== 'summary' && steps < 120 * maxSeconds) {
     if (run.build.pending) {
       run.build.offer();
       const choice =
@@ -77,13 +98,15 @@ for (let seed = 0; seed < 12; seed++) {
   }
   results.push({
     seed,
+    mode,
+    classId,
     won: run.won,
     phase: run.phase,
     rooms: run.rooms,
     kills: run.kills,
     seconds: Math.round(steps / 120),
     health: Math.round(game.player.health),
-    timeout,
+    timeout: timeout || run.phase !== 'summary',
     remaining: [...game.world.entities.values()]
       .filter((entity) => entity.definition.faction === 'enemy' && entity.kind !== 'projectile')
       .map((entity) => ({ kind: entity.kind, health: Math.round(entity.health) })),

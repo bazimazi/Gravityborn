@@ -4,9 +4,17 @@ import { kineticAbilities } from './kinetic-abilities';
 import { dynamicFieldAbilities } from './dynamic-field-abilities';
 import { surfaceAbilities } from './surface-abilities';
 import { tetherAbilities } from './tether-abilities';
+import { manipulationAbilities } from './manipulation-abilities';
 import type { SurfaceValues } from '../core/surface';
 
 export type EffectKind =
+  | 'tether_cut'
+  | 'tether_release'
+  | 'reanchor'
+  | 'spin'
+  | 'momentum_swap'
+  | 'momentum_balance'
+  | 'radial_turn'
   | 'surface'
   | 'split'
   | 'mass'
@@ -61,6 +69,7 @@ export interface AbilityDefinition {
     tetherTopology?: 'chain' | 'star' | 'ring' | 'anchor';
     tetherPlayer?: boolean;
     tetherDamping?: number;
+    angularScale?: number;
     selfOnly?: boolean;
     attach?: boolean;
     fieldCount?: number;
@@ -84,6 +93,7 @@ export interface AbilityDefinition {
 export const abilities: AbilityDefinition[] = [
   ...surfaceAbilities,
   ...tetherAbilities,
+  ...manipulationAbilities,
   {
     id: 'beacon',
     name: 'Gravity Beacon',

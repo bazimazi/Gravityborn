@@ -31,6 +31,25 @@ it('validates region narrative, references, fields, hazards and stable identifie
     expect(issues.some((issue) => issue.path.endsWith(suffix))).toBe(true);
   expect(issues.some((issue) => issue.message.includes('unique'))).toBe(true);
 });
+
+it('region scenery has unique authored identity and rejects unbounded or invalid geometry', () => {
+  expect(new Set(regions.map((region) => region.scenery?.watermark)).size).toBe(regions.length);
+  expect(regions.every((region) => region.scenery?.marks.length)).toBe(true);
+  const broken = structuredClone(regions[0]);
+  broken.scenery!.marks = [{ kind: 'ellipse', x: 600, y: 400, rx: Infinity, ry: 100, rotation: 0 }];
+  expect(validateRegions([broken]).some((issue) => issue.path.endsWith('scenery'))).toBe(true);
+  broken.scenery!.marks = [{ kind: 'line', points: [] }];
+  expect(validateRegions([broken]).some((issue) => issue.path.endsWith('scenery'))).toBe(true);
+  broken.scenery!.marks = Array.from({ length: 25 }, () => ({
+    kind: 'arc' as const,
+    x: 600,
+    y: 400,
+    radius: 100,
+    start: 0,
+    end: 1,
+  }));
+  expect(validateRegions([broken]).some((issue) => issue.path.endsWith('scenery'))).toBe(true);
+});
 it('an appended region drives room content, campaign length, routing and checkpoint bounds', () => {
   const extension = structuredClone(regions[6]);
   extension.id = 'expansion_test';
