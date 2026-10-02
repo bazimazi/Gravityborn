@@ -5,6 +5,7 @@ import { newProfile } from '../src/progression/profile';
 import { rotatingChallenge, type RunMode } from '../src/content/modes';
 import { phenomena, contracts } from '../src/content/phenomena';
 import { encounters } from '../src/content/events';
+import { regions } from '../src/content/regions';
 import { vi } from 'vitest';
 
 function progress(run: Expedition): void {
@@ -105,7 +106,7 @@ for (const [mode, count] of [
   ['quick', 7],
   ['boss_rush', 10],
   ['gauntlet', 7],
-  ['campaign', 56],
+  ['campaign', regions.length * 7],
 ] as [RunMode, number][])
   it(`${mode} reaches its intended completion with consistent checkpoints`, () => {
     const run = new Expedition(new Game(false));
@@ -122,7 +123,7 @@ it('endless wraps the last region, escalates rules, and preserves its route on r
   const profile = newProfile();
   profile.skills = ['endless', 'navigation', 'survey'];
   const run = new Expedition(new Game(false));
-  run.start('endless', 'manipulator', profile, 7, { mode: 'endless' });
+  run.start('endless', 'manipulator', profile, regions.length - 1, { mode: 'endless' });
   for (let i = 0; i < 160 && !(run.biome === 0 && run.phase === 'map'); i++) progress(run);
   expect(run.phase).toBe('map');
   expect(run.biome).toBe(0);

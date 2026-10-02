@@ -28,7 +28,7 @@ import {
   purchaseResearch,
 } from './progression/profile';
 import { equipmentById } from './content/equipment';
-import { modes, type RunMode } from './content/modes';
+import { modes, isEndlessMode, type RunMode } from './content/modes';
 import { contracts, phenomena, difficultyDescriptions, type Contract } from './content/phenomena';
 import { objectDefinitions } from './content/objects';
 import { installAccessibility, joystickInput } from './presentation/accessibility';
@@ -127,6 +127,7 @@ element<HTMLSelectElement>('#ability-select').onchange = () => {
   const id = element<HTMLSelectElement>('#ability-select').value;
   if (!run.active && !game.abilities.levels.has(id)) game.abilities.learn(id);
   element('#ability-description').textContent = abilityById.get(id)!.description;
+  updateHud(60);
 };
 element('#ability-description').textContent = abilities[0].description;
 function castPower(): void {
@@ -511,9 +512,9 @@ function prepareSharedRules(recipe: RunRecipe, revision: string): void {
   const region = element<HTMLSelectElement>('#run-region');
   if (
     (!rotating && !profile.classes.includes(recipe.classId)) ||
-    (recipe.mode === 'endless' && !profile.skills.includes('endless')) ||
+    (isEndlessMode(recipe.mode) && !profile.skills.includes('endless')) ||
     !region.options[recipe.biome] ||
-    region.options[recipe.biome].disabled
+    (recipe.mode !== 'planetary' && region.options[recipe.biome].disabled)
   ) {
     toast('Unlock this class, mode or starting region before using these rules.');
     return;

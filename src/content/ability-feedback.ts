@@ -44,6 +44,7 @@ export function abilitySound(id: string): AbilitySoundLayer[] {
       };
       break;
     case 'planet':
+    case 'split':
     case 'collapse':
       primary.waveform = 'sine';
       primary.duration = Math.max(0.4, primary.duration);

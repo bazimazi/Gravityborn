@@ -12,6 +12,10 @@ describe('physical powers', () => {
       game.world.spawn('crate', { x: 460, y: 450 });
       game.world.spawn('projectile', { x: 440, y: 400 });
       game.abilities.learn(definition.id);
+      if (definition.effect === 'split') {
+        game.abilities.learn('planet');
+        game.abilities.cast('planet', { x: 410, y: 450 }, true);
+      }
       game.start();
       expect(game.castAbility(definition.id, { x: 410, y: 450 })).toBe(true);
       expect(game.abilities.energy).toBe(100 - definition.energy);

@@ -373,5 +373,72 @@
       "anomalies": ["rift", "storm"],
       "resource": "Anomaly fragments"
     }
+  },
+  {
+    "id": "colonies",
+    "name": "Broken Planetary Colonies",
+    "color": "#20242c",
+    "accent": "#efce95",
+    "enemies": ["parasite", "splitter", "orbiter", "lancer", "salvager", "momentum_broker"],
+    "guardian": "planet_eater",
+    "prop": "fragment",
+    "secondaryProp": "metal_plate",
+    "hazard": "crusher",
+    "fields": [
+      {
+        "source": "environment",
+        "mode": "radial",
+        "position": {
+          "x": 360,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 0.0025,
+        "radius": 230,
+        "falloff": "linear",
+        "remaining": 36000
+      },
+      {
+        "source": "environment",
+        "mode": "radial",
+        "position": {
+          "x": 840,
+          "y": 400
+        },
+        "direction": {
+          "x": 0,
+          "y": 1
+        },
+        "strength": 0.0025,
+        "radius": 230,
+        "falloff": "linear",
+        "remaining": 36000
+      }
+    ],
+    "hazards": [],
+    "movingWalls": true,
+    "story": {
+      "act": "V · Beyond Weight",
+      "title": "Homes between worlds",
+      "intro": "Beyond the frontier, broken colony rings still circle the fragments they once sheltered. The Planet Eater follows their remaining gravity. The survivors ask you to hold a path open.",
+      "memory": "Memory 09: The colonies never needed one perfect world. They needed someone to keep the pieces within reach."
+    },
+    "secret": {
+      "name": "The shared center",
+      "text": "A schoolroom map names every moon after a family that returned. Its final lesson is written over the old evacuation order: a home is a place that makes room for another orbit."
+    },
+    "planet": {
+      "name": "Concord Remnants",
+      "mass": 1.9,
+      "radius": 6400,
+      "gravity": 0.9,
+      "atmosphere": "Sealed habitats",
+      "property": "Broken colonies around competing planetary fragments",
+      "anomalies": ["collision", "rift", "dense"],
+      "resource": "Habitat alloy"
+    }
   }
 ]

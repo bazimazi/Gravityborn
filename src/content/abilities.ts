@@ -3,6 +3,7 @@ import { specialistAbilities } from './specialist-abilities';
 import { kineticAbilities } from './kinetic-abilities';
 
 export type EffectKind =
+  | 'split'
   | 'mass'
   | 'orbit_impulse'
   | 'vector_turn'
@@ -450,6 +451,22 @@ export const abilities: AbilityDefinition[] = [
   ...advancedAbilities,
   ...specialistAbilities,
   ...kineticAbilities,
+  {
+    id: 'planet_split',
+    name: 'Planet Split',
+    rarity: 'legendary',
+    description:
+      'Split one of your summoned planets into two destructible moons in open space. They share its mass, inherit motion and temporary effects, and keep only its remaining lifetime.',
+    tags: ['Gravity', 'Mass', 'Orbit'],
+    effect: 'split',
+    energy: 28,
+    cooldown: 8,
+    radius: 210,
+    strength: 0.0035,
+    duration: 10,
+    target: 'point',
+    maxLevel: 3,
+  },
 ];
 
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));

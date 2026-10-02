@@ -36,6 +36,13 @@ export const modes = [
     description: 'One region under an intense rotating gravity field.',
   },
   {
+    id: 'planetary',
+    name: 'Planetary Endless',
+    regions: Infinity,
+    description:
+      'Cycle the broken colonies, dead planet and floating islands with moving planetary gravity. Begin with Micro Planet and Planet Split; frontier rules keep escalating.',
+  },
+  {
     id: 'boss_rush',
     name: 'Boss Rush',
     regions: 1,
@@ -61,6 +68,12 @@ export const modes = [
   },
 ] as const;
 export type RunMode = (typeof modes)[number]['id'];
+export const isEndlessMode = (mode: string): boolean => mode === 'endless' || mode === 'planetary';
+export function planetaryRoute(): number[] {
+  return ['colonies', 'dead_planet', 'islands']
+    .map((id) => regions.findIndex((region) => region.id === id))
+    .filter((index) => index >= 0);
+}
 export function rotatingChallenge(
   mode: 'daily' | 'weekly',
   date = new Date(),

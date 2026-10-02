@@ -109,6 +109,8 @@
     "collapseRadiusRatio": 0.38,
     "collapseDamage": 12,
     "planetOffset": 45,
+    "planetSplitOffset": 35,
+    "planetSplitImpulse": 6,
     "planetGravityScale": 0.1,
     "planetImpulse": 5,
     "planetVortexRatio": 0.45,

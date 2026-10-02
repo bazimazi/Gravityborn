@@ -13,7 +13,9 @@ test('production build cold-starts offline, plays, and preserves settings and a 
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByLabel('Reduced flashing').check();
   await page.getByRole('button', { name: 'Close settings' }).click();
-  await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
+  await page.getByRole('button', { name: 'Progression hub', exact: true }).click();
+  await page.locator('#run-seed').fill('offline-recovery');
+  await page.getByRole('button', { name: 'Start selected class', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
   await context.setOffline(true);
   await page.reload();

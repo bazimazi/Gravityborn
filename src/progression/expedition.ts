@@ -11,7 +11,13 @@ import type { AbilitySnapshot } from '../gameplay/abilities';
 import type { Profile } from './profile';
 import { encounters, type EventChoice } from '../content/events';
 import { Random } from '../core/random';
-import { modes, rotatingChallenge, type RunMode } from '../content/modes';
+import {
+  modes,
+  rotatingChallenge,
+  isEndlessMode,
+  planetaryRoute,
+  type RunMode,
+} from '../content/modes';
 import { contracts, phenomena, type Contract, type Phenomenon } from '../content/phenomena';
 import { bossDefinitions, type BossKind } from '../content/bosses';
 import { freshMastery, readMastery, type MasteryProgress } from './mastery';
@@ -173,7 +179,7 @@ export class Expedition {
     if (this.active && this.phase !== 'summary') this.abandon();
     this.eventReward = undefined;
     this.mode = modes.some((mode) => mode.id === options.mode) ? options.mode! : 'standard';
-    if (this.mode === 'endless' && !profile?.skills.includes('endless')) this.mode = 'standard';
+    if (isEndlessMode(this.mode) && !profile?.skills.includes('endless')) this.mode = 'standard';
     this.contract = contracts.some((contract) => contract.id === options.contract)
       ? options.contract!
       : 'none';
@@ -209,6 +215,7 @@ export class Expedition {
         ? Math.max(0, Math.min(biomes.length - 1, Math.floor(biome)))
         : 0;
     this.biome = this.startBiome;
+    if (this.mode === 'planetary') this.biome = this.startBiome = planetaryRoute()[0];
     this.rooms = 0;
     this.kills = 0;
     this.elapsed = 0;
@@ -216,6 +223,8 @@ export class Expedition {
     this.game.reset(false);
     this.game.abilities.levels.clear();
     for (const id of classById.get(this.classId)!.powers) this.game.abilities.learn(id);
+    if (this.mode === 'planetary')
+      for (const id of ['planet', 'planet_split']) this.game.abilities.learn(id);
     this.build = new RunBuild(this.game, this.seed, this.classId);
     if (profile) this.build.configure(profile);
     this.build.apply();
@@ -290,7 +299,7 @@ export class Expedition {
         period: 4,
         phase: 0,
       });
-    const endlessStage = this.mode === 'endless' ? this.rooms + 1 : 0;
+    const endlessStage = isEndlessMode(this.mode) ? this.rooms + 1 : 0;
     if (endlessStage >= endlessTuning.movingWallsAt)
       room.walls.slice(4).forEach((wall, index) => {
         wall.motion = index % 2 ? 'horizontal' : 'vertical';
@@ -316,10 +325,11 @@ export class Expedition {
       phenomenon,
       this.contract,
       Math.min(
-        this.mode === 'endless' ? endlessTuning.maxDifficulty : 12,
+        isEndlessMode(this.mode) ? endlessTuning.maxDifficulty : 12,
         this.difficulty + this.depth,
       ),
       endlessStage,
+      this.mode === 'planetary' ? ['collision'] : [],
     );
     for (const id of this.game.rules.activePhenomena) this.discoveries.add(`phenomenon:${id}`);
     if (['combat', 'elite', 'challenge', 'boss', 'puzzle', 'secret'].includes(roomType)) {
@@ -427,7 +437,7 @@ export class Expedition {
     if (this.current?.type === 'boss' && this.current.next.length === 0) {
       const limit = modes.find((mode) => mode.id === this.mode)!.regions;
       if (
-        this.mode !== 'endless' &&
+        !isEndlessMode(this.mode) &&
         this.biome >= Math.min(biomes.length - 1, this.startBiome + limit - 1)
       ) {
         this.won = true;
@@ -440,7 +450,10 @@ export class Expedition {
         this.recordEnd('victory');
         return true;
       }
-      this.biome = (this.biome + 1) % biomes.length;
+      if (this.mode === 'planetary') {
+        const route = planetaryRoute();
+        this.biome = route[(route.indexOf(this.biome) + 1) % route.length];
+      } else this.biome = (this.biome + 1) % biomes.length;
       this.depth++;
       this.map = this.createMap();
       this.current = undefined;

@@ -28,8 +28,8 @@ const exported = JSON.parse(
 if (exported.version !== 2 || !exported.payload.profile)
   throw new Error('Native JSON export was not written');
 await device.shell('input keyevent 4');
-await page.getByRole('button', { name: 'Close progression' }).click();
-await page.getByRole('button', { name: 'Begin expedition', exact: true }).click();
+await page.locator('#run-seed').fill('offline-recovery');
+await page.getByRole('button', { name: 'Start selected class', exact: true }).click();
 await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
 await page.locator('[data-room]:enabled').click();
 await page.getByRole('button', { name: 'Gravity left', exact: true }).click();

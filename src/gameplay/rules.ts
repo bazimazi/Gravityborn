@@ -30,13 +30,16 @@ export class RuleSystem {
     contract: Contract,
     difficulty: number,
     endlessStage = 0,
+    additional: Phenomenon[] = [],
   ): void {
     this.random = new Random(`${seed}:rules`);
     this.phenomenon = phenomenon;
     this.contract = contract;
     this.difficulty = difficulty;
     this.endlessStage = endlessStage;
-    this.activePhenomena = endlessPhenomena(endlessStage, phenomenon);
+    this.activePhenomena = [
+      ...new Set([...endlessPhenomena(endlessStage, phenomenon), ...additional]),
+    ];
   }
   private field(
     mode: GravityField['mode'],

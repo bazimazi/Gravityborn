@@ -257,7 +257,7 @@
         "tests/exploration.test.ts",
         "tests/rooms.test.ts"
       ],
-      "remaining": "Hidden vault routes are revealed through destructible physical seals; optional elite encounters award rare relics and eight authored lore entries. Automated discovery, checkpoint, reward and route reachability checks pass. Human discoverability and reward tuning remain open."
+      "remaining": "Hidden vault routes are revealed through destructible physical seals; optional elite encounters award rare relics and nine authored lore entries. Automated discovery, checkpoint, reward and route reachability checks pass. Human discoverability and reward tuning remain open."
     },
     {
       "section": 21,
@@ -418,7 +418,7 @@
         "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "Eight collectible planet records expose mass, radius, gravity, atmosphere, property, biome, enemies, resource, anomaly and guardian. These are exploration records, not eight separately simulated spherical worlds."
+      "remaining": "Nine collectible planet records expose mass, radius, gravity, atmosphere, property, biome, enemies, resource, anomaly and guardian. These are exploration records, not nine separately simulated spherical worlds."
     },
     {
       "section": 33,
@@ -514,7 +514,7 @@
         "src/progression/profile.ts",
         "tests/mastery.test.ts"
       ],
-      "remaining": "128 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
+      "remaining": "323 challenges including per-power mastery milestones. Rewards include currency/research, equipment, six core appearances, eight titles and six memories. Reward idempotency, unlock restrictions, selection and migration are tested. Balance remains a separate review."
     },
     {
       "section": 40,
@@ -692,7 +692,7 @@
         "src/content/events.ts",
         "src/presentation/codex.ts"
       ],
-      "remaining": "Eight region chapters, short event encounters, guardian memories, planetary descriptions and hidden archives develop The Weight and the awakened core. Human narrative pacing/coherence and expanded environmental staging remain open."
+      "remaining": "Nine region chapters, short event encounters, guardian memories, planetary descriptions and hidden archives develop The Weight and the awakened core. Human narrative pacing/coherence and expanded environmental staging remain open."
     },
     {
       "section": 53,
@@ -704,7 +704,7 @@
         "src/progression/expedition.ts",
         "tests/modes.test.ts"
       ],
-      "remaining": "Five named acts span the eight-region campaign and guardian memories. Endless continues into the gravitational frontier after the campaign; full campaign routing is automated."
+      "remaining": "Five named acts span the nine-region campaign and guardian memories. Endless continues into the gravitational frontier after the campaign; full campaign routing is automated."
     },
     {
       "section": 54,
@@ -1092,7 +1092,7 @@
         "scripts/validate-content.ts",
         "tests/tactical-enemies.test.ts"
       ],
-      "remaining": "Current catalog: eight biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 60 powers, 60 relics, ten classes and 318 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
+      "remaining": "Current catalog: nine biomes, ten bosses, 25 distinct base enemies plus 99 curated elite variants, 61 powers, 60 relics, ten classes and 323 challenges. The alpha content minima are met. Human balance and replayability remain unvalidated."
     },
     {
       "section": 83,
@@ -1105,7 +1105,7 @@
         "src/content/classes.ts",
         "tests/endless.test.ts"
       ],
-      "remaining": "Ten classes, 120 combined powers/relics, eight regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
+      "remaining": "Ten classes, 121 combined powers/relics, nine regions, ten bosses, 99 variants, equipment, mutations, endless and rotating challenges meet the named beta feature/count targets. Balance, UX polish and physical-device coverage remain open."
     },
     {
       "section": 84,
@@ -1116,7 +1116,7 @@
         "scripts/validate-content.ts",
         "docs/native-delivery.md"
       ],
-      "remaining": "Most named launch systems exist, with eight regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 60/60 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
+      "remaining": "Most named launch systems exist, with nine regions, ten bosses, 99 variants, fifty equipment designs and ten classes. Powers/relics remain 61/60 against approximate 100/100 targets. Player balance/readability/pacing, physical-device validation, signed iOS builds and store delivery remain open."
     },
     {
       "section": 85,
@@ -1137,14 +1137,16 @@
     {
       "section": 86,
       "title": "Example Expansion",
-      "status": "partial",
+      "status": "implemented",
       "evidence": [
         "src/content/abilities.ts",
         "src/content/bosses.ts",
         "src/data/regions.json",
-        "tests/deployment.test.ts"
+        "tests/deployment.test.ts",
+        "tests/planetfall.test.ts",
+        "tests/browser/planetfall.spec.ts"
       ],
-      "remaining": "The Planetfall example is not a shipped expansion pack. Existing planets, Binary System, slingshot, Orbital Strike, Planetary Core, Stable Orbit, Moon Fragment and planetary regions/guardians provide its architectural basis. Planet Split and a dedicated planetary endless package remain unimplemented."
+      "remaining": "Planetfall content is integrated: an appended Broken Planetary Colonies region with its chapter/vault, parasite encounters and the Planet Eater; Micro Planet, Planet Split, Orbital Strike, Slingshot and Binary System; Planetary Core, Stable Orbit and Moon Fragment. Planetary Endless cycles colonies/dead planet/islands with persistent planetary collision sources plus frontier escalation, starting planets and splitting, the endless research gate, checkpoint recovery and shared challenge codes. Split preflights geometry/caps, preserves mass and temporary-effect expiry, and cannot extend its parent lifetime. Balance and physical-device quality remain separate gates."
     },
     {
       "section": 87,

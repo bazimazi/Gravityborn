@@ -1,3 +1,4 @@
+import { isEndlessMode } from '../content/modes';
 import type { RunArchive } from '../progression/archive';
 import { replayRevision } from '../progression/archive';
 import { abilityById } from '../content/abilities';
@@ -13,7 +14,7 @@ export function archiveView(archive: RunArchive, selected: string): string {
   const local = archive.reports.filter((item) => !item.imported && !item.assisted);
   return `<details id="run-archive"><summary>Run archive & ghosts · ${archive.reports.length} records</summary>
   <p class="dialog-copy">Keep the last 20 results and the latest complete victory ghost. Export a run to share its seed, rules, build and route. Imports never award progression. Local records cover only this archive.</p>
-  <p class="mono">LOCAL BEST · SCORE ${Math.max(0, ...local.map((r) => r.score))} · CHAIN ${Math.max(0, ...local.map((r) => r.chain))} · DEPTH ${Math.max(0, ...local.filter((r) => r.recipe.mode === 'endless').map((r) => r.depth))}</p>
+  <p class="mono">LOCAL BEST · SCORE ${Math.max(0, ...local.map((r) => r.score))} · CHAIN ${Math.max(0, ...local.map((r) => r.chain))} · DEPTH ${Math.max(0, ...local.filter((r) => isEndlessMode(r.recipe.mode)).map((r) => r.depth))}</p>
   <label class="setting-row">Show matching ghost <input id="ghost-enabled" type="checkbox" ${archive.enabled ? 'checked' : ''}></label>
   <p class="dialog-copy">Ghosts follow chamber time and never collide. Matching seed, rules, starting bonuses and game revision are required. New runs record up to 100 minutes; resumed or assisted runs have results only.</p>
   ${

@@ -59,7 +59,7 @@ export class AbilitySystem {
   private readonly bindings: Binding[] = [];
   private readonly statuses: Status[] = [];
   private readonly resistance = new Map<number, { until: number; generation: number }>();
-  private readonly constructs: { entity: Entity; expires: number }[] = [];
+  private readonly constructs: { entity: Entity; expires: number; planet?: boolean }[] = [];
   readonly tethers: {
     body: Matter.Constraint;
     a: Entity;
@@ -197,6 +197,56 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
+    const splitSource =
+      definition.effect === 'split'
+        ? this.constructs
+            .filter(
+              (construct) =>
+                construct.planet &&
+                construct.entity.alive &&
+                !construct.entity.body.isStatic &&
+                construct.expires > this.host.time &&
+                targets.includes(construct.entity),
+            )
+            .sort(
+              (a, b) =>
+                length(subtract(a.entity.body.position, point)) -
+                length(subtract(b.entity.body.position, point)),
+            )[0]
+        : undefined;
+    const splitPositions = splitSource
+      ? [-1, 1].map((sign) => ({
+          x: splitSource.entity.body.position.x + sign * tuning.planetSplitOffset,
+          y: splitSource.entity.body.position.y,
+        }))
+      : [];
+    if (definition.effect === 'split') {
+      const source = splitSource?.entity;
+      const rawMass = source
+        ? [...source.massFactors.values()].reduce((mass, factor) => mass * factor, source.massBase)
+        : 0;
+      const parentFields = this.bindings.filter(
+        (binding) =>
+          binding.entity === splitSource?.entity && this.host.gravity.fields.has(binding.field),
+      ).length;
+      const childRadius = entityDefinitions.fragment.radius;
+      if (
+        !splitSource ||
+        source!.body.mass < 0.02 ||
+        Math.abs(rawMass - source!.body.mass) > 1e-8 ||
+        this.host.world.entities.size + 1 > balance.physics.maxBodies ||
+        this.host.gravity.fields.size - parentFields + 4 > balance.physics.maxFields ||
+        splitPositions.some(
+          (position) =>
+            position.x < childRadius ||
+            position.y < childRadius ||
+            position.x > this.host.room.width - childRadius ||
+            position.y > this.host.room.height - childRadius ||
+            !this.host.world.circleClear(position, childRadius),
+        )
+      )
+        return false;
+    }
     const responseTargets = ['response', 'mass'].includes(definition.effect)
       ? (parameters.selfOnly ? [this.host.player] : targets).filter(
           (entity) => !entity.body.isStatic,
@@ -281,6 +331,7 @@ export class AbilitySystem {
       center: Vec2,
       power: number,
       follow?: Entity,
+      lifespan = duration,
     ): number => {
       const fieldId = this.host.gravity.addField({
         source: `ability:${id}`,
@@ -291,13 +342,13 @@ export class AbilitySystem {
         radius,
         falloff: parameters.falloff ?? (mode === 'zero' ? 'constant' : 'linear'),
         affects: parameters.affects,
-        remaining: duration,
+        remaining: lifespan,
       });
       this.bindings.push({
         field: fieldId,
         entity: follow,
         chain,
-        expires: this.host.time + duration,
+        expires: this.host.time + lifespan,
         velocity:
           parameters.travelSpeed === undefined
             ? undefined
@@ -309,6 +360,51 @@ export class AbilitySystem {
       return fieldId;
     };
     switch (definition.effect) {
+      case 'split': {
+        const parent = splitSource!.entity;
+        const lifespan = Math.min(duration, splitSource!.expires - this.host.time);
+        const velocity = Matter.Body.getVelocity(parent.body);
+        const inheritedStatuses = this.statuses.filter(
+          (status) =>
+            status.entity === parent &&
+            status.generation === parent.generation &&
+            status.kind !== 'lock',
+        );
+        this.host.world.remove(parent);
+        this.constructs.splice(this.constructs.indexOf(splitSource!), 1);
+        for (let index = this.bindings.length - 1; index >= 0; index--)
+          if (this.bindings[index].entity === parent) {
+            this.host.gravity.removeField(this.bindings[index].field);
+            this.bindings.splice(index, 1);
+          }
+        for (const [index, position] of splitPositions.entries()) {
+          const child = this.host.world.spawn('fragment', position)!;
+          child.gravityScale =
+            (parent.gravityBase * parent.definition.gravityResponse) /
+            child.definition.gravityResponse;
+          child.gravityFactors = new Map(parent.gravityFactors);
+          child.massFactors = new Map(parent.massFactors);
+          this.host.world.setMass(child, parent.massBase / 2);
+          for (const status of inheritedStatuses)
+            this.statuses.push({ ...status, entity: child, generation: child.generation });
+          Matter.Body.setVelocity(child.body, velocity);
+          this.host.world.impulse(child, {
+            x: ((index ? 1 : -1) * tuning.planetSplitImpulse) / Math.sqrt(child.body.mass),
+            y: 0,
+          });
+          this.host.markCause(child, chain);
+          this.constructs.push({ entity: child, expires: this.host.time + lifespan, planet: true });
+          field('radial', child.body.position, strength, child, lifespan);
+          field(
+            'vortex',
+            child.body.position,
+            strength * tuning.planetVortexRatio,
+            child,
+            lifespan,
+          );
+        }
+        break;
+      }
       case 'mass': {
         const key = `mass:${id}`;
         for (const entity of responseTargets) {
@@ -568,7 +664,11 @@ export class AbilitySystem {
           if (!planet) continue;
           planet.gravityScale = tuning.planetGravityScale;
           this.host.markCause(planet, chain);
-          this.constructs.push({ entity: planet, expires: this.host.time + duration });
+          this.constructs.push({
+            entity: planet,
+            expires: this.host.time + duration,
+            planet: true,
+          });
           this.host.world.impulse(planet, { x: 0, y: (index % 2 ? -1 : 1) * tuning.planetImpulse });
           field('radial', planet.body.position, strength, planet);
           field('vortex', planet.body.position, strength * tuning.planetVortexRatio, planet);
