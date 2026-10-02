@@ -55,12 +55,12 @@ Choose **Learn by playing** for seven training lessons, **Enter the chamber** fo
 
 Beyond the original laboratory, the current implementation includes:
 
-- 61 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 60 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
+- 75 physical powers with levels/evolutions and traveling fields, a four-stage primary well, 75 relics, conditional/tagged modifiers, triggers, and twelve build synergies.
 - 22 additional enemy behaviors, eight elite modifiers forming 99 curated variants, ten bosses, and nine biome definitions.
 - Seeded authored-room composition, branching routes, puzzles, hazards, shops, six events, and three-choice XP upgrades.
 - Ten classes, 50 equipment designs, upgrades/affixes/sets, six research trees, and nine mutations.
 - Quick, standard, long, campaign, endless, challenge, boss-rush, gauntlet, daily, and weekly modes; seven difficulties and four contracts.
-- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 323 reward-bearing challenges.
+- Five story acts, nine collectible planet records, hidden vaults with nine additional lore entries, a discovery codex, causal ability mastery, and 393 reward-bearing challenges.
 - Physical XP/shard pickups, nine material definitions, contact fire/quenching, conductive discharge, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Seven shop purchase categories with build-aware power selection, equipment replacement, and persistent sold inventory.
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.

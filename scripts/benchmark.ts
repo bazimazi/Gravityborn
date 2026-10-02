@@ -102,45 +102,48 @@ for (const spacing of [55, 44])
   }
 
 // Exercise gameplay attribution as well as the solver at both shared budgets.
-const saturated = new Game(false);
-saturated.player.invulnerability = 1000;
-saturated.abilities.learn('vortex');
-for (let index = 0; saturated.world.entities.size < balance.physics.maxBodies; index++) {
-  const entity = saturated.world.spawn(index % 2 ? 'rock' : 'chaser', {
-    x: 90 + (index % 20) * 52,
-    y: 90 + Math.floor(index / 20) * 52,
-  })!;
-  entity.invulnerability = 1000;
-}
-for (let index = 0; index < balance.physics.maxFields; index++)
-  saturated.abilities.cast(
-    'vortex',
-    { x: 180 + (index % 5) * 210, y: 150 + Math.floor(index / 5) * 50 },
-    true,
+for (const programmed of [false, true]) {
+  const saturated = new Game(false);
+  saturated.player.invulnerability = 1000;
+  const powers = programmed ? ['pulsing_well', 'orbital_lantern', 'spiral_bloom'] : ['vortex'];
+  for (const power of powers) saturated.abilities.learn(power);
+  for (let index = 0; saturated.world.entities.size < balance.physics.maxBodies; index++) {
+    const entity = saturated.world.spawn(index % 2 ? 'rock' : 'chaser', {
+      x: 90 + (index % 20) * 52,
+      y: 90 + Math.floor(index / 20) * 52,
+    })!;
+    entity.invulnerability = 1000;
+  }
+  for (let index = 0; index < balance.physics.maxFields; index++)
+    saturated.abilities.cast(
+      powers[index % powers.length],
+      { x: 180 + (index % 5) * 210, y: 150 + Math.floor(index / 5) * 50 },
+      true,
+    );
+  saturated.start();
+  saturated.abilities.learn('constellation');
+  for (let index = 0; index < 4; index++)
+    if (!saturated.abilities.cast('constellation', { x: 600, y: 400 }, true))
+      throw new Error('Could not populate tether stress case');
+  const fullTimings: number[] = [];
+  for (let step = 0; step < 480; step++) {
+    const start = performance.now();
+    saturated.step();
+    if (step >= 100) fullTimings.push(performance.now() - start);
+  }
+  fullTimings.sort((a, b) => a - b);
+  console.log(
+    JSON.stringify({
+      stage: programmed ? 'full-gameplay-programmed-fields' : 'full-gameplay-field-attribution',
+      bodies: saturated.world.entities.size,
+      fields: saturated.gravity.fields.size,
+      tethers: saturated.abilities.tethers.length,
+      p95Ms: +fullTimings[Math.floor(fullTimings.length * 0.95)].toFixed(3),
+      budgetMs: +balance.physics.stepMs.toFixed(3),
+    }),
   );
-saturated.start();
-saturated.abilities.learn('constellation');
-for (let index = 0; index < 4; index++)
-  if (!saturated.abilities.cast('constellation', { x: 600, y: 400 }, true))
-    throw new Error('Could not populate tether stress case');
-const fullTimings: number[] = [];
-for (let step = 0; step < 480; step++) {
-  const start = performance.now();
-  saturated.step();
-  if (step >= 100) fullTimings.push(performance.now() - start);
+  saturated.world.dispose();
 }
-fullTimings.sort((a, b) => a - b);
-console.log(
-  JSON.stringify({
-    stage: 'full-gameplay-field-attribution',
-    bodies: saturated.world.entities.size,
-    fields: saturated.gravity.fields.size,
-    tethers: saturated.abilities.tethers.length,
-    p95Ms: +fullTimings[Math.floor(fullTimings.length * 0.95)].toFixed(3),
-    budgetMs: +balance.physics.stepMs.toFixed(3),
-  }),
-);
-saturated.world.dispose();
 
 // A repeatable input-only playthrough confirms that the authored arena is winnable.
 const game = new Game();

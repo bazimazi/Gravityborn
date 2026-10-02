@@ -2,6 +2,7 @@ import type { Modifier, TriggerRule } from '../progression/modifiers';
 import { advancedRelics } from './advanced-relics';
 import { specialistRelics } from './specialist-relics';
 import { kineticRelics } from './kinetic-relics';
+import { fieldRelics } from './field-relics';
 export interface RelicDefinition {
   id: string;
   name: string;
@@ -287,6 +288,7 @@ export const relics: RelicDefinition[] = [
   ...advancedRelics,
   ...specialistRelics,
   ...kineticRelics,
+  ...fieldRelics,
 ];
 export const relicById = new Map(relics.map((relic) => [relic.id, relic]));
 

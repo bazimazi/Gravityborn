@@ -7,6 +7,7 @@ import { entityDefinitions } from '../content/enemies';
 import type { GravityField, GravitySystem } from '../physics/gravity';
 import type { Entity, PhysicsWorld } from '../physics/world';
 import { ModifierSet, type ModifierContext } from '../progression/modifiers';
+import { fieldMotionAt, type FieldMotion } from './field-motion';
 
 export interface AbilityHost {
   world: PhysicsWorld;
@@ -25,9 +26,11 @@ export interface AbilityHost {
 interface Binding {
   field: number;
   entity?: Entity;
+  generation?: number;
   chain: number;
   expires: number;
   velocity?: Vec2;
+  motion?: FieldMotion;
   collapse?: {
     radius: number;
     position: Vec2;
@@ -141,14 +144,24 @@ export class AbilitySystem {
       this.modifiers.evaluate('energyCost', definition.energy, definition.tags, context),
     );
     const tuning = balance.abilities;
-    const parameters = definition.parameters ?? {};
+    const parameters = { ...definition.parameters };
+    for (const [key, stat] of [
+      ['fieldOffset', 'fieldOffset'],
+      ['orbitSpeed', 'fieldOrbitSpeed'],
+      ['directionSpeed', 'fieldDirectionSpeed'],
+      ['strengthPeriod', 'fieldPeriod'],
+    ] as const)
+      if (parameters[key] !== undefined)
+        parameters[key] = this.modifiers.evaluate(stat, parameters[key]!, definition.tags, context);
     const planets = definition.effect === 'planet' ? (parameters.planetCount ?? 1) : 0;
     const bodies = planets + Number(definition.effect === 'deploy');
     const fieldSlots = planets
       ? planets * 2
-      : ['field', 'collapse', 'reflect', 'deploy'].includes(definition.effect)
-        ? 1
-        : 0;
+      : definition.effect === 'field'
+        ? (parameters.fieldCount ?? 1)
+        : ['collapse', 'reflect', 'deploy'].includes(definition.effect)
+          ? 1
+          : 0;
     if (
       (!repeated && cost > this.energy) ||
       this.host.gravity.fields.size + fieldSlots > balance.physics.maxFields ||
@@ -197,6 +210,10 @@ export class AbilitySystem {
       context,
     );
     const targets = this.near(point, radius, parameters.affects);
+    const attachment = parameters.attach
+      ? targets.find((entity) => !entity.body.isStatic && !['xp', 'shard'].includes(entity.kind))
+      : undefined;
+    if (parameters.attach && !attachment) return false;
     const splitSource =
       definition.effect === 'split'
         ? this.constructs
@@ -332,14 +349,42 @@ export class AbilitySystem {
       power: number,
       follow?: Entity,
       lifespan = duration,
+      phase = 0,
     ): number => {
+      const aim = normalize(subtract(target, this.host.player.body.position));
+      const direction = length(aim) ? aim : { x: 1, y: 0 };
+      const motion: FieldMotion | undefined =
+        definition.effect === 'field' &&
+        [
+          parameters.fieldOffset,
+          parameters.orbitSpeed,
+          parameters.directionSpeed,
+          parameters.radiusStart,
+          parameters.radiusEnd,
+          parameters.strengthPeriod,
+          parameters.returning,
+        ].some((value) => value !== undefined)
+          ? {
+              origin: { ...center },
+              direction,
+              radius,
+              strength: power,
+              start: this.host.time,
+              duration: lifespan,
+              phase,
+              parameters,
+            }
+          : undefined;
+      const initial = motion
+        ? fieldMotionAt(motion, this.host.time, follow?.body.position)
+        : undefined;
       const fieldId = this.host.gravity.addField({
         source: `ability:${id}`,
         mode,
-        direction: normalize(subtract(target, this.host.player.body.position)),
-        position: center,
-        strength: power,
-        radius,
+        direction: initial?.direction ?? direction,
+        position: initial?.position ?? center,
+        strength: initial?.strength ?? power,
+        radius: initial?.radius ?? radius,
         falloff: parameters.falloff ?? (mode === 'zero' ? 'constant' : 'linear'),
         affects: parameters.affects,
         remaining: lifespan,
@@ -347,10 +392,12 @@ export class AbilitySystem {
       this.bindings.push({
         field: fieldId,
         entity: follow,
+        generation: follow?.generation,
+        motion,
         chain,
         expires: this.host.time + lifespan,
         velocity:
-          parameters.travelSpeed === undefined
+          parameters.travelSpeed === undefined || motion
             ? undefined
             : scale(
                 normalize(subtract(target, this.host.player.body.position)),
@@ -519,14 +566,18 @@ export class AbilitySystem {
         }
         break;
       case 'field':
-        field(
-          definition.mode!,
-          point,
-          strength,
-          definition.target === 'player' && parameters.travelSpeed === undefined
-            ? this.host.player
-            : undefined,
-        );
+        for (let index = 0; index < (parameters.fieldCount ?? 1); index++)
+          field(
+            definition.mode!,
+            attachment?.body.position ?? point,
+            strength * (parameters.alternatePolarity && index % 2 ? -1 : 1),
+            attachment ??
+              (definition.target === 'player' && parameters.travelSpeed === undefined
+                ? this.host.player
+                : undefined),
+            duration,
+            (index * Math.PI * 2) / (parameters.fieldCount ?? 1),
+          );
         break;
       case 'impulse':
       case 'burst': {
@@ -801,7 +852,11 @@ export class AbilitySystem {
     }
     for (let index = this.bindings.length - 1; index >= 0; index--) {
       const binding = this.bindings[index];
-      if (binding.expires <= this.host.time || (binding.entity && !binding.entity.alive)) {
+      if (
+        binding.expires <= this.host.time ||
+        (binding.entity &&
+          (!binding.entity.alive || binding.entity.generation !== binding.generation))
+      ) {
         if (binding.collapse) {
           const targets = this.near(
             binding.collapse.position,
@@ -825,6 +880,13 @@ export class AbilitySystem {
       }
       if (binding.entity) this.host.gravity.moveField(binding.field, binding.entity.body.position);
       const field = this.host.gravity.fields.get(binding.field);
+      if (field && binding.motion) {
+        const value = fieldMotionAt(binding.motion, this.host.time, binding.entity?.body.position);
+        field.radius = value.radius;
+        field.strength = value.strength;
+        field.direction = value.direction;
+        this.host.gravity.moveField(binding.field, value.position);
+      }
       if (field && binding.velocity)
         this.host.gravity.moveField(binding.field, {
           x: field.position.x + binding.velocity.x * dt,

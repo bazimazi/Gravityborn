@@ -1,6 +1,7 @@
 import { advancedAbilities } from './advanced-abilities';
 import { specialistAbilities } from './specialist-abilities';
 import { kineticAbilities } from './kinetic-abilities';
+import { dynamicFieldAbilities } from './dynamic-field-abilities';
 
 export type EffectKind =
   | 'split'
@@ -52,6 +53,16 @@ export interface AbilityDefinition {
     travelSpeed?: number;
     tetherLength?: number;
     selfOnly?: boolean;
+    attach?: boolean;
+    fieldCount?: number;
+    fieldOffset?: number;
+    alternatePolarity?: boolean;
+    orbitSpeed?: number;
+    directionSpeed?: number;
+    radiusStart?: number;
+    radiusEnd?: number;
+    strengthPeriod?: number;
+    returning?: boolean;
   };
   feedback?: {
     color?: string;
@@ -451,6 +462,7 @@ export const abilities: AbilityDefinition[] = [
   ...advancedAbilities,
   ...specialistAbilities,
   ...kineticAbilities,
+  ...dynamicFieldAbilities,
   {
     id: 'planet_split',
     name: 'Planet Split',
@@ -469,4 +481,7 @@ export const abilities: AbilityDefinition[] = [
   },
 ];
 
+for (const definition of abilities)
+  if (definition.effect === 'field' && !definition.tags.includes('Field'))
+    definition.tags.push('Field');
 export const abilityById = new Map(abilities.map((definition) => [definition.id, definition]));

@@ -247,6 +247,73 @@ export function validateAbilities(catalog: readonly AbilityDefinition[]): Conten
       parent = next;
     }
     const p = item.parameters;
+    if (p) {
+      const programKeys = [
+        'attach',
+        'fieldCount',
+        'fieldOffset',
+        'alternatePolarity',
+        'orbitSpeed',
+        'directionSpeed',
+        'radiusStart',
+        'radiusEnd',
+        'strengthPeriod',
+        'returning',
+      ] as const;
+      if (programKeys.some((key) => p[key] !== undefined))
+        check(
+          item.effect === 'field',
+          'parameters',
+          'Dynamic field parameters require a field effect.',
+        );
+      for (const key of ['attach', 'alternatePolarity', 'returning'] as const)
+        if (p[key] !== undefined)
+          check(typeof p[key] === 'boolean', `parameters.${key}`, 'Use a boolean field option.');
+      if (p.attach)
+        check(
+          item.target === 'point' && p.travelSpeed === undefined,
+          'parameters.attach',
+          'Attached fields require point targets and no travel speed.',
+        );
+      if (p.fieldCount !== undefined)
+        check(
+          Number.isInteger(p.fieldCount) && isNumber(p.fieldCount, 1, 4),
+          'parameters.fieldCount',
+          'Use one to four shared-budget fields.',
+        );
+      if (p.fieldOffset !== undefined)
+        check(
+          isNumber(p.fieldOffset, 0, 300),
+          'parameters.fieldOffset',
+          'Field offsets must be within 0–300.',
+        );
+      for (const key of ['orbitSpeed', 'directionSpeed'] as const)
+        if (p[key] !== undefined)
+          check(
+            isNumber(p[key]!, -8, 8),
+            `parameters.${key}`,
+            'Angular field speed must be within -8–8 radians per second.',
+          );
+      for (const key of ['radiusStart', 'radiusEnd'] as const)
+        if (p[key] !== undefined)
+          check(
+            isNumber(p[key]!, 0.05, 2),
+            `parameters.${key}`,
+            'Radius scales must be within 0.05–2.',
+          );
+      if (p.strengthPeriod !== undefined)
+        check(
+          item.mode !== 'zero' && isNumber(p.strengthPeriod, 0.5, 20),
+          'parameters.strengthPeriod',
+          'Signed oscillation requires a force field and a 0.5–20 second period.',
+        );
+      if (p.returning)
+        check(
+          p.travelSpeed !== undefined,
+          'parameters.returning',
+          'Returning fields require a travel speed.',
+        );
+    }
     if (p?.selfOnly !== undefined)
       check(
         typeof p.selfOnly === 'boolean' &&

@@ -7,6 +7,8 @@ for (const power of [
   'polarity',
   'densify',
   'planet_split',
+  'quadrupole',
+  'orbital_lantern',
 ])
   test(`${power} renders and remains usable with visual accessibility settings`, async ({
     page,
