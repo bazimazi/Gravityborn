@@ -16,6 +16,10 @@
   --line: #263449;
   --mint: #94e8d8;
   --violet: #bda7f6;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
 }
 * {
   box-sizing: border-box;
@@ -86,11 +90,15 @@ kbd {
   text-transform: uppercase;
 }
 .app-shell {
+  --shell-gutter: 28px;
+  --shell-bottom: 14px;
   height: 100dvh;
   min-height: 360px;
   max-width: 1800px;
   margin: auto;
-  padding: 0 28px 14px;
+  padding: var(--safe-area-top) max(var(--shell-gutter), var(--safe-area-right))
+    max(var(--shell-bottom), var(--safe-area-bottom))
+    max(var(--shell-gutter), var(--safe-area-left));
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -861,13 +869,14 @@ kbd {
   justify-content: flex-start;
 }
 dialog {
-  max-height: calc(100dvh - 32px);
+  inset: var(--safe-area-top) var(--safe-area-right) var(--safe-area-bottom) var(--safe-area-left);
+  max-height: calc(100dvh - 32px - var(--safe-area-top) - var(--safe-area-bottom));
   overflow-y: auto;
   color: #dce6f0;
   background: #101c2c;
   border: 1px solid #40536a;
   border-radius: 15px;
-  width: min(440px, calc(100% - 32px));
+  width: min(440px, calc(100% - 32px - var(--safe-area-left) - var(--safe-area-right)));
   padding: 25px;
   box-shadow: 0 25px 100px #0008;
 }
@@ -981,7 +990,8 @@ dialog::backdrop {
 }
 @media (max-width: 1100px) {
   .app-shell {
-    padding: 0 18px 12px;
+    --shell-gutter: 18px;
+    --shell-bottom: 12px;
     gap: 12px;
   }
   .workspace {
@@ -1057,7 +1067,8 @@ dialog::backdrop {
   .app-shell {
     height: 100dvh;
     min-height: 360px;
-    padding: 0 10px max(8px, env(safe-area-inset-bottom));
+    --shell-gutter: 10px;
+    --shell-bottom: 8px;
     gap: 7px;
   }
   .masthead {
@@ -1271,12 +1282,13 @@ dialog::backdrop {
 @media (max-height: 650px) and (min-width: 601px) {
   .app-shell {
     min-height: 360px;
-    padding: 0 10px 8px;
-    gap: 5px;
+    --shell-gutter: 10px;
+    --shell-bottom: 8px;
+    gap: 4px;
   }
   .masthead {
-    height: 48px;
-    min-height: 48px;
+    height: 46px;
+    min-height: 46px;
   }
   .brand-subtitle,
   .section-heading,
@@ -1288,7 +1300,7 @@ dialog::backdrop {
     grid-template-columns: minmax(0, 1fr);
   }
   .game-column {
-    gap: 5px;
+    gap: 4px;
   }
   .controls {
     min-height: 90px;
@@ -1583,8 +1595,8 @@ dialog::backdrop {
   margin: 16px 0;
 }
 #profile-dialog {
-  width: min(740px, calc(100vw - 28px));
-  max-height: 85dvh;
+  width: min(740px, calc(100vw - 28px - var(--safe-area-left) - var(--safe-area-right)));
+  max-height: min(85dvh, calc(100dvh - 32px - var(--safe-area-top) - var(--safe-area-bottom)));
   overflow: auto;
 }
 #profile-dialog input[type='text'],
@@ -1798,6 +1810,7 @@ dialog::backdrop {
   }
   .controls {
     min-height: 82px;
+    padding-block: 2px;
   }
   .tutorial-guide {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -1813,6 +1826,42 @@ dialog::backdrop {
     grid-column: 3;
     grid-row: 1;
   }
+}
+@media (pointer: coarse) {
+  .header-right .icon-button {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+}
+@media (pointer: coarse) and (min-width: 601px) and (min-height: 651px) {
+  .dpad {
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+  }
+  .control-description {
+    display: none;
+  }
+}
+.effects-heading {
+  margin-top: 20px;
+  font-size: calc(15px * var(--ui-scale, 1));
+}
+.effect-detail {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.effect-detail h4 {
+  margin: 0 0 6px;
+  font-size: calc(12px * var(--ui-scale, 1));
+  color: var(--mint);
+}
+.effect-detail p {
+  font-size: calc(12px * var(--ui-scale, 1));
+  line-height: 1.5;
+  color: #aec0cf;
 }
 
 /* Intro content adapts to the actual arena, including split-screen windows. */
@@ -1889,5 +1938,22 @@ dialog::backdrop {
   }
   .run-results strong {
     font-size: calc(18px * var(--ui-scale, 1));
+  }
+}
+@container (height <= 260px) and (width <= 600px) {
+  .overlay:not(.summary) .intro-title {
+    font-size: calc(20px * var(--ui-scale, 1));
+    margin-bottom: 8px;
+  }
+  .overlay:not(.summary) .intro-actions {
+    margin-top: 8px;
+  }
+}
+@container (height <= 220px) and (width <= 600px) {
+  .overlay:not(.summary) .intro-title {
+    display: none;
+  }
+  .overlay:not(.summary) .intro-actions {
+    margin-top: 0;
   }
 }

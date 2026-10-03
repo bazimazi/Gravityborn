@@ -74,6 +74,8 @@ await page.getByRole('button', { name: 'Pause game', exact: true }).click();
 await assertLayout();
 await page.getByRole('button', { name: 'About selected power' }).click();
 await expect(page.locator('#ability-details')).not.toBeEmpty();
+await expect(page.getByRole('heading', { name: 'Current effects', exact: true })).toBeVisible();
+await expect(page.locator('#effect-details')).not.toBeEmpty();
 await page.getByRole('button', { name: 'Close power details' }).click();
 await expect(page.getByRole('button', { name: 'Resume game', exact: true })).toBeVisible();
 await device.screenshot({ path: 'artifacts/android-native.png' });
@@ -120,6 +122,7 @@ await writeFile(
         'arena and controls fit the native viewport',
         'intro actions require no scrolling',
         'power details preserve paused play',
+        'current-effect details are available',
       ],
     },
     null,

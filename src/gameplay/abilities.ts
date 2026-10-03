@@ -107,6 +107,33 @@ export class AbilitySystem {
   get maxEnergy(): number {
     return this.modifiers.evaluate('maxEnergy', 100);
   }
+  activePlayerEffects(): { id: string; remaining: number }[] {
+    const effects = new Map<string, number>();
+    const player = this.host.player;
+    for (const status of this.statuses) {
+      if (
+        status.entity !== player ||
+        !player.alive ||
+        status.generation !== player.generation ||
+        status.until <= this.host.time ||
+        !status.factor
+      )
+        continue;
+      const factors =
+        status.kind === 'surface'
+          ? player.surfaceOverrides
+          : status.kind === 'mass'
+            ? player.massFactors
+            : status.kind === 'response'
+              ? player.gravityFactors
+              : undefined;
+      if (!factors?.has(status.factor)) continue;
+      const id = status.factor.slice(status.factor.indexOf(':') + 1);
+      if (abilityById.has(id))
+        effects.set(id, Math.max(effects.get(id) ?? 0, status.until - this.host.time));
+    }
+    return [...effects].map(([id, remaining]) => ({ id, remaining }));
+  }
   learn(id: string): string | null {
     const definition = abilityById.get(id);
     if (!definition) return null;

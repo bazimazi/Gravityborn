@@ -72,6 +72,14 @@ Thirty new browser cases cover seven viewport sizes from 320 × 568 through 1440
 
 Verification covers **665 passing unit tests** and **137 passing browser checks with four platform-specific skips**, plus TypeScript, formatting and production offline play. An initial concurrent emulator cold boot caused unit-test timeouts and three browser timeouts; the unit suite passed on its separate rerun and all three browser checks passed on focused rerun. Live-badge input was also checked after giving a conditional relic through the inspector: tapping through the HUD still reaches the arena and places a well. Production JavaScript is 464.25 kB (140.26 kB gzip). Android package identity and smoke results are tracked in `native-delivery.md`.
 
+## Mobile controls and current effects continuation — 2026-10-03
+
+The follow-up audit found undersized tablet gravity controls, safe-area padding limited to the phone's bottom edge, and temporary core effects missing from the HUD. Coarse-pointer headers and tablet gravity buttons now retain 44-pixel targets. Shell padding and modal bounds honor all four safe-area insets. A narrow intro adapts further when insets and maximum text/joystick settings leave less than 260 pixels of arena height, preserving its start actions without scrolling.
+
+Temporary core coatings, mass and gravity-response effects display their remaining simulation-time durations. Status extraction checks the current core, generation, expiry and actual physical factors; it is read-only. Object-only, removed, expired, dead and recycled statuses are excluded, and refreshes do not create duplicate badges. The power dialog lists all current HUD effects with their explanations, including the combined frontier rules that can exceed the compact HUD row. Opening and closing it preserves the existing pause behavior. Physics and reward sequences are unchanged, so replay r25 remains compatible.
+
+Verification: **668 unit tests**, **145 browser checks with five platform-specific skips**, TypeScript, formatting, content validation and production offline play pass. New browser cases cover tablet touch targets, simulated portrait/landscape safe areas at maximum settings, long-dialog bounds, temporary effect expiry and frontier explanations. Portrait and landscape captures were inspected. Production JavaScript is 465.47 kB (140.63 kB gzip). Android package identity and smoke results are recorded in `native-delivery.md`. Actual device insets, comfortable reach and human HUD readability remain unverified.
+
 ## Completion boundary
 
 The requirement ledger retains partial status for human, physical-device and future online outcomes. The repository implementation and launch quantities are substantially covered; the complete product definition of done is still open. Network leaderboards/replays are explicitly future, stability-gated services in the specification. No store submission or public release has been performed.

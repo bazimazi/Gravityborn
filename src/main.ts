@@ -121,11 +121,11 @@ element('.debug-grid').insertAdjacentHTML(
 );
 element('#controls').insertAdjacentHTML(
   'afterend',
-  `<div class="ability-bar"><label for="ability-select">Core power</label><select id="ability-select">${abilities.map((ability) => `<option value="${ability.id}">${ability.name}</option>`).join('')}</select><button id="ability-cast" class="text-button">Cast · Q</button><button id="ability-info" aria-label="About selected power" title="Power details">ⓘ</button><span id="energy-value" class="mono"></span><p id="ability-description"></p></div>`,
+  `<div class="ability-bar"><label for="ability-select">Core power</label><select id="ability-select">${abilities.map((ability) => `<option value="${ability.id}">${ability.name}</option>`).join('')}</select><button id="ability-cast" class="text-button">Cast · Q</button><button id="ability-info" aria-label="About selected power and current effects" title="Power details and current effects">ⓘ</button><span id="energy-value" class="mono"></span><p id="ability-description"></p></div>`,
 );
 document.body.insertAdjacentHTML(
   'beforeend',
-  '<dialog id="ability-dialog" aria-labelledby="ability-title"><div class="dialog-header"><h2 id="ability-title"></h2><button data-close aria-label="Close power details">×</button></div><p class="dialog-copy" id="ability-details"></p></dialog>',
+  '<dialog id="ability-dialog" aria-labelledby="ability-title"><div class="dialog-header"><h2 id="ability-title"></h2><button data-close aria-label="Close power details">×</button></div><p class="dialog-copy" id="ability-details"></p><h3 class="effects-heading">Current effects</h3><div id="effect-details"></div></dialog>',
 );
 element<HTMLSelectElement>('#ability-select').onchange = () => {
   const id = element<HTMLSelectElement>('#ability-select').value;
@@ -634,6 +634,23 @@ element('#ability-info').onclick = () => {
   const power = abilityById.get(element<HTMLSelectElement>('#ability-select').value)!;
   element('#ability-title').textContent = power.name;
   element('#ability-details').textContent = element('#ability-description').textContent;
+  const badges = statusBadges(game);
+  const details = badges.map((badge) => {
+    const article = document.createElement('article');
+    article.className = 'effect-detail';
+    const heading = document.createElement('h4');
+    heading.textContent = badge.label;
+    const description = document.createElement('p');
+    description.textContent = badge.description;
+    article.append(heading, description);
+    return article;
+  });
+  if (!details.length) {
+    const empty = document.createElement('p');
+    empty.className = 'dialog-copy';
+    empty.textContent = 'No current effects.';
+    element('#effect-details').replaceChildren(empty);
+  } else element('#effect-details').replaceChildren(...details);
   openDialog('#ability-dialog');
 };
 element('#pause').onclick = pauseToggle;

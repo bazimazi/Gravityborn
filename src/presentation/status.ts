@@ -2,6 +2,7 @@ import type { Game } from '../gameplay/game';
 import { relicById } from '../content/relics';
 import { conditionsMatch } from '../progression/modifiers';
 import { phenomena } from '../content/phenomena';
+import { abilityById } from '../content/abilities';
 
 export interface StatusBadge {
   label: string;
@@ -33,6 +34,13 @@ export function statusBadges(game: Game): StatusBadge[] {
       label: `Stored ${Math.floor(game.abilities.stored)}`,
       description: 'Stored charge strengthens Stored Burst and is spent when it fires.',
     });
+  for (const effect of game.abilities.activePlayerEffects()) {
+    const power = abilityById.get(effect.id)!;
+    badges.push({
+      label: `${power.name} ${effect.remaining.toFixed(1)}s`,
+      description: `Temporary effect on your core. ${power.description}`,
+    });
+  }
   const modifiers = game.abilities.modifiers;
   const rush = modifiers.remaining('temporary:chain-rush', game.time);
   if (rush > 0)
