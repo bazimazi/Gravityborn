@@ -3,6 +3,8 @@ import { Game } from '../src/gameplay/game';
 import { Expedition } from '../src/progression/expedition';
 import { RunArchive, readReport, replayRevision } from '../src/progression/archive';
 import { archiveView } from '../src/presentation/archive';
+import { abilityById } from '../src/content/abilities';
+import { relicById } from '../src/content/relics';
 
 function setup() {
   const records = new Map<string, string>();
@@ -92,6 +94,82 @@ describe('local run archive', () => {
     expect(html).not.toContain('<img');
     expect(html).toContain('SCORE 0');
   });
+  it('reloads a generated full-catalog build without losing other archived results', () => {
+    const context = setup();
+    const previous = victory(context);
+    context.run.start('full-catalog', 'manipulator', undefined, 0, { mode: 'quick' });
+    // This is an assisted persistence fixture, not an earned run or balance check.
+    for (const power of abilityById.values())
+      while ((context.game.abilities.levels.get(power.id) ?? 0) < power.maxLevel)
+        context.game.abilities.learn(power.id);
+    for (const id of relicById.keys()) context.run.build.relics.push(id);
+    context.game.events.emit('runEnded', {
+      id: context.run.id,
+      outcome: 'defeat',
+      elapsed: 600,
+      score: 999,
+      assisted: true,
+    });
+    const report = context.archive.reports[0];
+    expect(report.powers).toHaveLength(abilityById.size);
+    expect(report.powers.length).toBeGreaterThan(64);
+    expect(report.powerLevels).toEqual([...abilityById.values()].map((power) => power.maxLevel));
+    const restored = new RunArchive(context.storage, new Expedition(new Game()));
+    expect(restored.state).toBe('ready');
+    expect(restored.reports).toEqual([report, previous]);
+    expect(archiveView(restored, report.id)).toContain('SCORE 20');
+  });
+  it('shares every catalog power with its paired level and every relic without changing play', () => {
+    const source = setup();
+    const report = victory(source);
+    report.powers = [...abilityById.keys()];
+    report.powerLevels = [...abilityById.values()].map((power) => power.maxLevel);
+    report.relics = [...relicById.keys()];
+    report.assisted = true;
+    report.ghost = [];
+    source.archive.save();
+    const target = setup();
+    target.run.start('unrelated-live-run');
+    target.run.enter(target.run.available[0].id);
+    const build = target.run.build.snapshot();
+    const bodies = target.game.world.entities.size;
+    expect(target.archive.import(source.archive.export(report.id)!)).toBe(true);
+    const imported = target.archive.reports[0];
+    expect(imported).toMatchObject({
+      powers: report.powers,
+      powerLevels: report.powerLevels,
+      relics: report.relics,
+      assisted: true,
+      imported: true,
+    });
+    expect(target.run.build.snapshot()).toEqual(build);
+    expect(target.run.active).toBe(true);
+    expect(target.game.world.entities.size).toBe(bodies);
+    expect(new RunArchive(target.storage, new Expedition(new Game())).reports).toEqual([imported]);
+  });
+  it('accepts registered catalog expansion beyond both legacy collection bounds', () => {
+    const report = victory(setup());
+    const powerId = 'archive-expansion-power';
+    const relicIds = Array.from({ length: 201 }, (_, index) => `archive-expansion-relic-${index}`);
+    abilityById.set(powerId, { ...abilityById.get('pulse')!, id: powerId });
+    for (const id of relicIds) relicById.set(id, { ...relicById.values().next().value!, id });
+    try {
+      const powers = [...abilityById.keys()];
+      const relics = [...relicById.keys()];
+      const expanded = readReport({
+        ...report,
+        powers,
+        powerLevels: powers.map(() => 1),
+        relics,
+      });
+      expect(expanded.powers).toEqual(powers);
+      expect(expanded.relics).toEqual(relics);
+      expect(() => readReport({ ...expanded, powers: [...powers, 'unknown'] })).toThrow();
+    } finally {
+      abilityById.delete(powerId);
+      for (const id of relicIds) relicById.delete(id);
+    }
+  });
   it('rejects malformed, oversized, nonfinite, duplicate-room and out-of-order traces atomically', () => {
     const context = setup();
     const report = victory(context);
@@ -120,6 +198,13 @@ describe('local run archive', () => {
       },
       (r: any) => {
         r.powers = ['not-a-power'];
+      },
+      (r: any) => {
+        r.powers = Array(Math.max(64, abilityById.size) + 1).fill('pulse');
+        r.powerLevels = r.powers.map(() => 1);
+      },
+      (r: any) => {
+        r.powerLevels = [];
       },
     ]) {
       const data = JSON.parse(raw);

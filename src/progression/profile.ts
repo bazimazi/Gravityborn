@@ -8,6 +8,7 @@ import { challenges } from '../content/challenges';
 import { cosmeticById } from '../content/cosmetics';
 import { challengeProgress } from './challenges';
 import { newDiagnostics, readDiagnostics, type LocalDiagnostics } from '../core/diagnostics';
+import { isRouteDiscovery, readDiscoveries } from './discoveries';
 export interface Profile {
   cosmetic: string;
   title: string;
@@ -73,7 +74,7 @@ export function readProfile(value: unknown): Profile {
     if (typeof data.selectedClass === 'string' && profile.classes.includes(data.selectedClass))
       profile.selectedClass = data.selectedClass;
     profile.claimed = strings(data.claimed, 200);
-    profile.discoveries = strings(data.discoveries, 1000);
+    profile.discoveries = readDiscoveries(data.discoveries, 1000);
     profile.skills = strings(data.skills ?? [], 100);
     profile.abilityMastery = readMastery(data.abilityMastery ?? {});
     profile.challenges = strings(data.challenges ?? [], Math.max(1000, challenges.length)).filter(
@@ -138,7 +139,7 @@ export function settleRun(profile: Profile, run: Expedition): boolean {
   profile.metrics.kills = profile.kills;
   profile.metrics.chain = Math.max(profile.metrics.chain ?? 0, run.bestChain);
   for (const id of run.discoveries)
-    if (!profile.discoveries.includes(id)) profile.discoveries.push(id);
+    if (!isRouteDiscovery(id) && !profile.discoveries.includes(id)) profile.discoveries.push(id);
   for (const id of [...run.build.relics, ...run.game.abilities.levels.keys()])
     if (!profile.discoveries.includes(id)) profile.discoveries.push(id);
   for (let biome = run.startBiome; biome <= run.biome; biome++)

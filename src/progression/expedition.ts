@@ -28,6 +28,7 @@ import { eliteCompatibility, type VariantKind } from '../content/variants';
 import type { EliteModifier } from '../content/enemies';
 import { endlessTuning } from '../content/endless';
 import balance from '../data/balance.json';
+import { isRouteDiscovery, readDiscoveries } from './discoveries';
 export interface RunOptions {
   mode?: RunMode;
   contract?: Contract;
@@ -502,6 +503,7 @@ export class Expedition {
         this.biome = route[(route.indexOf(this.biome) + 1) % route.length];
       } else this.biome = (this.biome + 1) % biomes.length;
       this.depth++;
+      for (const id of this.discoveries) if (isRouteDiscovery(id)) this.discoveries.delete(id);
       this.map = this.createMap();
       this.current = undefined;
     }
@@ -559,7 +561,9 @@ export class Expedition {
     if (this.phase === 'inactive' || this.phase === 'room') return null;
     return structuredClone({
       id: this.id,
-      discoveries: [...this.discoveries],
+      discoveries: [...this.discoveries].filter(
+        (id) => !isRouteDiscovery(id) || id === this.secretKey,
+      ),
       mastery: this.mastery,
       metrics: this.metrics,
       classId: this.classId,
@@ -623,7 +627,7 @@ export class Expedition {
       const kills = finite(data.kills, 0, 10000000);
       const elapsed = finite(data.elapsed, 0, 100000000);
       const health = finite(data.health, 0, 100000);
-      const discoveries = strings(data.discoveries ?? [], 2000);
+      const discoveries = readDiscoveries(data.discoveries ?? [], 2000, `secret:${biome}:${depth}`);
       const mastery = readMastery(data.mastery ?? {});
       const metrics: Record<string, number> = {};
       for (const [id, value] of Object.entries(record(data.metrics ?? {})))

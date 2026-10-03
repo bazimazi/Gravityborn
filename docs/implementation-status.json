@@ -259,9 +259,12 @@
         "src/progression/expedition.ts",
         "src/presentation/expedition.ts",
         "tests/exploration.test.ts",
-        "tests/rooms.test.ts"
+        "tests/rooms.test.ts",
+        "src/progression/discoveries.ts",
+        "tests/discovery-persistence.test.ts",
+        "tests/browser/discovery-persistence.spec.ts"
       ],
-      "remaining": "Hidden vault routes are revealed through destructible physical seals; optional elite encounters award rare relics and nine authored lore entries. Automated discovery, checkpoint, reward and route reachability checks pass. Human discoverability and reward tuning remain open."
+      "remaining": "Hidden vault routes are revealed through destructible physical seals; optional elite encounters award rare relics and nine authored lore entries. Automated discovery, checkpoint, reward and route reachability checks pass. Human discoverability and reward tuning remain open. Hidden-route markers are scoped to the current region/depth; region advancement and checkpoint migration discard earlier flags while retaining the current revealed vault, regional lore and secret counters."
     },
     {
       "section": 21,
@@ -561,9 +564,13 @@
         "src/content/modes.ts",
         "src/gameplay/rules.ts",
         "tests/equipment.test.ts",
-        "tests/modes.test.ts"
+        "tests/modes.test.ts",
+        "src/progression/discoveries.ts",
+        "tests/discovery-persistence.test.ts",
+        "tests/browser/discovery-persistence.spec.ts",
+        "scripts/android-smoke.mjs"
       ],
-      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible."
+      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible. Endless discoveries remain bounded by separating temporary route flags from permanent knowledge. A legacy 2,500-marker fixture preserves progression and its current revealed route across browser reloads and native process restart."
     },
     {
       "section": 42,
@@ -762,9 +769,12 @@
         "src/physics/world.ts",
         "tests/mastery.test.ts",
         "tests/run-events.test.ts",
-        "tests/browser/game.spec.ts"
+        "tests/browser/game.spec.ts",
+        "src/progression/discoveries.ts",
+        "tests/discovery-persistence.test.ts",
+        "tests/browser/discovery-persistence.spec.ts"
       ],
-      "remaining": "Codex records powers, enemies, bosses, relics, equipment, planets, materials, physics objects, phenomena, events, mutations, lore, challenges and mastery. Encountered and defeated bosses are distinct. Expedition-only equipment remains discovered after its temporary loadout ends. Initial props and later spawned objects/enemies record through typed spawn facts. Collection challenges unlock equipment/research/cosmetics and settle once; old saves cannot reconstruct historical per-boss defeats they never recorded."
+      "remaining": "Codex records powers, enemies, bosses, relics, equipment, planets, materials, physics objects, phenomena, events, mutations, lore, challenges and mastery. Encountered and defeated bosses are distinct. Expedition-only equipment remains discovered after its temporary loadout ends. Initial props and later spawned objects/enemies record through typed spawn facts. Collection challenges unlock equipment/research/cosmetics and settle once; old saves cannot reconstruct historical per-boss defeats they never recorded. Settlement excludes temporary hidden-route flags; legacy profile migration deduplicates permanent discoveries without resetting currencies, equipment, lore or secret metrics."
     },
     {
       "section": 56,
@@ -802,9 +812,10 @@
         "src/progression/challenge-code.ts",
         "src/core/export.ts",
         "tests/challenge-code.test.ts",
-        "tests/export.test.ts"
+        "tests/export.test.ts",
+        "scripts/android-smoke.mjs"
       ],
-      "remaining": "Offline run/build/ghost JSON sharing and compact Unicode-safe challenge codes are implemented, including historical daily/weekly dates, checksums, catalog validation and unlock enforcement. Codes share seeds/rules, not scores or progression; ordinary runs retain the recipient loadout. Cross-revision codes display a compatibility notice. Native exports use the OS share sheet. Online leaderboard/replay services remain optional future extensions."
+      "remaining": "Offline run/build/ghost JSON sharing and compact Unicode-safe challenge codes are implemented, including historical daily/weekly dates, checksums, catalog validation and unlock enforcement. Codes share seeds/rules, not scores or progression; ordinary runs retain the recipient loadout. Cross-revision codes display a compatibility notice. Native exports use the OS share sheet. Online leaderboard/replay services remain optional future extensions. Full-catalog 100-power builds retain paired levels through reload, import and export. Collection bounds grow with registered power/relic catalogs while the archive size and recording budgets remain enforced."
     },
     {
       "section": 59,
@@ -817,7 +828,7 @@
         "tests/archive.test.ts",
         "tests/browser/archive.spec.ts"
       ],
-      "remaining": "Successful unassisted runs record bounded quarter-second positional traces per chamber. Matching seed/rules/starting bonuses/revision replay a visual-only ghost with interpolation; imports share routes. Resumed or truncated runs retain results only. One complete ghost and 20 results persist locally, including native storage."
+      "remaining": "Successful unassisted runs record bounded quarter-second positional traces per chamber. Matching seed/rules/starting bonuses/revision replay a visual-only ghost with interpolation; imports share routes. Resumed or truncated runs retain results only. One complete ghost and 20 results persist locally, including native storage. Large final builds no longer invalidate the archive: 100-power result persistence, paired-level sharing and additional registered catalog entries are regression-tested."
     },
     {
       "section": 60,
@@ -963,9 +974,15 @@
         "src/progression/profile.ts",
         "src/progression/expedition.ts",
         "tests/save.test.ts",
-        "tests/storage.test.ts"
+        "tests/storage.test.ts",
+        "src/progression/discoveries.ts",
+        "tests/discovery-persistence.test.ts",
+        "tests/archive.test.ts",
+        "tests/browser/discovery-persistence.spec.ts",
+        "tests/browser/archive.spec.ts",
+        "scripts/android-smoke.mjs"
       ],
-      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries."
+      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries. Legacy discovery lists are validated and normalized before applying the permanent collection budget; checkpoints keep only the current route flag, and long-run settlement retains lore/metrics without unbounded route-marker growth. Full-catalog archive records remain readable."
     },
     {
       "section": 70,
@@ -1173,9 +1190,11 @@
         "src/content/relics.ts",
         "src/content/events.ts",
         "tests/regions.test.ts",
-        "tests/content.test.ts"
+        "tests/content.test.ts",
+        "tests/archive.test.ts",
+        "src/progression/archive.ts"
       ],
-      "remaining": "A validated append-only region catalog owns biome, planet, guardian, environment, story and hidden lore. Campaign/endless routing, save bounds and class loading derive from catalog size. Existing effect/modifier/behavior catalogs extend abilities, relics, enemies and events without changing the physics engine. Novel behaviors need their own tested gameplay handler. All 80 existing region/room outputs were preserved during migration; a ninth-region/class extension is regression-tested."
+      "remaining": "A validated append-only region catalog owns biome, planet, guardian, environment, story and hidden lore. Campaign/endless routing, save bounds and class loading derive from catalog size. Existing effect/modifier/behavior catalogs extend abilities, relics, enemies and events without changing the physics engine. Novel behaviors need their own tested gameplay handler. All 80 existing region/room outputs were preserved during migration; a ninth-region/class extension is regression-tested. Archive power/relic collection bounds derive from registered catalog sizes with legacy minimums retained; a registered expansion beyond both former limits is tested."
     },
     {
       "section": 86,
@@ -1331,9 +1350,15 @@
         "src/progression/ability-options.ts",
         "src/progression/build.ts",
         "tests/upgrade-recovery.test.ts",
-        "tests/browser/upgrade-recovery.spec.ts"
+        "tests/browser/upgrade-recovery.spec.ts",
+        "src/progression/discoveries.ts",
+        "tests/discovery-persistence.test.ts",
+        "tests/browser/discovery-persistence.spec.ts",
+        "tests/archive.test.ts",
+        "tests/browser/archive.spec.ts",
+        "scripts/android-smoke.mjs"
       ],
-      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw."
+      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw. Oversized legacy secret-route discovery lists recover permanent progression and the current revealed route rather than resetting the profile or rejecting the checkpoint. Existing v1 full-catalog archive results also load without a schema or replay revision change."
     },
     {
       "section": 97,

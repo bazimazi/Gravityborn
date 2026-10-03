@@ -1,6 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { replayRevision } from '../../src/progression/archive';
 import { challengeCode } from '../../src/progression/challenge-code';
+import { abilityById } from '../../src/content/abilities';
+import { relicById } from '../../src/content/relics';
+import { readFile } from 'node:fs/promises';
+import { newProfile } from '../../src/progression/profile';
+import { checksum } from '../../src/core/save';
 
 test('shared runs import, export, persist and prepare historical challenge rules', async ({
   page,
@@ -97,4 +102,106 @@ test('challenge codes validate, respect unlocks and prepare historical dates wit
   await expect(page.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
   const seed = await page.evaluate(() => (window as any).__gravityborn().expedition.seed);
   expect(seed).toBe('daily:2025-01-10');
+});
+
+test('existing full-catalog archives reload, display and share every paired power level', async ({
+  page,
+}) => {
+  // Explicitly assisted synthetic result: this verifies storage and sharing, not progression.
+  const report = {
+    id: 'full-catalog-fixture',
+    revision: replayRevision,
+    recipe: {
+      seed: 'full-catalog-fixture',
+      classId: 'manipulator',
+      mode: 'quick',
+      contract: 'none',
+      difficulty: 0,
+      biome: 0,
+    },
+    loadout: '{}',
+    outcome: 'defeat',
+    assisted: true,
+    imported: false,
+    elapsed: 600,
+    score: 999,
+    chain: 30,
+    rooms: 10,
+    depth: 0,
+    powers: [...abilityById.keys()],
+    powerLevels: [...abilityById.values()].map((power) => power.maxLevel),
+    relics: [...relicById.keys()],
+    wellLevel: 4,
+    level: 100,
+    bonuses: [],
+    ghost: [],
+  };
+  const previous = {
+    ...report,
+    id: 'previous-fixture',
+    recipe: { ...report.recipe, seed: 'previous-fixture' },
+    powers: ['pulse'],
+    powerLevels: [1],
+    relics: [],
+  };
+  const profile = { ...newProfile(), shards: 37, research: 11 };
+  const payload = { profile, checkpoint: null };
+  const save = JSON.stringify({ version: 2, checksum: checksum(JSON.stringify(payload)), payload });
+  await page.addInitScript(
+    ({ records, save }) => {
+      if (!localStorage.getItem('gravityborn.archive'))
+        localStorage.setItem(
+          'gravityborn.archive',
+          JSON.stringify({ version: 1, enabled: true, reports: records }),
+        );
+      if (!localStorage.getItem('gravityborn.save')) localStorage.setItem('gravityborn.save', save);
+    },
+    { records: [report, previous], save },
+  );
+  await page.goto('/');
+  const open = async () => {
+    await page.getByRole('button', { name: 'Progression hub' }).click();
+    await page.locator('#run-archive summary').click();
+    await expect(page.locator('#run-archive')).toContainText('ARCHIVE: READY');
+    await expect(page.locator('#run-archive')).toContainText('LOCAL BEST · SCORE 0');
+  };
+  await open();
+  await expect(page.locator('#archive-selection option')).toHaveCount(2);
+  const buildText = await page.locator('#run-archive').innerText();
+  for (const [index, id] of report.powers.entries())
+    expect(buildText).toContain(`${abilityById.get(id)!.name} ${report.powerLevels[index]}`);
+  for (const id of report.relics) expect(buildText).toContain(relicById.get(id)!.name);
+  await page.reload();
+  await open();
+  const profileBefore = await page.evaluate(
+    () => JSON.parse(localStorage.getItem('gravityborn.save')!).payload.profile,
+  );
+  expect(profileBefore.shards).toBe(37);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export selected run' }).click();
+  const download = await downloadPromise;
+  const path = await download.path();
+  expect(path).not.toBeNull();
+  const raw = await readFile(path!, 'utf8');
+  expect(JSON.parse(raw).report).toEqual(report);
+  await page.locator('#import-run').setInputFiles({
+    name: 'full-build.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(raw),
+  });
+  await expect(page.locator('#archive-selection option')).toHaveCount(3);
+  await expect(page.locator('#archive-selection')).toContainText('imported / unverified');
+  expect(
+    await page.evaluate(
+      () => JSON.parse(localStorage.getItem('gravityborn.save')!).payload.profile,
+    ),
+  ).toEqual(profileBefore);
+  await page.reload();
+  await open();
+  await expect(page.locator('#archive-selection option')).toHaveCount(3);
+  const stored = await page.evaluate(() =>
+    JSON.parse(localStorage.getItem('gravityborn.archive')!),
+  );
+  expect(stored.reports[0]).toMatchObject({ ...report, imported: true, id: expect.any(String) });
+  expect(stored.reports.slice(1)).toEqual([report, previous]);
 });

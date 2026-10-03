@@ -114,8 +114,9 @@ export function readReport(value: unknown): RunReport {
     typeof data.imported !== 'boolean'
   )
     throw new Error('Unknown recording rules');
-  const powers = strings(data.powers, 64);
-  const relics = strings(data.relics, 200);
+  // Preserve legacy bounds while allowing every registered item as catalogs expand.
+  const powers = strings(data.powers, Math.max(64, abilityById.size));
+  const relics = strings(data.relics, Math.max(200, relicById.size));
   const powerLevels = data.powerLevels ?? powers.map(() => 1);
   if (!Array.isArray(powerLevels) || powerLevels.length !== powers.length)
     throw new Error('Invalid power levels');

@@ -99,6 +99,131 @@ await expect(resumed.locator('#ghost-enabled')).not.toBeChecked();
 await expect(resumed.locator('[data-run-action="resume"]')).toBeEnabled();
 await resumed.locator('[data-run-action="resume"]').click();
 await expect(resumed.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
+console.log('Baseline native gameplay and process recovery passed; loading persistence fixtures.');
+// Assisted synthetic legacy records exercise the actual Preferences bridge and process restart.
+const catalog = await resumed.evaluate(async () => {
+  const preferences = (method, options) =>
+    window.Capacitor.nativePromise('Preferences', method, options);
+  const { value } = await preferences('get', { key: 'gravityborn.save' });
+  const data = JSON.parse(value).payload;
+  const markers = Array.from({ length: 2500 }, (_, depth) => `secret:0:${depth}`);
+  Object.assign(data.profile, {
+    shards: 1234,
+    research: 56,
+    runs: 8,
+    wins: 2,
+    skills: ['endless'],
+    metrics: { secretsRevealed: 2500 },
+    discoveries: [...markers, 'lore:secret:0', 'planet:0'],
+  });
+  Object.assign(data.checkpoint, {
+    mode: 'endless',
+    depth: 3000,
+    discoveries: [...markers, 'secret:0:3000', 'lore:secret:0', 'planet:0'],
+    metrics: { secretsRevealed: 2501, assisted: 1 },
+  });
+  data.checkpoint.build.currency = 75;
+  await preferences('set', {
+    key: 'gravityborn.save',
+    value: JSON.stringify({ version: 1, ...data }),
+  });
+  const powers = [...document.querySelectorAll('#debug-ability option')].map((option) => ({
+    id: option.value,
+    name: option.textContent,
+  }));
+  const relics = [...document.querySelectorAll('#debug-relic option')].map(
+    (option) => option.value,
+  );
+  const previous = await preferences('get', { key: 'gravityborn.archive' });
+  const archive = JSON.parse(previous.value);
+  archive.reports.unshift({
+    id: 'native-full-catalog-fixture',
+    revision: 'native-persistence-fixture',
+    recipe: {
+      seed: 'native-full-catalog-fixture',
+      classId: 'manipulator',
+      mode: 'quick',
+      contract: 'none',
+      difficulty: 0,
+      biome: 0,
+    },
+    loadout: '{}',
+    outcome: 'defeat',
+    assisted: true,
+    imported: false,
+    elapsed: 600,
+    score: 999,
+    chain: 30,
+    rooms: 10,
+    depth: 0,
+    powers: powers.map((power) => power.id),
+    powerLevels: powers.map(() => 1),
+    relics,
+    wellLevel: 4,
+    level: 100,
+    bonuses: [],
+    ghost: [],
+  });
+  archive.reports = archive.reports.slice(0, 20);
+  await preferences('set', { key: 'gravityborn.archive', value: JSON.stringify(archive) });
+  return { powers, relics };
+});
+await device.shell('am force-stop com.bazimazi.gravityborn');
+await device.shell('am start -n com.bazimazi.gravityborn/.MainActivity');
+const recovered = await (await device.webView({ pkg: 'com.bazimazi.gravityborn' })).page();
+recovered.on('pageerror', (error) => errors.push(error.message));
+await recovered.getByRole('button', { name: 'Progression hub' }).click();
+await expect(recovered.locator('#profile-dialog')).toContainText(
+  '1234 GRAVITY SHARDS · 56 RESEARCH · 8 RUNS · 2 WINS',
+);
+await recovered.locator('#run-archive summary').click();
+await expect(recovered.locator('#run-archive')).toContainText('ARCHIVE: READY');
+await expect(recovered.locator('#archive-selection')).toHaveValue('native-full-catalog-fixture');
+console.log('Native restart recovered the legacy profile and full-catalog archive.');
+const buildText = await recovered.locator('#run-archive').innerText();
+for (const power of catalog.powers) expect(buildText).toContain(`${power.name} 1`);
+await recovered.getByRole('button', { name: 'Export selected run' }).click();
+await expect.poll(focusedWindow, { timeout: 30_000 }).toContain('ChooserActivity');
+const shared = JSON.parse(
+  (await device.shell('run-as com.bazimazi.gravityborn cat cache/gravityborn-run.json')).toString(),
+);
+expect(shared.report.powers).toEqual(catalog.powers.map((power) => power.id));
+expect(shared.report.powerLevels).toEqual(catalog.powers.map(() => 1));
+expect(shared.report.relics).toEqual(catalog.relics);
+expect(shared.report.assisted).toBe(true);
+await device.shell('input keyevent 4');
+await expect.poll(focusedWindow, { timeout: 30_000 }).toContain('com.bazimazi.gravityborn');
+await recovered.locator('[data-run-action="resume"]').click();
+await expect(recovered.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
+await expect(recovered.getByRole('button', { name: 'SECRET', exact: true })).toBeVisible();
+await expect
+  .poll(async () => {
+    return recovered.evaluate(async () => {
+      const { value } = await window.Capacitor.nativePromise('Preferences', 'get', {
+        key: 'gravityborn.save',
+      });
+      return JSON.parse(value);
+    });
+  })
+  .toMatchObject({
+    version: 2,
+    payload: {
+      profile: {
+        shards: 1234,
+        research: 56,
+        runs: 8,
+        wins: 2,
+        discoveries: ['lore:secret:0', 'planet:0'],
+        metrics: { secretsRevealed: 2500 },
+      },
+      checkpoint: {
+        depth: 3000,
+        discoveries: ['secret:0:3000', 'lore:secret:0', 'planet:0'],
+        metrics: { secretsRevealed: 2501, assisted: 1 },
+        build: { currency: 75 },
+      },
+    },
+  });
 if (errors.length) throw new Error(errors.join('\n'));
 await writeFile(
   'artifacts/android-native-result.json',
@@ -123,6 +248,10 @@ await writeFile(
         'intro actions require no scrolling',
         'power details preserve paused play',
         'current-effect details are available',
+        'full-catalog native archive recovery',
+        'full-catalog native run export',
+        'legacy native discovery recovery preserves progression',
+        'deep checkpoint keeps its current hidden route',
       ],
     },
     null,
