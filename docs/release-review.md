@@ -62,6 +62,16 @@ Extending that same deterministic earned-progression sequence to **36 attempts p
 
 Verification: **665 unit tests**, **107 browser checks with four platform-specific skips**, TypeScript, content validation and the production offline test passed. Production JavaScript is 463.68 kB (140.16 kB gzip). The rebuilt Android package passed the complete native smoke script with exit code zero; its hash and device limitations are recorded in `native-delivery.md`.
 
+## Responsive arena and training continuation — 2026-10-03
+
+The layout audit reproduced clipped intro actions and page overflow. The fixed-height shell had accumulated an expanding description panel, an empty effect row and minimum/fixed arena heights; intro content then needed an independent scrollbar. At 320 × 568 the old document reached 978 pixels high, putting gameplay controls below the viewport. At 1366 × 768 the old intro scrolled inside a 296-pixel arena and hid its start actions.
+
+The arena now receives remaining viewport space, and its intro/result content adapts to its own dimensions. Compact screens retain the selected power, cast button and energy while opening the full description in a modal. The modal pauses active play and retains an existing pause on close. Live effect badges stay in the arena HUD, and empty rows consume no height. Training instructions use a compact grid and replace the unrelated power panel during the seven movement/gravity lessons. Short portrait layouts retain 44-pixel gravity buttons with a compact direction arrangement; phone headers retain 44-pixel actions. Long route maps, upgrade choices and collection dialogs remain scrollable.
+
+Thirty new browser cases cover seven viewport sizes from 320 × 568 through 1440 × 1000, including 1512 × 509 and 844 × 390. They verify document and panel bounds, all four intro actions without scrolling, ordinary gravity input, long power descriptions, pause/resume behavior, maximum text/joystick settings, live effects and training through rotation. Phone, landscape-training and desktop captures were inspected. Active-run physics and reward choices are unchanged, so replay r25 remains compatible.
+
+Verification covers **665 passing unit tests** and **137 passing browser checks with four platform-specific skips**, plus TypeScript, formatting and production offline play. An initial concurrent emulator cold boot caused unit-test timeouts and three browser timeouts; the unit suite passed on its separate rerun and all three browser checks passed on focused rerun. Live-badge input was also checked after giving a conditional relic through the inspector: tapping through the HUD still reaches the arena and places a well. Production JavaScript is 464.25 kB (140.26 kB gzip). Android package identity and smoke results are tracked in `native-delivery.md`.
+
 ## Completion boundary
 
 The requirement ledger retains partial status for human, physical-device and future online outcomes. The repository implementation and launch quantities are substantially covered; the complete product definition of done is still open. Network leaderboards/replays are explicitly future, stability-gated services in the specification. No store submission or public release has been performed.

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-02",
+  "updated": "2026-10-03",
   "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
   "requirements": [
     {
@@ -986,9 +986,10 @@
         "src/presentation/accessibility.ts",
         "src/presentation/gestures.ts",
         "tests/browser/game.spec.ts",
-        "scripts/android-smoke.mjs"
+        "scripts/android-smoke.mjs",
+        "tests/browser/layout.spec.ts"
       ],
-      "remaining": "Large controls, portrait/landscape layouts, left-handed mode, text/joystick scaling, quick restart and touch gestures pass browser checks. Physical-device one-handed ergonomics and safe areas remain external validation."
+      "remaining": "Large controls, portrait/landscape layouts, left-handed mode, text/joystick scaling, quick restart and touch gestures pass browser checks. Physical-device one-handed ergonomics and safe areas remain external validation. Arena, controls and all intro actions fit seven tested viewport sizes, including 320 × 568 and short landscape, without page/intro scrolling. Compact descriptions and training panels preserve play space; maximum text/joystick and rotation checks pass."
     },
     {
       "section": 72,
@@ -999,9 +1000,10 @@
         "src/presentation/status.ts",
         "src/presentation/shell.ts",
         "tests/browser/game.spec.ts",
-        "tests/modifiers.test.ts"
+        "tests/modifiers.test.ts",
+        "tests/browser/layout.spec.ts"
       ],
-      "remaining": "Health, energy, direction, owned-power selection/cooldown, level, XP, total expedition time, shield/stored-charge/conditional-effect/chain-rush status and chain count are visible. Human clutter/readability review remains part of device validation."
+      "remaining": "Health, energy, direction, owned-power selection/cooldown, level, XP, total expedition time, shield/stored-charge/conditional-effect/chain-rush status and chain count are visible. Human clutter/readability review remains part of device validation. Compact screens use a bounded selector/cast/energy row with full power details in a pause-aware modal. Live effect badges sit inside the arena HUD and empty badges consume no layout space."
     },
     {
       "section": 73,
@@ -1034,9 +1036,10 @@
         "src/gameplay/tutorial.ts",
         "src/main.ts",
         "tests/tutorial.test.ts",
-        "tests/browser/game.spec.ts"
+        "tests/browser/game.spec.ts",
+        "tests/browser/layout.spec.ts"
       ],
-      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing."
+      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing. Training instructions fit small portrait and rotated landscape views at maximum text/joystick scale; unrelated core-power controls are omitted during these movement/gravity lessons."
     },
     {
       "section": 76,
@@ -1046,9 +1049,10 @@
         "src/gameplay/tutorial.ts",
         "src/main.ts",
         "tests/tutorial.test.ts",
-        "tests/browser/game.spec.ts"
+        "tests/browser/game.spec.ts",
+        "tests/browser/layout.spec.ts"
       ],
-      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing."
+      "remaining": "Seven playable lessons, input-only completion, pause/restart and desktop/phone browser checks pass. Observe first-time players to validate teaching effectiveness and timing. Training instructions fit small portrait and rotated landscape views at maximum text/joystick scale; unrelated core-power controls are omitted during these movement/gravity lessons."
     },
     {
       "section": 77,
@@ -1081,9 +1085,10 @@
         "src/core/settings.ts",
         "src/style.css",
         "tests/settings.test.ts",
-        "tests/browser/game.spec.ts"
+        "tests/browser/game.spec.ts",
+        "tests/browser/layout.spec.ts"
       ],
-      "remaining": "Text scaling, symbol indicators, high contrast, reduced motion/flashing, joystick sizing/deadzone, separate audio sliders, handedness, haptics and frame cap implemented. Physical device accessibility evaluation remains external."
+      "remaining": "Text scaling, symbol indicators, high contrast, reduced motion/flashing, joystick sizing/deadzone, separate audio sliders, handedness, haptics and frame cap implemented. Physical device accessibility evaluation remains external. Maximum text and joystick scales retain a usable arena and accessible start actions at 320 × 568 and after landscape rotation. Long power descriptions remain available without compressing play space."
     },
     {
       "section": 80,

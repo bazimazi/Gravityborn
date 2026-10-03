@@ -121,7 +121,11 @@ element('.debug-grid').insertAdjacentHTML(
 );
 element('#controls').insertAdjacentHTML(
   'afterend',
-  `<div class="ability-bar"><label for="ability-select">Core power</label><select id="ability-select">${abilities.map((ability) => `<option value="${ability.id}">${ability.name}</option>`).join('')}</select><button id="ability-cast" class="text-button">Cast · Q</button><span id="energy-value" class="mono"></span><p id="ability-description"></p></div>`,
+  `<div class="ability-bar"><label for="ability-select">Core power</label><select id="ability-select">${abilities.map((ability) => `<option value="${ability.id}">${ability.name}</option>`).join('')}</select><button id="ability-cast" class="text-button">Cast · Q</button><button id="ability-info" aria-label="About selected power" title="Power details">ⓘ</button><span id="energy-value" class="mono"></span><p id="ability-description"></p></div>`,
+);
+document.body.insertAdjacentHTML(
+  'beforeend',
+  '<dialog id="ability-dialog" aria-labelledby="ability-title"><div class="dialog-header"><h2 id="ability-title"></h2><button data-close aria-label="Close power details">×</button></div><p class="dialog-copy" id="ability-details"></p></dialog>',
 );
 element<HTMLSelectElement>('#ability-select').onchange = () => {
   const id = element<HTMLSelectElement>('#ability-select').value;
@@ -626,6 +630,12 @@ element('#start').onclick = begin;
 element('#intro-help').onclick = () => openDialog('#help-dialog');
 element('#help').onclick = () => openDialog('#help-dialog');
 element('#settings').onclick = () => openDialog('#settings-dialog');
+element('#ability-info').onclick = () => {
+  const power = abilityById.get(element<HTMLSelectElement>('#ability-select').value)!;
+  element('#ability-title').textContent = power.name;
+  element('#ability-details').textContent = element('#ability-description').textContent;
+  openDialog('#ability-dialog');
+};
 element('#pause').onclick = pauseToggle;
 element('#debug-open').onclick = () => openDialog('#debug-dialog');
 for (const dialog of document.querySelectorAll('dialog')) {
@@ -935,8 +945,7 @@ function updateHud(fps: number): void {
   }
   const badges = statusBadges(game);
   const statusEffects = element('#status-effects');
-  statusEffects.style.visibility =
-    badges.length === 0 || (run.active && run.phase !== 'room') ? 'hidden' : 'visible';
+  statusEffects.hidden = badges.length === 0 || (run.active && run.phase !== 'room');
   statusEffects.replaceChildren(
     ...badges.map((badge) => {
       const item = document.createElement('span');

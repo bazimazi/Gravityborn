@@ -64,6 +64,7 @@ Beyond the original laboratory, the current implementation includes:
 - Physical XP/shard pickups, nine material definitions, contact fire/quenching, conductive discharge, magnetic and gravity objects, mines, energy cells, sustained crush damage, and telegraphed enemy waves.
 - Seven shop purchase categories with build-aware power selection, equipment replacement, and persistent sold inventory.
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.
+- Viewport-sized arena and compact phone/landscape controls. Intro actions fit without scrolling; the power information button opens the full description while preserving pause state. Training instructions share the same responsive layout.
 - Installable offline web build and generated Android/iOS native projects with platform lifecycle and native preferences storage. See [native delivery](docs/native-delivery.md).
 - Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. A reload restarts from the last saved route rather than restoring every moving body.
 

@@ -87,7 +87,7 @@ kbd {
 }
 .app-shell {
   height: 100dvh;
-  min-height: 540px;
+  min-height: 360px;
   max-width: 1800px;
   margin: auto;
   padding: 0 28px 14px;
@@ -162,6 +162,7 @@ kbd {
 }
 .game-column {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -187,7 +188,8 @@ kbd {
 .stage {
   position: relative;
   flex: 1;
-  min-height: 220px;
+  min-height: 160px;
+  container-type: size;
   overflow: hidden;
   border: 1px solid #33455c;
   border-radius: 12px;
@@ -223,6 +225,12 @@ kbd {
   pointer-events: none;
 }
 .status-effects {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  bottom: 56px;
+  left: 20px;
+  right: 20px;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -353,6 +361,10 @@ kbd {
   background: linear-gradient(90deg, #0a1425f5 0%, #0a1425ec 36%, #0a142558 68%, #0a142514 100%);
 }
 .tutorial-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 12px;
   flex-shrink: 0;
   width: 100%;
   padding: 12px;
@@ -372,18 +384,23 @@ kbd {
   min-height: 44px;
 }
 .tutorial-guide p {
-  margin: 8px 0;
+  grid-column: 1 / -1;
+  margin: 0;
   line-height: 1.5;
 }
 .tutorial-guide small {
-  display: block;
-  color: #bacad9;
+  display: none;
 }
 .tutorial-guide button {
+  grid-column: 2;
+  grid-row: 1;
   pointer-events: auto;
   min-height: 44px;
   padding: 8px 14px;
-  margin-top: 8px;
+  font-size: calc(11px * var(--ui-scale, 1));
+}
+.game-column:has(.tutorial-guide:not([hidden])) .ability-bar {
+  display: none;
 }
 .training-focus {
   outline: 3px solid #fff1aa;
@@ -441,10 +458,18 @@ kbd {
   border-color: #b5f5e8;
 }
 .intro-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: 12px;
   margin-top: 28px;
+}
+.intro-actions .primary-button {
+  order: -1;
+}
+.intro-actions button {
+  min-height: 44px;
+  padding-inline: 10px;
 }
 .text-button {
   background: transparent;
@@ -500,6 +525,7 @@ kbd {
   border: 1px solid #243349;
   border-radius: 10px;
   min-height: 120px;
+  flex-shrink: 0;
 }
 .movement-control {
   display: flex;
@@ -1030,7 +1056,7 @@ dialog::backdrop {
 @media (max-width: 600px) {
   .app-shell {
     height: 100dvh;
-    min-height: 580px;
+    min-height: 360px;
     padding: 0 10px max(8px, env(safe-area-inset-bottom));
     gap: 7px;
   }
@@ -1078,7 +1104,6 @@ dialog::backdrop {
   }
   .stage {
     border-radius: 9px;
-    min-height: 240px;
   }
   .hud {
     top: 10px;
@@ -1112,6 +1137,11 @@ dialog::backdrop {
     right: 10px;
     bottom: 10px;
     gap: 5px;
+  }
+  .status-effects {
+    left: 10px;
+    right: 10px;
+    bottom: 48px;
   }
   .status-chip {
     font-size: calc(9px * var(--ui-scale, 1));
@@ -1240,7 +1270,7 @@ dialog::backdrop {
 }
 @media (max-height: 650px) and (min-width: 601px) {
   .app-shell {
-    min-height: 390px;
+    min-height: 360px;
     padding: 0 10px 8px;
     gap: 5px;
   }
@@ -1302,9 +1332,6 @@ dialog::backdrop {
   }
   .intro-footnote {
     display: none;
-  }
-  .stage {
-    min-height: 190px;
   }
   .hud {
     top: 9px;
@@ -1382,14 +1409,6 @@ dialog::backdrop {
   .intro-actions {
     flex-wrap: wrap;
   }
-  .app-shell {
-    height: auto;
-    min-height: 100dvh;
-  }
-  .stage {
-    height: 360px;
-    flex: none;
-  }
   .footer {
     flex-wrap: wrap;
     gap: 6px;
@@ -1401,15 +1420,30 @@ dialog::backdrop {
   }
 }
 :root .ability-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 210px) auto auto 1fr;
   align-items: center;
-  flex-wrap: wrap;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 8px 12px;
   background: #101921;
   border: 1px solid #293943;
   border-radius: 8px;
-  margin-top: 12px;
+  flex-shrink: 0;
+}
+.ability-bar > * {
+  min-width: 0;
+}
+#ability-cast,
+#ability-info {
+  min-width: 44px;
+  min-height: 44px;
+}
+#ability-info {
+  font-size: 20px;
+}
+#energy-value {
+  justify-self: end;
+  font-size: calc(12px * var(--ui-scale, 1));
 }
 .ability-bar select {
   color: #edf4fa;
@@ -1421,6 +1455,7 @@ dialog::backdrop {
   max-width: 100%;
 }
 .ability-bar p {
+  grid-column: 1 / -1;
   width: 100%;
   color: #aabac4;
   font-size: calc(13px * var(--ui-scale, 1));
@@ -1666,5 +1701,193 @@ dialog::backdrop {
 @media (max-width: 600px) {
   .codex-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Keep the arena's space independent of long descriptions and empty HUD rows. */
+.section-heading,
+.status-effects,
+.footer,
+.masthead {
+  flex-shrink: 0;
+}
+@media (max-height: 800px), (max-width: 850px) {
+  .ability-bar p {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  :root .ability-bar {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 4px 8px;
+    padding: 6px 8px;
+    font-size: calc(12px * var(--ui-scale, 1));
+  }
+  .ability-bar label {
+    display: none;
+  }
+  #energy-value {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: calc(10px * var(--ui-scale, 1));
+  }
+  .ability-bar select {
+    width: 100%;
+    padding-inline: 6px;
+  }
+  .masthead {
+    height: 57px;
+    min-height: 57px;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 4px 0;
+  }
+  .brand {
+    flex-basis: auto;
+    min-width: 0;
+  }
+  .brand-name {
+    overflow-wrap: anywhere;
+  }
+  .header-right {
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .header-right .icon-button,
+  #profile-open {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
+  }
+}
+@media (max-width: 400px) {
+  .brand img,
+  .brand-subtitle {
+    display: none;
+  }
+  .brand-name {
+    font-size: calc(11px * var(--ui-scale, 1));
+    letter-spacing: 1px;
+  }
+  .section-heading .mono {
+    display: none;
+  }
+}
+@media (max-height: 700px) and (max-width: 600px) {
+  .controls {
+    min-height: 100px;
+    padding-block: 4px;
+  }
+  .dpad {
+    grid-template-rows: repeat(2, 44px);
+  }
+  .dpad [data-direction='down'] {
+    grid-area: 2 / 2;
+  }
+  .dpad-center {
+    display: none;
+  }
+  .footer {
+    display: none;
+  }
+}
+@media (max-height: 650px) and (min-width: 601px) {
+  :root .ability-bar {
+    gap: 8px;
+    padding: 4px 10px;
+  }
+  .controls {
+    min-height: 82px;
+  }
+  .tutorial-guide {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 6px 10px;
+  }
+  .tutorial-guide p {
+    grid-column: 2;
+  }
+  .tutorial-guide small {
+    display: none;
+  }
+  .tutorial-guide button {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+
+/* Intro content adapts to the actual arena, including split-screen windows. */
+@container (height <= 450px) {
+  .overlay:not(.run-overlay) {
+    padding: 16px;
+    align-items: flex-start;
+  }
+  .intro-content {
+    max-width: 680px;
+  }
+  .intro-title,
+  .summary .intro-title {
+    font-size: calc(32px * var(--ui-scale, 1));
+    margin-bottom: 12px;
+  }
+  .prototype-label {
+    margin-bottom: 12px;
+  }
+  .intro-description {
+    font-size: calc(12px * var(--ui-scale, 1));
+    line-height: 1.5;
+    max-width: none;
+  }
+  .intro-actions {
+    margin-top: 16px;
+    gap: 8px;
+  }
+  .intro-footnote {
+    display: none;
+  }
+}
+@container (height <= 450px) and (width > 600px) {
+  .intro-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 24px;
+  }
+  .prototype-label {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin: 0;
+  }
+  .intro-title {
+    margin: 0;
+  }
+  .intro-description {
+    align-self: center;
+  }
+  .intro-actions,
+  .run-results {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  .intro-actions {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .summary .intro-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@container (height <= 300px) {
+  .prototype-label,
+  .intro-description {
+    display: none;
+  }
+  .intro-title,
+  .summary .intro-title {
+    font-size: calc(26px * var(--ui-scale, 1));
+  }
+  .run-results {
+    margin-top: 10px;
+    gap: 20px;
+  }
+  .run-results strong {
+    font-size: calc(18px * var(--ui-scale, 1));
   }
 }
