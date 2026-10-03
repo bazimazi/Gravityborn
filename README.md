@@ -66,7 +66,7 @@ Beyond the original laboratory, the current implementation includes:
 - Adaptive synthesized music, separate audio sliders, scalable text, reduced flashing, high contrast, adjustable joystick, optional haptics, and 30/60 FPS rendering.
 - Viewport-sized arena and compact phone/landscape controls, with 44-pixel touch targets on phones and tablets and padding for all four safe areas. Intro actions fit without scrolling; the power information button shows the full description and current effects while preserving pause state. Temporary core coatings, mass and gravity response display their remaining durations. Training instructions share the same responsive layout.
 - Installable offline web build and generated Android/iOS native projects with platform lifecycle and native preferences storage. See [native delivery](docs/native-delivery.md).
-- Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. A reload restarts from the last saved route rather than restoring every moving body.
+- Versioned local progression, backup recovery, future-version protection, save export/import, and checkpoints at room boundaries. Stale upgrade offers refresh without spending pending upgrades or rerolls. A reload restarts from the last saved route rather than restoring every moving body.
 
 Content counts describe implemented definitions, not independently balanced or externally playtested content. The launch catalog targets are met; interaction audits, run pacing, human polish review, and native/release validation remain open.
 

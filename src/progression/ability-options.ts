@@ -1,4 +1,4 @@
-import { abilityById, type AbilityDefinition } from '../content/abilities';
+import { abilities, abilityById, type AbilityDefinition } from '../content/abilities';
 
 /** Gate acquisition, not casts or restoration of powers already owned. */
 export function canDevelopAbility(
@@ -16,4 +16,21 @@ export function canDevelopAbility(
       return true;
   }
   return false;
+}
+
+/** The power a level-up would grant; locked and exhausted choices have no result. */
+export function nextAbilityUpgrade(
+  id: string,
+  levels: ReadonlyMap<string, number>,
+): AbilityDefinition | undefined {
+  const ability = abilityById.get(id);
+  if (!ability || !canDevelopAbility(ability, levels)) return;
+  const current = levels.get(id) ?? 0;
+  if (current >= ability.maxLevel) {
+    if (!ability.evolution || levels.has(ability.evolution)) return;
+    const evolved = abilityById.get(ability.evolution);
+    return evolved && canDevelopAbility(evolved, levels) ? evolved : undefined;
+  }
+  if (!current && abilities.some((parent) => parent.evolution === id)) return;
+  return ability;
 }

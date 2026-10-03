@@ -293,9 +293,11 @@
         "tests/shop.test.ts",
         "tests/run-events.test.ts",
         "src/progression/ability-options.ts",
-        "tests/ability-options.test.ts"
+        "tests/ability-options.test.ts",
+        "tests/upgrade-recovery.test.ts",
+        "tests/browser/upgrade-recovery.spec.ts"
       ],
-      "remaining": "Physical XP/currency/energy, three-choice level-ups, powers, upgrades, passives, relics, temporary gear, mutations and discoveries integrate with room transitions. Offers, purchases, event rewards and snapshots preserve run state. New acquisition of Planet Split, tether cutting/releasing and anchor relocation requires a compatible learned construct source. Shops and level-ups share eligibility; owned powers remain developable and invalid legacy offers refresh without spending upgrades."
+      "remaining": "Physical XP/currency/energy, three-choice level-ups, powers, upgrades, passives, relics, temporary gear, mutations and discoveries integrate with room transitions. Offers, purchases, event rewards and snapshots preserve run state. New acquisition of Planet Split, tether cutting/releasing and anchor relocation requires a compatible learned construct source. Shops and level-ups share eligibility; owned powers remain developable and invalid legacy offers refresh without spending upgrades. Exhausted powers, owned relics and maximum-level wells cannot consume a pending upgrade; stale or duplicate choices refresh without spending XP, currency or rerolls."
     },
     {
       "section": 23,
@@ -321,9 +323,13 @@
         "src/content/abilities.ts",
         "src/content/well.ts",
         "src/gameplay/game.ts",
-        "tests/well.test.ts"
+        "tests/well.test.ts",
+        "src/progression/ability-options.ts",
+        "src/progression/build.ts",
+        "tests/upgrade-recovery.test.ts",
+        "tests/browser/upgrade-recovery.spec.ts"
       ],
-      "remaining": "Pulse, collapse, planet and primary-well evolution paths implemented; further launch catalog breadth remains tracked in section 84."
+      "remaining": "Pulse, collapse, planet and primary-well evolution paths implemented; further launch catalog breadth remains tracked in section 84. Level-up generation and selection share the actual next power/evolution result. Already-owned evolutions and unacquired evolution-only cards are excluded. Four hundred ordinary seeded offers, resulting builds and random states match the prior implementation; replay r25 is retained."
     },
     {
       "section": 25,
@@ -1026,9 +1032,12 @@
       "evidence": [
         "src/progression/build.ts",
         "src/presentation/expedition.ts",
-        "tests/debug.test.ts"
+        "tests/debug.test.ts",
+        "src/progression/ability-options.ts",
+        "tests/upgrade-recovery.test.ts",
+        "tests/browser/upgrade-recovery.spec.ts"
       ],
-      "remaining": "Three-choice upgrade cards show rarity, current/next level, tags and evolved descriptions while physics pauses. Phone visual review completed."
+      "remaining": "Three-choice upgrade cards show rarity, current/next level, tags and evolved descriptions while physics pauses. Phone visual review completed. Saved exhausted choices regenerate into usable cards before display, and choosing a replacement survives another reload on desktop Chromium, Android-sized Chromium and phone WebKit."
     },
     {
       "section": 75,
@@ -1318,9 +1327,13 @@
         "src/progression/profile.ts",
         "tests/save.test.ts",
         "tests/storage.test.ts",
-        "tests/mastery.test.ts"
+        "tests/mastery.test.ts",
+        "src/progression/ability-options.ts",
+        "src/progression/build.ts",
+        "tests/upgrade-recovery.test.ts",
+        "tests/browser/upgrade-recovery.spec.ts"
       ],
-      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures."
+      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw."
     },
     {
       "section": 97,

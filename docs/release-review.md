@@ -80,6 +80,14 @@ Temporary core coatings, mass and gravity-response effects display their remaini
 
 Verification: **668 unit tests**, **145 browser checks with five platform-specific skips**, TypeScript, formatting, content validation and production offline play pass. New browser cases cover tablet touch targets, simulated portrait/landscape safe areas at maximum settings, long-dialog bounds, temporary effect expiry and frontier explanations. Portrait and landscape captures were inspected. Production JavaScript is 465.47 kB (140.63 kB gzip). Android package identity and smoke results are recorded in `native-delivery.md`. Actual device insets, comfortable reach and human HUD readability remain unverified.
 
+## Upgrade recovery continuation — 2026-10-03
+
+Saved offers previously checked construct prerequisites but could still spend a pending upgrade on an exhausted power, an already-owned evolution or a duplicate relic. A well card saved at maximum well level rejected the entire route checkpoint. These failures were reproduced before the fix. Offer generation and selection now share the next power/evolution result, and selection verifies relic ownership and the remaining well levels. Known stale or duplicate offers regenerate without spending pending upgrades, XP, currency or rerolls. Unknown content continues to fail validation. A failed learning operation cannot consume the choice.
+
+Four unit cases cover refusal without build changes, maximum-well checkpoint recovery, valid versus owned evolution offers, duplicate cards and unacquired evolution-only choices. The browser recovery fixture loads an assisted legacy checkpoint with three exhausted choices, obtains three usable replacements, selects one and reloads again with the upgrade and currency preserved. A separate comparison of 400 ordinary offers across all ten classes matches the prior choices, resulting builds and random states. Physics is unchanged and replay r25 remains compatible.
+
+Verification: **672 unit tests**, **148 browser checks with five platform-specific skips**, TypeScript, formatting, content validation and production offline play pass. Production JavaScript is 465.85 kB (140.78 kB gzip). The rebuilt Android package passed all 16 emulator smoke checks with exit code zero; its identity is recorded in the native-delivery notes. The fixture checks recovery, not ordinary progression or human balance.
+
 ## Completion boundary
 
 The requirement ledger retains partial status for human, physical-device and future online outcomes. The repository implementation and launch quantities are substantially covered; the complete product definition of done is still open. Network leaderboards/replays are explicitly future, stability-gated services in the specification. No store submission or public release has been performed.

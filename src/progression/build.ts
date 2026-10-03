@@ -12,7 +12,7 @@ import type { Profile } from './profile';
 import { wellEvolutions } from '../content/well';
 import { matchesSynergy } from './synergies';
 import { collectTags } from '../core/tags';
-import { canDevelopAbility } from './ability-options';
+import { nextAbilityUpgrade } from './ability-options';
 
 export interface UpgradeChoice {
   id: string;
@@ -103,14 +103,21 @@ export class RunBuild {
       this.pending++;
     }
   }
+  private canChoose(choice: UpgradeChoice): boolean {
+    if (choice.id !== `${choice.kind}:${choice.target}`) return false;
+    if (choice.kind === 'ability')
+      return Boolean(nextAbilityUpgrade(choice.target, this.game.abilities.levels));
+    if (choice.kind === 'well')
+      return choice.target === 'well' && this.wellLevel < wellEvolutions.length;
+    if (choice.kind === 'relic')
+      return relicById.has(choice.target) && !this.relics.includes(choice.target);
+    return choice.kind === 'passive' && passives.some((passive) => passive.id === choice.target);
+  }
   offer(): UpgradeChoice[] {
-    // Older checkpoints can contain an offer generated before prerequisite rules.
+    // Saved or inspector-altered choices may no longer develop the current build.
     if (
-      this.choices.some(
-        (choice) =>
-          choice.kind === 'ability' &&
-          !canDevelopAbility(abilityById.get(choice.target)!, this.game.abilities.levels),
-      )
+      this.choices.some((choice) => !this.canChoose(choice)) ||
+      new Set(this.choices.map((choice) => choice.id)).size !== this.choices.length
     )
       this.choices = [];
     if (this.choices.length) {
@@ -118,8 +125,8 @@ export class RunBuild {
         if (choice.kind !== 'ability') continue;
         const ability = abilityById.get(choice.target)!;
         const level = this.game.abilities.levels.get(choice.target) ?? 0;
-        const evolved =
-          level >= ability.maxLevel ? abilityById.get(ability.evolution ?? '') : undefined;
+        const result = nextAbilityUpgrade(choice.target, this.game.abilities.levels)!;
+        const evolved = level >= ability.maxLevel ? result : undefined;
         choice.name = evolved
           ? `Evolve: ${evolved.name}`
           : `${ability.name}${level ? ` ${level + 1}` : ''}`;
@@ -139,27 +146,18 @@ export class RunBuild {
       });
     }
     for (const ability of abilities) {
-      if (!canDevelopAbility(ability, this.game.abilities.levels)) continue;
+      const result = nextAbilityUpgrade(ability.id, this.game.abilities.levels);
+      if (!result) continue;
       const level = this.game.abilities.levels.get(ability.id) ?? 0;
-      const isEvolution = abilities.some((parent) => parent.evolution === ability.id);
-      if (isEvolution && !level) continue;
-      if (
-        level >= ability.maxLevel &&
-        (!ability.evolution || this.game.abilities.levels.has(ability.evolution))
-      )
-        continue;
       pool.push({
         id: `ability:${ability.id}`,
         kind: 'ability',
         target: ability.id,
         name:
           level >= ability.maxLevel
-            ? `Evolve: ${abilityById.get(ability.evolution!)!.name}`
+            ? `Evolve: ${result.name}`
             : `${ability.name}${level ? ` ${level + 1}` : ''}`,
-        description:
-          level >= ability.maxLevel
-            ? abilityById.get(ability.evolution!)!.description
-            : ability.description,
+        description: result.description,
       });
     }
     for (const relic of relics)
@@ -195,12 +193,7 @@ export class RunBuild {
   choose(id: string): boolean {
     if (this.pending <= 0) return false;
     const choice = this.choices.find((choice) => choice.id === id);
-    if (!choice) return false;
-    if (
-      choice.kind === 'ability' &&
-      !canDevelopAbility(abilityById.get(choice.target)!, this.game.abilities.levels)
-    )
-      return false;
+    if (!choice || !this.canChoose(choice)) return false;
     if (choice.kind === 'well') {
       if (this.wellLevel >= wellEvolutions.length) return false;
       this.wellLevel++;
@@ -209,8 +202,9 @@ export class RunBuild {
         level: this.wellLevel,
         previousLevel: this.wellLevel - 1,
       });
-    } else if (choice.kind === 'ability') this.game.abilities.learn(choice.target);
-    else if (choice.kind === 'relic') this.relics.push(choice.target);
+    } else if (choice.kind === 'ability') {
+      if (!this.game.abilities.learn(choice.target)) return false;
+    } else if (choice.kind === 'relic') this.relics.push(choice.target);
     else this.passives.push(choice.target);
     this.pending--;
     this.game.events.emit('diagnostic', {
@@ -420,8 +414,8 @@ export class RunBuild {
               ? relicById.get(target)
               : kind === 'passive'
                 ? passives.find((passive) => passive.id === target)
-                : kind === 'well' && target === 'well' && this.wellLevel < wellEvolutions.length
-                  ? wellEvolutions[this.wellLevel]
+                : kind === 'well' && target === 'well'
+                  ? wellEvolutions[Math.min(this.wellLevel, wellEvolutions.length - 1)]
                   : undefined;
         if (!definition) throw new Error('Unknown upgrade');
         this.choices.push({
