@@ -593,6 +593,12 @@ export class Expedition {
     });
   }
   restore(value: unknown): boolean {
+    return this.readCheckpoint(value, true);
+  }
+  canRestore(value: unknown): boolean {
+    return this.readCheckpoint(value, false);
+  }
+  private readCheckpoint(value: unknown, apply: boolean): boolean {
     try {
       const data = record(value);
       if (
@@ -618,9 +624,12 @@ export class Expedition {
       const current =
         data.current === null ? undefined : map.find((node) => node.id === data.current);
       if (data.current !== null && !current) return false;
+      if (['reward', 'shop', 'event'].includes(data.phase) && !current) return false;
       const powers = record(data.powers);
-      record(powers.levels);
-      record(powers.cooldowns);
+      for (const values of [record(powers.levels), record(powers.cooldowns)]) {
+        if (Object.keys(values).length > Math.max(200, abilityById.size)) return false;
+        for (const value of Object.values(values)) finite(value, 0, 1000000);
+      }
       finite(powers.energy, 0, 100000);
       finite(powers.stored, 0, 100);
       const rooms = finite(data.rooms, 0, 100000);
@@ -649,6 +658,8 @@ export class Expedition {
           return false;
         shop.push({ id: item.id, price: finite(item.price, 0, 1000), sold: item.sold === true });
       }
+      // All validation above constructs local metadata only; gameplay changes start here.
+      if (!apply) return true;
       this.game.reset(false);
       this.eventReward = undefined;
       this.roomDiagnostic = undefined;

@@ -13,20 +13,19 @@ export function checksum(text: string): string {
   }
   return (hash >>> 0).toString(16);
 }
-export class SaveStore {
+export class SaveStore<Payload = unknown> {
   state: SaveState = 'empty';
   get readOnly(): boolean {
     return this.state === 'future';
   }
-  constructor(private readonly storage: Pick<Storage, 'getItem' | 'setItem'>) {}
-  load(): unknown {
+  constructor(
+    private readonly storage: Pick<Storage, 'getItem' | 'setItem'>,
+    private readonly readPayload: (value: unknown) => Payload = (value) => value as Payload,
+  ) {}
+  load(): Payload | null {
     try {
       const primary = this.storage.getItem(key);
-      if (!primary) {
-        this.state = 'empty';
-        return null;
-      }
-      const decoded = this.decode(primary);
+      const decoded = primary ? this.decode(primary) : undefined;
       if (this.state === 'future') return null;
       if (decoded !== undefined) {
         this.state = 'loaded';
@@ -35,20 +34,30 @@ export class SaveStore {
       const backup = this.storage.getItem(`${key}.backup`);
       if (backup) {
         const restored = this.decode(backup);
+        if (this.readOnly) return null;
         if (restored !== undefined) {
           this.state = 'recovered';
           return restored;
         }
       }
-      this.state = 'corrupt';
+      this.state = primary || backup ? 'corrupt' : 'empty';
       return null;
     } catch {
       this.state = 'unavailable';
       return null;
     }
   }
-  save(payload: unknown): boolean {
+  save(payload: Payload): boolean {
     if (this.readOnly) return false;
+    let validated: Payload;
+    let encoded: string;
+    try {
+      validated = this.readPayload(payload);
+      encoded = JSON.stringify(validated);
+      if (encoded.length > 1000000) return false;
+    } catch {
+      return false;
+    }
     try {
       const old = this.storage.getItem(key);
       if (old) {
@@ -56,9 +65,11 @@ export class SaveStore {
         if (this.readOnly) return false;
         if (decoded !== undefined) this.storage.setItem(`${key}.backup`, old);
       }
-      const encoded = JSON.stringify(payload);
-      if (encoded.length > 1000000) return false;
-      const envelope: SaveEnvelope = { version: 2, checksum: checksum(encoded), payload };
+      const envelope: SaveEnvelope = {
+        version: 2,
+        checksum: checksum(encoded),
+        payload: validated,
+      };
       this.storage.setItem(key, JSON.stringify(envelope));
       this.state = 'loaded';
       return true;
@@ -67,17 +78,17 @@ export class SaveStore {
       return false;
     }
   }
-  export(payload: unknown): string {
+  export(payload: Payload): string {
     const encoded = JSON.stringify(payload);
     return JSON.stringify({ version: 2, checksum: checksum(encoded), payload }, null, 2);
   }
-  import(text: string): unknown {
+  import(text: string): Payload | undefined {
     const previous = this.state;
     const decoded = this.decode(text);
     this.state = previous;
     return decoded;
   }
-  private decode(text: string): unknown {
+  private decode(text: string): Payload | undefined {
     try {
       if (text.length > 1100000) return undefined;
       const envelope = JSON.parse(text);
@@ -87,13 +98,16 @@ export class SaveStore {
         return undefined;
       }
       if (envelope.version === 1 && envelope.profile)
-        return { profile: envelope.profile, checkpoint: envelope.checkpoint ?? null };
+        return this.readPayload({
+          profile: envelope.profile,
+          checkpoint: envelope.checkpoint ?? null,
+        });
       if (
         envelope.version !== 2 ||
         envelope.checksum !== checksum(JSON.stringify(envelope.payload))
       )
         return undefined;
-      return envelope.payload;
+      return this.readPayload(envelope.payload);
     } catch {
       return undefined;
     }

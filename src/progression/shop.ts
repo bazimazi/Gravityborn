@@ -31,7 +31,8 @@ const services = new Map([
   ],
 ]);
 export function shopDescription(id: string): { name: string; description: string } | undefined {
-  const [kind, target] = id.split(':');
+  const [kind, target, ...extra] = id.split(':');
+  if (extra.length) return undefined;
   if (kind === 'ability') return abilityById.get(target);
   if (kind === 'equipment') {
     const item = equipmentById.get(target);

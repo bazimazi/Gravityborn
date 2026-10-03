@@ -980,9 +980,13 @@
         "tests/archive.test.ts",
         "tests/browser/discovery-persistence.spec.ts",
         "tests/browser/archive.spec.ts",
-        "scripts/android-smoke.mjs"
+        "scripts/android-smoke.mjs",
+        "src/progression/save-data.ts",
+        "tests/save-validation.test.ts",
+        "tests/progress-import.test.ts",
+        "tests/browser/progress-import.spec.ts"
       ],
-      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries. Legacy discovery lists are validated and normalized before applying the permanent collection budget; checkpoints keep only the current route flag, and long-run settlement retains lore/metrics without unbounded route-marker growth. Full-catalog archive records remain readable."
+      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries. Legacy discovery lists are validated and normalized before applying the permanent collection budget; checkpoints keep only the current route flag, and long-run settlement retains lore/metrics without unbounded route-marker growth. Full-catalog archive records remain readable. Profile and route validation precedes every progression read/write, including backup selection. Invalid imports and failed writes retain live progress; native writes finish before a successful import replaces it and ends the previous expedition. Pending imports block competing actions and background persistence."
     },
     {
       "section": 70,
@@ -1306,7 +1310,11 @@
         "tests/rooms.test.ts",
         "tests/save.test.ts",
         "tests/browser/game.spec.ts",
-        ".github/workflows/check.yml"
+        ".github/workflows/check.yml",
+        "src/progression/save-data.ts",
+        "tests/save-validation.test.ts",
+        "tests/progress-import.test.ts",
+        "tests/browser/progress-import.spec.ts"
       ],
       "remaining": "Automated gravity, physics, combat, progression, seeded path, persistence and browser-input coverage runs in CI. Scripted input playtests complement transition tests; human fun and balance remain separate."
     },
@@ -1356,9 +1364,13 @@
         "tests/browser/discovery-persistence.spec.ts",
         "tests/archive.test.ts",
         "tests/browser/archive.spec.ts",
-        "scripts/android-smoke.mjs"
+        "scripts/android-smoke.mjs",
+        "src/progression/save-data.ts",
+        "tests/save-validation.test.ts",
+        "tests/progress-import.test.ts",
+        "tests/browser/progress-import.spec.ts"
       ],
-      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw. Oversized legacy secret-route discovery lists recover permanent progression and the current revealed route rather than resetting the profile or rejecting the checkpoint. Existing v1 full-catalog archive results also load without a schema or replay revision change."
+      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw. Oversized legacy secret-route discovery lists recover permanent progression and the current revealed route rather than resetting the profile or rejecting the checkpoint. Existing v1 full-catalog archive results also load without a schema or replay revision change. A valid checksum cannot admit invalid profile or route data. Missing or semantically invalid primary records recover a valid backup; surviving future-version backups stay protected. Browser and native write failures and file-read retries preserve live progress. Metadata-only validation preserves physics, events and RNG; Android process-death fixtures recover a valid native backup from an invalid profile."
     },
     {
       "section": 97,

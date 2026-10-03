@@ -13,13 +13,7 @@ import { enemyDefinitions, eliteModifiers, type EliteModifier } from './content/
 import { Expedition } from './progression/expedition';
 import { expeditionView } from './presentation/expedition';
 import { SaveStore } from './core/save';
-import {
-  newProfile,
-  readProfile,
-  settleRun,
-  unlockClass,
-  type Profile,
-} from './progression/profile';
+import { newProfile, settleRun, unlockClass, type Profile } from './progression/profile';
 import { profileView } from './presentation/profile';
 import {
   craftEquipment,
@@ -48,6 +42,7 @@ import { RunArchive, replayRevision, type RunRecipe } from './progression/archiv
 import { readChallengeCode } from './progression/challenge-code';
 import { archiveView } from './presentation/archive';
 import { exportJson } from './core/export';
+import { readSaveData, importProgress, type SaveData } from './progression/save-data';
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = shell;
 const element = <T extends HTMLElement = HTMLElement>(selector: string): T =>
@@ -69,19 +64,24 @@ const run = new Expedition(game);
 const archive = new RunArchive(storage, run);
 let archiveSelection = '';
 let challengeDate: Date | undefined;
-let saveStore: SaveStore;
+const readProgress = (value: unknown): SaveData =>
+  readSaveData(value, (checkpoint) => run.canRestore(checkpoint));
+let saveStore: SaveStore<SaveData>;
 try {
-  saveStore = new SaveStore(storage);
+  saveStore = new SaveStore(storage, readProgress);
 } catch {
-  saveStore = new SaveStore({
-    getItem: () => null,
-    setItem: () => {
-      throw new Error('Storage unavailable');
+  saveStore = new SaveStore(
+    {
+      getItem: () => null,
+      setItem: () => {
+        throw new Error('Storage unavailable');
+      },
     },
-  });
+    readProgress,
+  );
 }
-const saved = saveStore.load() as { profile?: unknown; checkpoint?: unknown } | null;
-let profile: Profile = saved?.profile ? readProfile(saved.profile) : newProfile();
+const saved = saveStore.load();
+let profile: Profile = saved?.profile ?? newProfile();
 let checkpoint: unknown = saved?.checkpoint ?? null;
 element('.header-right').insertAdjacentHTML(
   'afterbegin',
@@ -182,12 +182,14 @@ let moved = false;
 let armedWell = false;
 let toastUntil = 0;
 let resumeAfterDialog = false;
+let importingProgress = false;
 let lastState = game.state;
 let runViewKey = '';
 let powerListKey = '';
 let upgradePaused = false;
 
 function persist(): void {
+  if (importingProgress) return;
   if (run.active && run.phase !== 'room') {
     settleRun(profile, run);
     checkpoint = run.snapshot();
@@ -227,20 +229,44 @@ function renderProfile(): void {
       if (open[index] !== undefined) detail.open = open[index];
     });
   element<HTMLInputElement>('#import-save').onchange = async (event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
-    const data = saveStore.import(await file.text()) as
-      | { profile?: unknown; checkpoint?: unknown }
-      | undefined;
-    if (!data?.profile) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file || importingProgress) return;
+    if (file.size > 1100000) {
+      input.value = '';
       toast('This save could not be verified.');
       return;
     }
-    profile = readProfile(data.profile);
-    checkpoint = data.checkpoint ?? null;
-    saveStore.save({ profile, checkpoint });
-    renderProfile();
-    toast('Save imported. Resume the saved route when ready.');
+    importingProgress = true;
+    const dialog = element<HTMLDialogElement>('#profile-dialog');
+    dialog.inert = true;
+    toast('Importing save…');
+    try {
+      const result = await importProgress(saveStore, storage, await file.text());
+      if (result.status !== 'imported') {
+        toast(
+          result.status === 'future'
+            ? 'This progress was saved by a newer game version and cannot be replaced.'
+            : result.status === 'unavailable'
+              ? 'Save import could not be stored. Export your current progress before closing.'
+              : 'This save could not be verified.',
+        );
+        return;
+      }
+      restart();
+      resumeAfterDialog = false;
+      runViewKey = '';
+      profile = result.data.profile;
+      checkpoint = result.data.checkpoint;
+      renderProfile();
+      toast('Save imported. Resume the saved route when ready.');
+    } catch {
+      toast('This save could not be read. Please try again.');
+    } finally {
+      importingProgress = false;
+      dialog.inert = false;
+      input.value = '';
+    }
   };
   element<HTMLInputElement>('#import-run').onchange = async (event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -656,6 +682,9 @@ element('#ability-info').onclick = () => {
 element('#pause').onclick = pauseToggle;
 element('#debug-open').onclick = () => openDialog('#debug-dialog');
 for (const dialog of document.querySelectorAll('dialog')) {
+  dialog.addEventListener('cancel', (event) => {
+    if (importingProgress) event.preventDefault();
+  });
   dialog.querySelector<HTMLButtonElement>('[data-close]')!.onclick = () => dialog.close();
   dialog.addEventListener('close', () => {
     if (resumeAfterDialog) game.resume();
@@ -1185,6 +1214,7 @@ void installPlatform(
     persist();
   },
   () => {
+    if (importingProgress) return;
     const dialog = document.querySelector<HTMLDialogElement>('dialog[open]');
     if (dialog) dialog.close();
     else if (game.state === 'playing') {

@@ -61,60 +61,63 @@ export function newProfile(): Profile {
 }
 export function readProfile(value: unknown): Profile {
   try {
-    const data = record(value);
-    const profile = newProfile();
-    profile.diagnostics = readDiagnostics(data.diagnostics);
-    profile.tutorialCompleted = data.tutorialCompleted === true;
-    for (const key of ['shards', 'research', 'runs', 'wins', 'kills'] as const)
-      profile[key] = Math.floor(finite(data[key], 0, 100000000));
-    profile.classes = strings(data.classes, Math.max(100, classById.size)).filter((id) =>
-      classById.has(id),
-    );
-    if (!profile.classes.includes('manipulator')) profile.classes.push('manipulator');
-    if (typeof data.selectedClass === 'string' && profile.classes.includes(data.selectedClass))
-      profile.selectedClass = data.selectedClass;
-    profile.claimed = strings(data.claimed, 200);
-    profile.discoveries = readDiscoveries(data.discoveries, 1000);
-    profile.skills = strings(data.skills ?? [], 100);
-    profile.abilityMastery = readMastery(data.abilityMastery ?? {});
-    profile.challenges = strings(data.challenges ?? [], Math.max(1000, challenges.length)).filter(
-      (id) => challenges.some((challenge) => challenge.id === id),
-    );
-    const cosmetic =
-      typeof data.cosmetic === 'string' ? cosmeticById.get(data.cosmetic) : undefined;
-    if (cosmetic && (!cosmetic.challenge || profile.challenges.includes(cosmetic.challenge)))
-      profile.cosmetic = cosmetic.id;
-    if (
-      typeof data.title === 'string' &&
-      profile.challenges.includes(data.title) &&
-      challenges.some((item) => item.id === data.title && item.title)
-    )
-      profile.title = data.title;
-    for (const [id, value] of Object.entries(record(data.metrics ?? {})))
-      if (id.length < 50) profile.metrics[id] = finite(value, 0, 100000000);
-    for (const [id, amount] of Object.entries(record(data.mastery ?? {})))
-      if (classById.has(id)) profile.mastery[id] = Math.floor(finite(amount, 0, 100000000));
-    for (const [id, level] of Object.entries(record(data.equipment ?? {})))
-      if (equipmentById.has(id)) profile.equipment[id] = Math.floor(finite(level, 1, 5));
-    for (const [slot, id] of Object.entries(record(data.loadout ?? {})))
-      if (typeof id === 'string' && equipmentById.get(id)?.slot === slot && profile.equipment[id])
-        profile.loadout[slot] = id;
-    for (const [id, affix] of Object.entries(record(data.affixes ?? {})))
-      if (
-        profile.equipment[id] &&
-        typeof affix === 'string' &&
-        affixes.some((item) => item.id === affix)
-      )
-        profile.affixes[id] = affix;
-    if (
-      typeof data.mutation === 'string' &&
-      mutations.some((mutation) => mutation.id === data.mutation)
-    )
-      profile.mutation = data.mutation;
-    return profile;
+    return parseProfile(value);
   } catch {
     return newProfile();
   }
+}
+/** Validated profile reader for imports and backup selection; failures remain explicit. */
+export function parseProfile(value: unknown): Profile {
+  const data = record(value);
+  const profile = newProfile();
+  profile.diagnostics = readDiagnostics(data.diagnostics);
+  profile.tutorialCompleted = data.tutorialCompleted === true;
+  for (const key of ['shards', 'research', 'runs', 'wins', 'kills'] as const)
+    profile[key] = Math.floor(finite(data[key], 0, 100000000));
+  profile.classes = strings(data.classes, Math.max(100, classById.size)).filter((id) =>
+    classById.has(id),
+  );
+  if (!profile.classes.includes('manipulator')) profile.classes.push('manipulator');
+  if (typeof data.selectedClass === 'string' && profile.classes.includes(data.selectedClass))
+    profile.selectedClass = data.selectedClass;
+  profile.claimed = strings(data.claimed, 200);
+  profile.discoveries = readDiscoveries(data.discoveries, 1000);
+  profile.skills = strings(data.skills ?? [], 100);
+  profile.abilityMastery = readMastery(data.abilityMastery ?? {});
+  profile.challenges = strings(data.challenges ?? [], Math.max(1000, challenges.length)).filter(
+    (id) => challenges.some((challenge) => challenge.id === id),
+  );
+  const cosmetic = typeof data.cosmetic === 'string' ? cosmeticById.get(data.cosmetic) : undefined;
+  if (cosmetic && (!cosmetic.challenge || profile.challenges.includes(cosmetic.challenge)))
+    profile.cosmetic = cosmetic.id;
+  if (
+    typeof data.title === 'string' &&
+    profile.challenges.includes(data.title) &&
+    challenges.some((item) => item.id === data.title && item.title)
+  )
+    profile.title = data.title;
+  for (const [id, value] of Object.entries(record(data.metrics ?? {})))
+    if (id.length < 50) profile.metrics[id] = finite(value, 0, 100000000);
+  for (const [id, amount] of Object.entries(record(data.mastery ?? {})))
+    if (classById.has(id)) profile.mastery[id] = Math.floor(finite(amount, 0, 100000000));
+  for (const [id, level] of Object.entries(record(data.equipment ?? {})))
+    if (equipmentById.has(id)) profile.equipment[id] = Math.floor(finite(level, 1, 5));
+  for (const [slot, id] of Object.entries(record(data.loadout ?? {})))
+    if (typeof id === 'string' && equipmentById.get(id)?.slot === slot && profile.equipment[id])
+      profile.loadout[slot] = id;
+  for (const [id, affix] of Object.entries(record(data.affixes ?? {})))
+    if (
+      profile.equipment[id] &&
+      typeof affix === 'string' &&
+      affixes.some((item) => item.id === affix)
+    )
+      profile.affixes[id] = affix;
+  if (
+    typeof data.mutation === 'string' &&
+    mutations.some((mutation) => mutation.id === data.mutation)
+  )
+    profile.mutation = data.mutation;
+  return profile;
 }
 export function unlockClass(profile: Profile, id: string): boolean {
   const definition = classById.get(id);

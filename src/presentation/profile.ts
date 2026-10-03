@@ -67,5 +67,5 @@ export function profileView(profile: Profile, state: SaveState, checkpoint: bool
   ${codexView(profile)}
   ${diagnosticsView(profile.diagnostics)}
   <button class="primary-button" data-run-action="new">Start selected class</button>
-  <div class="save-tools"><button class="text-button" data-run-action="export">Export save</button><label class="text-button">Import save <input id="import-save" type="file" accept="application/json" hidden></label><span class="mono">SAVE: ${state.toUpperCase()}</span></div>`;
+  <p class="dialog-copy">Importing a save replaces your progress and ends the current expedition.</p><div class="save-tools"><button class="text-button" data-run-action="export">Export save</button><label class="text-button">Import save <input id="import-save" type="file" accept="application/json" hidden></label><span class="mono">SAVE: ${state.toUpperCase()}</span></div>`;
 }

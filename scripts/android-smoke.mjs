@@ -224,6 +224,30 @@ await expect
       },
     },
   });
+// A syntactically valid primary with invalid progress must recover the valid native backup.
+await recovered.evaluate(async () => {
+  const preferences = (method, data) => window.Capacitor.nativePromise('Preferences', method, data);
+  const { value } = await preferences('get', { key: 'gravityborn.save' });
+  const data = JSON.parse(value).payload;
+  await preferences('set', { key: 'gravityborn.save.backup', value });
+  data.profile.shards = -1;
+  await preferences('set', {
+    key: 'gravityborn.save',
+    value: JSON.stringify({ version: 1, ...data }),
+  });
+});
+await device.shell('am force-stop com.bazimazi.gravityborn');
+await device.shell('am start -n com.bazimazi.gravityborn/.MainActivity');
+const backupRecovered = await (await device.webView({ pkg: 'com.bazimazi.gravityborn' })).page();
+backupRecovered.on('pageerror', (error) => errors.push(error.message));
+await backupRecovered.getByRole('button', { name: 'Progression hub' }).click();
+await expect(backupRecovered.locator('#profile-dialog')).toContainText('SAVE: RECOVERED');
+await expect(backupRecovered.locator('#profile-dialog')).toContainText(
+  '1234 GRAVITY SHARDS · 56 RESEARCH · 8 RUNS · 2 WINS',
+);
+await backupRecovered.locator('[data-run-action="resume"]').click();
+await expect(backupRecovered.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
+await expect(backupRecovered.getByRole('button', { name: 'SECRET', exact: true })).toBeVisible();
 if (errors.length) throw new Error(errors.join('\n'));
 await writeFile(
   'artifacts/android-native-result.json',
@@ -252,6 +276,7 @@ await writeFile(
         'full-catalog native run export',
         'legacy native discovery recovery preserves progression',
         'deep checkpoint keeps its current hidden route',
+        'invalid native profile recovers the valid backup without losing its route',
       ],
     },
     null,

@@ -7,6 +7,7 @@ import { equipmentById } from '../src/content/equipment';
 function trader(): Expedition {
   const run = new Expedition(new Game(false));
   run.start('salvage');
+  run.current = run.map.find((node) => node.type === 'shop');
   run.phase = 'shop';
   run.build.currency = 1000;
   run.shop = shopInventory(run.build);
