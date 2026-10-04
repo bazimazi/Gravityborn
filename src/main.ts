@@ -11,6 +11,7 @@ import { shell } from './presentation/shell';
 import { abilities, abilityById } from './content/abilities';
 import { enemyDefinitions, eliteModifiers, type EliteModifier } from './content/enemies';
 import { Expedition } from './progression/expedition';
+import { maxRunLevel } from './progression/build';
 import { expeditionView } from './presentation/expedition';
 import { SaveStore } from './core/save';
 import { newProfile, settleRun, unlockClass, type Profile } from './progression/profile';
@@ -987,7 +988,10 @@ function updateHud(fps: number): void {
   element('#run-progress').hidden = !run.active;
   if (run.active) {
     element('#level-value').textContent = `LEVEL ${run.build.level}`;
-    element('#xp-value').textContent = `${Math.floor(run.build.xp)} / ${run.build.threshold} XP`;
+    element('#xp-value').textContent =
+      run.build.level === maxRunLevel
+        ? 'MAXIMUM LEVEL'
+        : `${Math.floor(run.build.xp)} / ${run.build.threshold} XP`;
   }
   const badges = statusBadges(game);
   const statusEffects = element('#status-effects');

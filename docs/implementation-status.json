@@ -1,5 +1,5 @@
 {
-  "updated": "2026-10-03",
+  "updated": "2026-10-04",
   "scope": "Full specification; future/example targets are distinguished from shipped implementation.",
   "requirements": [
     {
@@ -280,9 +280,12 @@
         "tests/modes.test.ts",
         "scripts/expedition-playtest.ts",
         "tests/rooms.test.ts",
-        "docs/release-review.md"
+        "docs/release-review.md",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "All run modes and multiwave encounters are implemented. r24 input-only tests reached quick, standard and full earned-progression campaign victories. r25 changes acquisition pools; its 36 earned-progression campaign attempts produced two full 63-room victories, 34 defeats and no timeouts. Revision-specific results and limitations are documented in the release review. Human pacing and balance remain open."
+      "remaining": "All run modes and multiwave encounters are implemented. r24 input-only tests reached quick, standard and full earned-progression campaign victories. r25 changes acquisition pools; its 36 earned-progression campaign attempts produced two full 63-room victories, 34 defeats and no timeouts. Revision-specific results and limitations are documented in the release review. Human pacing and balance remain open. r26 earned-progression quick attempts produced six wins/twelve attempts; the well-focused campaign policy again produced two full 63-room wins/36 attempts with no timeouts. The campaign baseline policy had zero wins and one room timeout; human balance remains open."
     },
     {
       "section": 22,
@@ -568,9 +571,12 @@
         "src/progression/discoveries.ts",
         "tests/discovery-persistence.test.ts",
         "tests/browser/discovery-persistence.spec.ts",
-        "scripts/android-smoke.mjs"
+        "scripts/android-smoke.mjs",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible. Endless discoveries remain bounded by separating temporary route flags from permanent knowledge. A legacy 2,500-marker fixture preserves progression and its current revealed route across browser reloads and native process restart."
+      "remaining": "Endless wraps the region catalog and derives persistent stage pressure from rooms completed. Milestones 10/20/30/40/50/100/200/500 add rifts, rotation, reversal, zero zones, singularities, planets, storms and reality instability. Stage 500 moves geometry and pulses on impact; fields/bodies remain capped. Depth health pressure continues beyond the old cap of 12. Tests cover checkpoint recovery, pooled bodies, dead planets, stress and three browser layouts. Human high-stage balance remains external. Endless research now enforces its authored guardian-victory requirement through shared purchase/UI eligibility; prior expedition wins and existing learned research remain compatible. Endless discoveries remain bounded by separating temporary route flags from permanent knowledge. A legacy 2,500-marker fixture preserves progression and its current revealed route across browser reloads and native process restart. Long fallback builds retain all ordered stacks through 10,000 entries; four combined modifiers keep their physics cost bounded. Browser fixtures preserve a 1,501-stack build through export and reload; native Preferences fixtures retain 1,200 stacks through migration and backup recovery."
     },
     {
       "section": 42,
@@ -581,9 +587,12 @@
         "src/gameplay/rules.ts",
         "src/progression/mastery.ts",
         "src/progression/archive.ts",
-        "tests/endless.test.ts"
+        "tests/endless.test.ts",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "Endless combines new field/geometry rules at milestones through stage 500, then continues bounded numerical pressure. Difficulties, contracts, daily/weekly seeds, mastery and local records support replay. Online seasonal competitions/leaderboards remain optional future services."
+      "remaining": "Endless combines new field/geometry rules at milestones through stage 500, then continues bounded numerical pressure. Difficulties, contracts, daily/weekly seeds, mastery and local records support replay. Online seasonal competitions/leaderboards remain optional future services. Repeated fallback bonuses compile into four finite, stat-clamped modifiers without losing stored acquisition counts. Levels stop at the existing 10,000-level save limit; banked XP refills a bounded 100-choice queue."
     },
     {
       "section": 43,
@@ -960,9 +969,12 @@
         "src/data/balance.json",
         "tests/physics.test.ts",
         "tests/regressions.test.ts",
-        "tests/endless.test.ts"
+        "tests/endless.test.ts",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "Velocity, angular speed, acceleration, impulses, fields, bodies and chains have limits. Corrupt geometry reconstructs at its last finite position; projectile containment, overlapping fields, stacked interactions and extreme endless combinations have regression coverage."
+      "remaining": "Velocity, angular speed, acceleration, impulses, fields, bodies and chains have limits. Corrupt geometry reconstructs at its last finite position; projectile containment, overlapping fields, stacked interactions and extreme endless combinations have regression coverage. Repeated fallback bonuses keep finite modifier values and existing stat limits even in a 10,000-stack build; nonfinite XP cannot corrupt progression. Temporary effects survive compilation."
     },
     {
       "section": 69,
@@ -984,9 +996,12 @@
         "src/progression/save-data.ts",
         "tests/save-validation.test.ts",
         "tests/progress-import.test.ts",
-        "tests/browser/progress-import.spec.ts"
+        "tests/browser/progress-import.spec.ts",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries. Legacy discovery lists are validated and normalized before applying the permanent collection budget; checkpoints keep only the current route flag, and long-run settlement retains lore/metrics without unbounded route-marker growth. Full-catalog archive records remain readable. Profile and route validation precedes every progression read/write, including backup selection. Invalid imports and failed writes retain live progress; native writes finish before a successful import replaces it and ends the previous expedition. Pending imports block competing actions and background persistence."
+      "remaining": "Versioned profile/route saves persist discoveries, equipment, classes, currencies, challenges, mastery, narrative progress, settings and bounded diagnostics. Checkpoints intentionally resume from room boundaries. Legacy discovery lists are validated and normalized before applying the permanent collection budget; checkpoints keep only the current route flag, and long-run settlement retains lore/metrics without unbounded route-marker growth. Full-catalog archive records remain readable. Profile and route validation precedes every progression read/write, including backup selection. Invalid imports and failed writes retain live progress; native writes finish before a successful import replaces it and ends the previous expedition. Pending imports block competing actions and background persistence. Fallback arrays exceeding the former 1,000-entry limit retain every stack through save/import/reload, up to the existing level budget of 10,000. XP and queued levels stay within readable save bounds."
     },
     {
       "section": 70,
@@ -1314,7 +1329,10 @@
         "src/progression/save-data.ts",
         "tests/save-validation.test.ts",
         "tests/progress-import.test.ts",
-        "tests/browser/progress-import.spec.ts"
+        "tests/browser/progress-import.spec.ts",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
       "remaining": "Automated gravity, physics, combat, progression, seeded path, persistence and browser-input coverage runs in CI. Scripted input playtests complement transition tests; human fun and balance remain separate."
     },
@@ -1328,9 +1346,12 @@
         "tests/modifiers.test.ts",
         "tests/variants.test.ts",
         "tests/manipulation-abilities.test.ts",
-        "tests/catalog-stress.test.ts"
+        "tests/catalog-stress.test.ts",
+        "src/progression/build.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "Host stress covers 220 bodies and 50 fields, runaway build multiplication, all elite variants and bounded causal effects. Oversized scenes are constrained by production caps. Sustained phone rendering/thermal stress remains external."
+      "remaining": "Host stress covers 220 bodies and 50 fields, runaway build multiplication, all elite variants and bounded causal effects. Oversized scenes are constrained by production caps. Sustained phone rendering/thermal stress remains external. Host r26 full-gameplay cases measured p95 2.001/2.284 ms with 220 bodies, 50 fields and 12 tethers against an 8.333 ms step budget. A 10,000-stack fallback fixture compiles into four modifiers; physical-device performance remains unverified."
     },
     {
       "section": 95,
@@ -1368,9 +1389,11 @@
         "src/progression/save-data.ts",
         "tests/save-validation.test.ts",
         "tests/progress-import.test.ts",
-        "tests/browser/progress-import.spec.ts"
+        "tests/browser/progress-import.spec.ts",
+        "tests/endless-build-persistence.test.ts",
+        "tests/browser/endless-build-persistence.spec.ts"
       ],
-      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw. Oversized legacy secret-route discovery lists recover permanent progression and the current revealed route rather than resetting the profile or rejecting the checkpoint. Existing v1 full-catalog archive results also load without a schema or replay revision change. A valid checksum cannot admit invalid profile or route data. Missing or semantically invalid primary records recover a valid backup; surviving future-version backups stay protected. Browser and native write failures and file-read retries preserve live progress. Metadata-only validation preserves physics, events and RNG; Android process-death fixtures recover a valid native backup from an invalid profile."
+      "remaining": "v1-to-v2 migration, backward-compatible optional fields, checksums, backup recovery, future-version read-only protection and validated readers are tested. Future schema changes must add migration fixtures. Known but exhausted upgrade choices remain recoverable, including maximum-level wells that previously rejected the checkpoint. Valid saved draws remain intact, and replacements survive later recovery without another redraw. Oversized legacy secret-route discovery lists recover permanent progression and the current revealed route rather than resetting the profile or rejecting the checkpoint. Existing v1 full-catalog archive results also load without a schema or replay revision change. A valid checksum cannot admit invalid profile or route data. Missing or semantically invalid primary records recover a valid backup; surviving future-version backups stay protected. Browser and native write failures and file-read retries preserve live progress. Metadata-only validation preserves physics, events and RNG; Android process-death fixtures recover a valid native backup from an invalid profile. The existing passive-ID array now accepts up to 10,000 entries without a schema migration. Legacy long builds survive browser export/reload and native migration/backup recovery. Replay r26 separates grouped multiplication rounding from older ghosts while leaving old archive results readable."
     },
     {
       "section": 97,

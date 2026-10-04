@@ -21,6 +21,8 @@ export interface UpgradeChoice {
   kind: 'ability' | 'relic' | 'passive' | 'well';
   target: string;
 }
+export const maxRunLevel = 10000;
+const maxPassiveStacks = maxRunLevel;
 const passives: {
   id: string;
   name: string;
@@ -96,12 +98,14 @@ export class RunBuild {
     return true;
   }
   gainXP(amount: number): void {
-    this.xp += Math.max(0, amount);
-    while (this.xp >= this.threshold) {
+    if (!Number.isFinite(amount) || amount < 0 || this.level >= maxRunLevel) return;
+    this.xp = Math.min(1000000, this.xp + amount);
+    while (this.xp >= this.threshold && this.level < maxRunLevel && this.pending < 100) {
       this.xp -= this.threshold;
       this.level++;
       this.pending++;
     }
+    if (this.level === maxRunLevel) this.xp = 0;
   }
   private canChoose(choice: UpgradeChoice): boolean {
     if (choice.id !== `${choice.kind}:${choice.target}`) return false;
@@ -207,6 +211,7 @@ export class RunBuild {
     } else if (choice.kind === 'relic') this.relics.push(choice.target);
     else this.passives.push(choice.target);
     this.pending--;
+    this.gainXP(0);
     this.game.events.emit('diagnostic', {
       event: choice.kind === 'relic' ? 'RelicChoices' : 'AbilityChoices',
       subject: choice.target,
@@ -287,10 +292,18 @@ export class RunBuild {
         modifiers.rules.set(`relic:${id}:${index}`, { ...rule, id: `relic:${id}:${index}` }),
       );
     }
-    this.passives.forEach((id, index) => {
-      const passive = passives.find((passive) => passive.id === id);
-      if (passive) modifiers.add({ ...passive.modifier, id: `passive:${index}` });
-    });
+    const stacks = new Map<string, number>();
+    for (const id of this.passives) stacks.set(id, (stacks.get(id) ?? 0) + 1);
+    for (const passive of passives) {
+      const count = stacks.get(passive.id) ?? 0;
+      if (!count) continue;
+      const { modifier } = passive;
+      const value =
+        modifier.operation === 'multiply'
+          ? Math.min(Number.MAX_VALUE, modifier.value ** count)
+          : modifier.value * count;
+      modifiers.add({ ...modifier, value, id: `passive:${passive.id}` });
+    }
     for (const synergy of this.synergyDefinitions) {
       synergy.modifiers?.forEach((modifier, index) =>
         modifiers.add({ ...modifier, id: `synergy:${synergy.id}:${index}` }),
@@ -381,7 +394,7 @@ export class RunBuild {
       });
     }
     this.xp = finite(data.xp, 0, 1000000);
-    this.level = Math.floor(finite(data.level, 1, 10000));
+    this.level = Math.floor(finite(data.level, 1, maxRunLevel));
     this.pending = Math.floor(finite(data.pending, 0, 100));
     this.currency = Math.floor(finite(data.currency, 0, 10000000));
     this.relics.splice(
@@ -392,7 +405,9 @@ export class RunBuild {
     this.passives.splice(
       0,
       this.passives.length,
-      ...strings(data.passives, 1000).filter((id) => passives.some((passive) => passive.id === id)),
+      ...strings(data.passives, maxPassiveStacks).filter((id) =>
+        passives.some((passive) => passive.id === id),
+      ),
     );
     this.random.state = finite(data.random, 0, 4294967295) >>> 0;
     this.choices = [];

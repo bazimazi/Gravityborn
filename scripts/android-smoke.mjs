@@ -123,6 +123,11 @@ const catalog = await resumed.evaluate(async () => {
     metrics: { secretsRevealed: 2501, assisted: 1 },
   });
   data.checkpoint.build.currency = 75;
+  data.checkpoint.build.level = 1201;
+  data.checkpoint.build.passives = Array.from(
+    { length: 1200 },
+    (_, index) => ['integrity', 'recovery', 'cooling', 'force'][index % 4],
+  );
   await preferences('set', {
     key: 'gravityborn.save',
     value: JSON.stringify({ version: 1, ...data }),
@@ -248,6 +253,30 @@ await expect(backupRecovered.locator('#profile-dialog')).toContainText(
 await backupRecovered.locator('[data-run-action="resume"]').click();
 await expect(backupRecovered.getByRole('heading', { name: 'Choose your route' })).toBeVisible();
 await expect(backupRecovered.getByRole('button', { name: 'SECRET', exact: true })).toBeVisible();
+await expect
+  .poll(async () =>
+    backupRecovered.evaluate(async () => {
+      const { value } = await window.Capacitor.nativePromise('Preferences', 'get', {
+        key: 'gravityborn.save',
+      });
+      const { build } = JSON.parse(value).payload.checkpoint;
+      return {
+        level: build.level,
+        stacks: build.passives.length,
+        counts: Object.fromEntries(
+          ['integrity', 'recovery', 'cooling', 'force'].map((id) => [
+            id,
+            build.passives.filter((item) => item === id).length,
+          ]),
+        ),
+      };
+    }),
+  )
+  .toEqual({
+    level: 1201,
+    stacks: 1200,
+    counts: { integrity: 300, recovery: 300, cooling: 300, force: 300 },
+  });
 if (errors.length) throw new Error(errors.join('\n'));
 await writeFile(
   'artifacts/android-native-result.json',
@@ -277,6 +306,7 @@ await writeFile(
         'legacy native discovery recovery preserves progression',
         'deep checkpoint keeps its current hidden route',
         'invalid native profile recovers the valid backup without losing its route',
+        'long fallback build retains all stacks through native migration and backup recovery',
       ],
     },
     null,
