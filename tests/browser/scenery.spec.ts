@@ -2,15 +2,15 @@ import { expect, test } from '@playwright/test';
 import { newProfile } from '../../src/progression/profile';
 import { regions } from '../../src/content/regions';
 
-test('every region opens with its authored scenery and keeps accessibility controls usable', async ({
-  page,
-}, testInfo) => {
-  test.setTimeout(120000);
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
-  const profile = newProfile();
-  profile.skills.push('navigation', 'survey');
-  for (const [index, region] of regions.entries()) {
+for (const [index, region] of regions.entries())
+  test(`${region.id} opens with its authored scenery and keeps accessibility controls usable`, async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(45000);
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    const profile = newProfile();
+    profile.skills.push('navigation', 'survey');
     await page.goto('/');
     await page.evaluate(
       (profile) =>
@@ -37,6 +37,5 @@ test('every region opens with its authored scenery and keeps accessibility contr
     await page.getByLabel('Reduced motion').check();
     await page.getByRole('button', { name: 'Close settings' }).click();
     await expect(page.locator('#game')).toBeVisible();
-  }
-  expect(errors).toEqual([]);
-});
+    expect(errors).toEqual([]);
+  });

@@ -188,6 +188,28 @@ let lastState = game.state;
 let runViewKey = '';
 let powerListKey = '';
 let upgradePaused = false;
+let suspended = document.hidden;
+audio.setActive(!suspended);
+
+function suspendGame(): void {
+  suspended = true;
+  resumeAfterDialog = false;
+  upgradePaused = false;
+  clearInput();
+  game.pause();
+  audio.setActive(false);
+}
+function activateGame(): void {
+  if (document.hidden) return;
+  suspended = false;
+  audio.setActive(true);
+}
+function resumeGame(): void {
+  activateGame();
+  if (suspended) return;
+  game.resume();
+  void audio.unlock();
+}
 
 function persist(): void {
   if (importingProgress) return;
@@ -364,13 +386,14 @@ function refreshRun(): void {
   }
   if (!run.build.pending && upgradePaused) {
     upgradePaused = false;
-    if (run.phase === 'room') game.resume();
+    if (run.phase === 'room' && !suspended && !document.querySelector('dialog[open]')) resumeGame();
   }
   const visible = run.phase !== 'room' || run.build.pending > 0;
   if (!visible) {
     if (overlay.classList.contains('run-overlay')) {
       overlay.classList.remove('run-overlay');
-      overlay.hidden = true;
+      if (game.state === 'paused') showState();
+      else overlay.hidden = true;
     }
     return;
   }
@@ -475,6 +498,8 @@ document.addEventListener('click', (event) => {
   }
   if (button.dataset.runAction === 'new') {
     tutorial.stop();
+    upgradePaused = false;
+    activateGame();
     const seed = document.querySelector<HTMLInputElement>('#run-seed')?.value;
     resumeAfterDialog = false;
     element<HTMLDialogElement>('#profile-dialog').close();
@@ -507,6 +532,8 @@ document.addEventListener('click', (event) => {
       return;
     }
     resumeAfterDialog = false;
+    upgradePaused = false;
+    activateGame();
     element<HTMLDialogElement>('#profile-dialog').close();
     feedback.clear();
     renderer.clear();
@@ -517,7 +544,9 @@ document.addEventListener('click', (event) => {
     restart();
     return;
   } else if (button.dataset.room) {
+    activateGame();
     if (run.enter(button.dataset.room)) {
+      void audio.unlock();
       if (run.current?.type === 'boss') audio.cue('boss');
       feedback.clear();
       renderer.clear();
@@ -593,6 +622,8 @@ function clearInput(): void {
 }
 function begin(): void {
   tutorial.stop();
+  upgradePaused = false;
+  activateGame();
   void audio.unlock();
   clearInput();
   game.start();
@@ -602,6 +633,8 @@ function begin(): void {
   toast('Flip gravity to launch objects into hostiles.');
 }
 function startTraining(): void {
+  upgradePaused = false;
+  activateGame();
   run.abandon();
   tutorial.start();
   feedback.clear();
@@ -614,6 +647,7 @@ function startTraining(): void {
   canvas.focus({ preventScroll: true });
 }
 function restart(): void {
+  upgradePaused = false;
   tutorial.stop();
   if (run.active) run.abandon();
   overlay.classList.remove('run-overlay');
@@ -634,7 +668,7 @@ function pauseToggle(): void {
   if (document.querySelector('dialog[open]')) return;
   clearInput();
   if (game.state === 'playing') game.pause();
-  else if (game.state === 'paused') game.resume();
+  else if (game.state === 'paused') resumeGame();
 }
 function openDialog(selector: string): void {
   resumeAfterDialog = game.state === 'playing';
@@ -688,7 +722,7 @@ for (const dialog of document.querySelectorAll('dialog')) {
   });
   dialog.querySelector<HTMLButtonElement>('[data-close]')!.onclick = () => dialog.close();
   dialog.addEventListener('close', () => {
-    if (resumeAfterDialog) game.resume();
+    if (resumeAfterDialog && !suspended) resumeGame();
     resumeAfterDialog = false;
     canvas.focus({ preventScroll: true });
   });
@@ -839,15 +873,11 @@ window.addEventListener('keydown', (event) => {
 window.addEventListener('keyup', (event) => {
   keys.delete(event.code);
 });
-window.addEventListener('blur', () => {
-  clearInput();
-  game.pause();
-});
+window.addEventListener('blur', suspendGame);
+window.addEventListener('focus', activateGame);
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    clearInput();
-    game.pause();
-  }
+  if (document.hidden) suspendGame();
+  else activateGame();
 });
 
 function applySettings(): void {
@@ -966,7 +996,7 @@ function showState(): void {
   overlay.innerHTML = `<div class="intro-content"><div class="prototype-label mono">${paused ? 'SIMULATION SUSPENDED' : won ? 'EXPERIMENT COMPLETE' : 'CORE SIGNAL LOST'}</div><h2 class="intro-title">${paused ? 'Hold that thought.' : won ? 'You changed<span>the outcome.</span>' : 'Gravity gives.<span>Gravity takes.</span>'}</h2><p class="intro-description">${paused ? 'The chamber will be right where you left it.' : won ? 'Six hostiles. Zero weapons. You made the room do the work.' : 'Try a new direction. Pull a barrel into the crowd. Every experiment teaches you something.'}</p>${paused ? '' : `<div class="run-results"><div><strong>${game.stats.kills}</strong><small>HOSTILES</small></div><div><strong>${game.chains.best}×</strong><small>BEST CHAIN</small></div><div><strong>${game.stats.score}</strong><small>SCORE</small></div></div>`}<div class="intro-actions"><button class="primary-button" id="continue">${paused ? 'Resume experiment' : 'Try another experiment ↗'}</button>${paused ? '<button class="text-button" id="restart">Restart</button>' : ''}</div></div>`;
   element('#continue').onclick = () => {
     if (paused) {
-      game.resume();
+      resumeGame();
       canvas.focus();
     } else {
       restart();
@@ -1180,7 +1210,8 @@ function frame(now: number): void {
   refreshRun();
   if (now - hudTime > 80) {
     audio.soundtrack(
-      document.hidden ||
+      suspended ||
+        document.hidden ||
         document.querySelector('dialog[open]') ||
         (game.state === 'paused' && !upgradePaused)
         ? 'off'
@@ -1212,9 +1243,7 @@ requestAnimationFrame(frame);
 
 void installPlatform(
   () => {
-    clearInput();
-    game.pause();
-    audio.soundtrack('off');
+    suspendGame();
     persist();
   },
   () => {
@@ -1226,6 +1255,7 @@ void installPlatform(
       game.pause();
     }
   },
+  activateGame,
 ).catch(() => {
   /* A missing native plugin must not prevent play. */
 });

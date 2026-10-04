@@ -1071,9 +1071,12 @@
         "tests/debug.test.ts",
         "src/progression/ability-options.ts",
         "tests/upgrade-recovery.test.ts",
-        "tests/browser/upgrade-recovery.spec.ts"
+        "tests/browser/upgrade-recovery.spec.ts",
+        "src/main.ts",
+        "tests/browser/interruptions.spec.ts",
+        "src/core/platform.ts"
       ],
-      "remaining": "Three-choice upgrade cards show rarity, current/next level, tags and evolved descriptions while physics pauses. Phone visual review completed. Saved exhausted choices regenerate into usable cards before display, and choosing a replacement survives another reload on desktop Chromium, Android-sized Chromium and phone WebKit."
+      "remaining": "Three-choice upgrade cards show rarity, current/next level, tags and evolved descriptions while physics pauses. Phone visual review completed. Saved exhausted choices regenerate into usable cards before display, and choosing a replacement survives another reload on desktop Chromium, Android-sized Chromium and phone WebKit. Focus loss and native suspension cancel automatic upgrade resume; finishing the interrupted final choice presents visible Resume/Restart actions. Uninterrupted combat upgrades retain automatic resume, and new sessions clear stale upgrade flags. Native pause events cover short Home/foreground interruptions that finish before an inactive app-state notification."
     },
     {
       "section": 75,
@@ -1109,9 +1112,14 @@
         "src/presentation/audio.ts",
         "src/presentation/feedback.ts",
         "src/content/ability-feedback.ts",
-        "tests/audio.test.ts"
+        "tests/audio.test.ts",
+        "src/main.ts",
+        "tests/platform.test.ts",
+        "tests/browser/interruptions.spec.ts",
+        "scripts/android-smoke.mjs",
+        "src/core/platform.ts"
       ],
-      "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues are implemented. Effect families have distinct bounded layered waveforms, pitch direction and timing while preserving the shared twelve-voice budget, mute and cleanup. Listening tests on real speakers/headphones and final mix remain external."
+      "remaining": "Synthesized collision, gravity, power, pickup, death, explosion, level, acquisition, boss and result cues are implemented. Effect families have distinct bounded layered waveforms, pitch direction and timing while preserving the shared twelve-voice budget, mute and cleanup. Listening tests on real speakers/headphones and final mix remain external. Background interruption immediately stops music and scheduled effect voices and gates new sounds. Foreground restores audio availability without resuming physics; explicit resume unlocks audio again. Oscillator identity tracking frees the twelve-voice budget immediately and ignores late cleanup from stopped voices. Native pause events cover short Home/foreground interruptions that finish before an inactive app-state notification."
     },
     {
       "section": 78,
@@ -1119,9 +1127,14 @@
       "status": "implemented",
       "evidence": [
         "src/presentation/audio.ts",
-        "src/main.ts"
+        "src/main.ts",
+        "tests/audio.test.ts",
+        "tests/platform.test.ts",
+        "tests/browser/interruptions.spec.ts",
+        "scripts/android-smoke.mjs",
+        "src/core/platform.ts"
       ],
-      "remaining": "Seven adaptive music arrangements with anomaly modulation and separate volume implemented. Device listening/mix validation remains external."
+      "remaining": "Seven adaptive music arrangements with anomaly modulation and separate volume implemented. Device listening/mix validation remains external. Music stops immediately on browser blur/visibility loss and native suspension, including interruptions during upgrade/dialog pauses. Home/foreground and explicit resume are exercised in the packaged Android emulator. Native pause events cover short Home/foreground interruptions that finish before an inactive app-state notification."
     },
     {
       "section": 79,
@@ -1332,9 +1345,15 @@
         "tests/browser/progress-import.spec.ts",
         "src/progression/build.ts",
         "tests/endless-build-persistence.test.ts",
-        "tests/browser/endless-build-persistence.spec.ts"
+        "tests/browser/endless-build-persistence.spec.ts",
+        "tests/audio.test.ts",
+        "tests/platform.test.ts",
+        "tests/browser/interruptions.spec.ts",
+        "scripts/android-smoke.mjs",
+        "src/core/platform.ts",
+        "tests/browser/scenery.spec.ts"
       ],
-      "remaining": "Automated gravity, physics, combat, progression, seeded path, persistence and browser-input coverage runs in CI. Scripted input playtests complement transition tests; human fun and balance remain separate."
+      "remaining": "Automated gravity, physics, combat, progression, seeded path, persistence and browser-input coverage runs in CI. Scripted input playtests complement transition tests; human fun and balance remain separate. Interruption regressions cover background dialog dismissal, final upgrade selection, frozen clocks and cleared input across desktop Chromium, Android-sized Chromium and phone WebKit. Native smoke includes actual Home/foreground during a dialog and explicit resume. Current verification passes 700 unit cases, 217 applicable browser cases with five platform-specific skips and 24 native emulator checks. Native pause events cover short Home/foreground interruptions that finish before an inactive app-state notification. Each region has an isolated browser case with its own startup, visual capture and accessibility assertions."
     },
     {
       "section": 94,

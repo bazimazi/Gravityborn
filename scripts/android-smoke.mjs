@@ -78,6 +78,24 @@ await expect(page.getByRole('heading', { name: 'Current effects', exact: true })
 await expect(page.locator('#effect-details')).not.toBeEmpty();
 await page.getByRole('button', { name: 'Close power details' }).click();
 await expect(page.getByRole('button', { name: 'Resume game', exact: true })).toBeVisible();
+await page.getByRole('button', { name: 'Resume game', exact: true }).click();
+await page.getByRole('button', { name: 'About selected power' }).click();
+await device.shell('input keyevent 3');
+// Window focus is briefly null during the transition; wait for the actual launcher.
+await expect.poll(focusedWindow, { timeout: 30_000 }).toContain('NexusLauncherActivity');
+await device.shell('am start -n com.bazimazi.gravityborn/.MainActivity');
+await expect.poll(focusedWindow, { timeout: 30_000 }).toContain('com.bazimazi.gravityborn');
+await expect(page.locator('#ability-dialog')).toBeVisible();
+await page.getByRole('button', { name: 'Close power details' }).click();
+await expect(page.getByRole('button', { name: 'Resume game', exact: true })).toBeVisible();
+await expect(page.getByRole('button', { name: 'Resume experiment', exact: true })).toBeVisible();
+const interruptedTimer = await page.locator('#timer').textContent();
+await page.waitForTimeout(500);
+await expect(page.locator('#timer')).toHaveText(interruptedTimer);
+await expect(page.getByRole('button', { name: 'Resume game', exact: true })).toBeVisible();
+await page.getByRole('button', { name: 'Resume experiment', exact: true }).click();
+await expect(page.getByRole('button', { name: 'Pause game', exact: true })).toBeVisible();
+await page.getByRole('button', { name: 'Pause game', exact: true }).click();
 await device.screenshot({ path: 'artifacts/android-native.png' });
 await page.getByRole('button', { name: 'Progression hub' }).click();
 const diagnostics = page.locator('details').filter({
@@ -301,6 +319,8 @@ await writeFile(
         'intro actions require no scrolling',
         'power details preserve paused play',
         'current-effect details are available',
+        'Home/foreground during an active dialog preserves pause after dismissal',
+        'interrupted native play remains frozen until explicit resume',
         'full-catalog native archive recovery',
         'full-catalog native run export',
         'legacy native discovery recovery preserves progression',

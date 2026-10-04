@@ -27,7 +27,8 @@ const arrangements: Record<
 /** Local synthesized sounds: no downloads, licenses, or network at runtime. */
 export class GameAudio {
   private context: AudioContext | undefined;
-  private voices = 0;
+  private active = true;
+  private readonly voices = new Set<OscillatorNode>();
   private lastImpact = 0;
   private musicState: MusicState = 'off';
   private nextBeat = 0;
@@ -70,6 +71,7 @@ export class GameAudio {
   }
 
   async unlock(): Promise<void> {
+    if (!this.active) return;
     try {
       this.context ??= new AudioContext();
       if (this.context.state === 'suspended') await this.context.resume();
@@ -78,12 +80,30 @@ export class GameAudio {
     }
   }
 
+  setActive(active: boolean): void {
+    if (active === this.active) return;
+    this.active = active;
+    if (active) return;
+    this.musicState = 'off';
+    this.nextBeat = 0;
+    for (const voice of this.voices) {
+      try {
+        voice.stop();
+      } catch {
+        /* Already ended. */
+      }
+    }
+    this.voices.clear();
+    this.musicVoices.clear();
+  }
+
   cue(kind: 'level' | 'relic' | 'boss'): void {
     const notes = { level: [440, 880], relic: [520, 1040], boss: [100, 40] }[kind];
     this.tone(notes[0], notes[1], 0.5, 'triangle', 0.12);
   }
 
   soundtrack(state: MusicState, anomaly = false): void {
+    if (!this.active) return;
     if (state !== this.musicState) {
       this.musicState = state;
       this.beat = 0;
@@ -142,9 +162,10 @@ export class GameAudio {
   ): void {
     if (
       !this.context ||
+      !this.active ||
       this.context.state !== 'running' ||
       (music ? this.settings.musicVolume : this.settings.volume) <= 0 ||
-      this.voices >= 12
+      this.voices.size >= 12
     )
       return;
     const context = this.context;
@@ -161,12 +182,12 @@ export class GameAudio {
     );
     envelope.gain.exponentialRampToValueAtTime(0.0001, when + duration);
     oscillator.connect(envelope).connect(context.destination);
-    this.voices++;
+    this.voices.add(oscillator);
     if (music) this.musicVoices.add(oscillator);
     oscillator.onended = () => {
       oscillator.disconnect();
       envelope.disconnect();
-      this.voices--;
+      this.voices.delete(oscillator);
       this.musicVoices.delete(oscillator);
     };
     oscillator.start(when);

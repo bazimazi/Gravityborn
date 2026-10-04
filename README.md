@@ -39,7 +39,7 @@ The Observatory's **Run archive & ghosts** saves recent results and a complete v
 | Restart after a result | R or result button | Result button |
 | Physics inspector | Backtick or sidebar button | Sidebar on larger screens |
 
-Choose **Learn by playing** for seven training lessons, **Enter the chamber** for the original six-hostile laboratory, or **Begin expedition** for a run. The observatory provides class selection, equipment, research, mutations, run modes, difficulty, contracts, the codex, local diagnostic export, and saved-route recovery. Health, immunity, cooldowns, and fields advance only while the simulation runs. Focus loss automatically pauses the game.
+Choose **Learn by playing** for seven training lessons, **Enter the chamber** for the original six-hostile laboratory, or **Begin expedition** for a run. The observatory provides class selection, equipment, research, mutations, run modes, difficulty, contracts, the codex, local diagnostic export, and saved-route recovery. Health, immunity, cooldowns, and fields advance only while the simulation runs. Focus loss pauses the game and silences queued audio. After an interruption, dismissing a dialog or finishing an upgrade leaves play paused until you choose Resume.
 
 ## Implemented scope
 

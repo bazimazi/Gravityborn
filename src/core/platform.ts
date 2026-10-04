@@ -15,10 +15,17 @@ export function vibrate(duration: number): void {
     }
   }
 }
-export async function installPlatform(onSuspend: () => void, onBack: () => void): Promise<void> {
+export async function installPlatform(
+  onSuspend: () => void,
+  onBack: () => void,
+  onActive: () => void,
+): Promise<void> {
   if (Capacitor.isNativePlatform()) {
+    // Android can pause and resume before onStop emits an inactive app state.
+    await App.addListener('pause', onSuspend);
     await App.addListener('appStateChange', ({ isActive }) => {
-      if (!isActive) onSuspend();
+      if (isActive) onActive();
+      else onSuspend();
     });
     await App.addListener('backButton', onBack);
   } else if (import.meta.env.PROD && 'serviceWorker' in navigator) {
